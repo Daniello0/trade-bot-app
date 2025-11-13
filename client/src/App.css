@@ -1,38 +1,193 @@
+/* 1. Глобальные стили и переменные */
+:root {
+  --color-primary: #0000bd;
+  --color-success: #009500;
+  --color-danger: #9f0000;
+  --color-warning: #FF9500;
+  --color-secondary: #6c757d;
+
+  --color-background: #F2F2F7;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E5EA;
+
+  --text-primary: #1D1D1F;
+  --text-secondary: #8A8A8E;
+  --text-on-primary: #FFFFFF;
+
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --border-radius: 12px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--color-background);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. Основной контейнер и Header */
+
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.header {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 25px;
+}
+
+.header > div {
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s ease;
+}
+
+.header > div:hover {
+  color: var(--color-primary);
+}
+
+/* 3. Таблица с ботами */
+
+.table {
+  width: 100%;
+  max-width: 1200px;
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  padding: 15px 25px;
+  background-color: #F9F9FB;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.2s ease;
+}
+
+.table-data > .table-row:last-child {
+  border-bottom: none;
+}
+
+/* Распределение колонок по ширине */
+.header-column-name, .column-name { flex: 3; font-weight: 600; }
+.header-column-type, .column-type { flex: 2; }
+.header-column-status, .column-status {
+  flex: 1.5;
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+}
+.column-actions {
+  flex: 4;
+  display: flex;
+  gap: 10px;
 }
 
-.App-link {
-  color: #61dafb;
+.header-column-actions {
+  flex: 4;
+  display: flex;
+  justify-content: center;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 4. Элементы внутри таблицы */
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.status-badge.status-stopped {
+  background-color: #FFDEB7;
+  color: #9D5A00;
+}
+
+.status-badge.status-running {
+  background-color: #D7F9E3;
+  color: #1A843D;
+}
+
+.action-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-button:hover {
+  transform: scale(107%);
+}
+
+/* Стили для разных типов кнопок */
+.action-button {
+  background-color: var(--color-border);
+  color: var(--text-primary);
+}
+
+.action-button.secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  box-shadow: 0 0 0 1px var(--color-border) inset;
+}
+
+.action-button.success {
+  background-color: var(--color-success);
+  color: var(--text-on-primary);
+}
+
+.action-button.danger {
+  background-color: var(--color-danger);
+  color: var(--text-on-primary);
+}
+
+/* 5. Основная кнопка "Добавить бота" */
+
+.add-bot-button {
+  margin-top: 30px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-on-primary);
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
+}
+
+.add-bot-button:hover {
+  transform: scale(104%);
 }

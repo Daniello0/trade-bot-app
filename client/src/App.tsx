@@ -18,22 +18,56 @@ function App() {
                     setData(responseData);
                     setStatus('connected');
                 } else {
-                    setStatus('disconnected');
+                    setStatus('connected');
                 }
             } catch (error) {
                 console.error("Connection failed:", error);
-                setStatus('disconnected');
+                setStatus('connected');
             }
         };
         checkConnection();
     }, []);
 
-    if (status === 'loading') {
-        return <h1>Loading...</h1>;
-    }
-
     if (status === 'connected') {
-        return <h1>Connected: {data}</h1>;
+        return (
+            <div className="App">
+                <div className="header">
+                    <div className="settings" onClick={() => {
+                        alert('Настройки')
+                    }}>Settings</div>
+                    <div className="singup" onClick={() => {
+                        alert('Зарегистрироваться')
+                    }}>Sing up</div>
+                    <div className="login" onClick={() => {
+                        alert('Войти')
+                    }}>Log in</div>
+                </div>
+                <div className="table">
+                    <div className="table-header">
+                        <div className="header-column-name">Имя</div>
+                        <div className="header-column-type">Тип</div>
+                        <div className="header-column-status">Статус</div>
+                        <div className="header-column-actions">Действия</div>
+                    </div>
+                    <div className="table-data">
+                        <div className="table-row">
+                            <div className="column-name">Bot1</div>
+                            <div className="column-type">Spot Grid Bot</div>
+                            <div className="column-status">
+                                <span className="status-badge status-stopped">disabled</span>
+                            </div>
+                            <div className="column-actions">
+                                <button className="action-button">Консоль</button>
+                                <button className="action-button secondary">Редактировать</button>
+                                <button className="action-button danger">Удалить</button>
+                                <button className="action-button success">Пуск</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="add-bot-button">Добавить бота</div>
+            </div>
+        )
     }
 
     return <h1>Disconnected</h1>;
