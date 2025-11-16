@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import {NavigateFunction} from "react-router";
+import {useNavigate} from "react-router"
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
     const [data, setData] = useState<any>(null);
+    const navigate: NavigateFunction = useNavigate();
 
     useEffect(() => {
-        const backendHost = process.env.REACT_APP_BACKEND_HOST;
-        const backendPort = process.env.REACT_APP_BACKEND_PORT;
-        const backendUrl = `${backendHost}:${backendPort}`;
-        const checkConnection = async () => {
-            try {
-                const response: Response = await fetch(`${backendUrl}/healthz`);
+        (async () => {
+            const backendHost = process.env.REACT_APP_BACKEND_HOST;
+            const backendPort = process.env.REACT_APP_BACKEND_PORT;
+            const backendUrl = `${backendHost}:${backendPort}`;
+            const checkConnection = async () => {
+                try {
+                    const response: Response = await fetch(`${backendUrl}/healthz`);
 
-                if (response.ok) {
-                    const responseData: string = await response.text();
-                    setData(responseData);
-                    setStatus('connected');
-                } else {
+                    if (response.ok) {
+                        const responseData: string = await response.text();
+                        setData(responseData);
+                        setStatus('connected');
+                    } else {
+                        setStatus('disconnected');
+                    }
+                } catch (error) {
+                    console.error("Connection failed:", error);
                     setStatus('connected');
                 }
-            } catch (error) {
-                console.error("Connection failed:", error);
-                setStatus('connected');
-            }
-        };
-        checkConnection();
+            };
+            await checkConnection();
+        })()
     }, []);
 
     if (status === 'connected') {
@@ -65,7 +70,7 @@ function App() {
                         </div>
                     </div>
                 </div>
-                <div className="add-bot-button">Добавить бота</div>
+                <div className="add-bot-button" onClick={() => {navigate('/add-bot')}}>Добавить бота</div>
             </div>
         )
     }
