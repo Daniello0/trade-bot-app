@@ -1,0 +1,180 @@
+.bot-settings-page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.bot-settings-form {
+    width: 100%;
+    max-width: 800px;
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 30px 40px;
+    box-sizing: border-box;
+}
+
+.bot-settings-form h1 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 28px;
+}
+
+.form-section {
+    border: none;
+    padding: 0;
+    margin: 0 0 35px 0;
+}
+
+.form-section legend {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--text-primary);
+}
+
+.bot-specific-settings {
+    border-top: 2px solid var(--color-primary);
+    padding-top: 20px;
+    margin-top: -15px;
+}
+
+.bot-specific-settings legend {
+    border-bottom: none;
+    color: var(--color-primary);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-group.full-width {
+    width: 100%;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    padding: 12px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.form-group.info p {
+    margin: 0;
+    padding: 12px 0;
+    color: var(--text-secondary);
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-group.vertical {
+    flex-direction: column;
+    gap: 15px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 10px;
+}
+
+.radio-description {
+    margin-left: 8px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.radio-group.nested {
+    padding-left: 20px;
+    margin-top: 10px;
+}
+
+.sub-group {
+    display: flex;
+    gap: 15px;
+    padding-left: 30px;
+    margin-top: 10px;
+    align-items: center;
+}
+
+.sub-group select[multiple] {
+    min-height: 120px;
+    background-color: white;
+}
+
+.input-adornment {
+    color: var(--text-secondary);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.form-hint {
+    margin: 0 0 0 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sub-group.grid-bounds {
+    justify-content: space-between;
+}
+
+.sub-group.grid-bounds div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sub-group.grid-bounds p {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.form-actions .action-button,
+.form-actions .add-bot-button {
+    margin-top: 0;
+}
