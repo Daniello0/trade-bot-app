@@ -1,0 +1,14 @@
+.sub-group.grid-bounds {
+    justify-content: space-between;
+}
+
+.sub-group.grid-bounds div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sub-group.grid-bounds p {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
