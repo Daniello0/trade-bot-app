@@ -15,7 +15,12 @@ function App() {
             const backendUrl = `${backendHost}:${backendPort}`;
             const checkConnection = async () => {
                 try {
-                    const response: Response = await fetch(`${backendUrl}/healthz`);
+                    const response: Response = await fetch(`${backendUrl}/healthz`, {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+
+                    console.log(response);
 
                     if (response.ok) {
                         const responseData: string = await response.text();
@@ -26,7 +31,7 @@ function App() {
                     }
                 } catch (error) {
                     console.error("Connection failed:", error);
-                    setStatus('connected');
+                    setStatus('disconnected');
                 }
             };
             await checkConnection();
