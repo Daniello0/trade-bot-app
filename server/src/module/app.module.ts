@@ -4,12 +4,12 @@ import { AppService } from '../service/app.service';
 import { AssignUserIdMiddleware } from '../middleware/user_id.middleware';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AssignUserIdMiddleware).forRoutes('*');
-  }
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(AssignUserIdMiddleware).forRoutes('*');
+    }
 }
