@@ -3,11 +3,13 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('users')
 export class User {
-    @PrimaryColumn({
+    @PrimaryColumn('text', {
         nullable: false,
     })
     id: string;
 
-    @Column('timestamp with time zone')
+    @Column('timestamp without time zone', {
+        nullable: false,
+    })
     created_at: Date;
 }
