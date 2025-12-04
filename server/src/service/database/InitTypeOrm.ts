@@ -1,7 +1,9 @@
 import { DataSource } from 'typeorm';
 import * as process from 'node:process';
-import { User } from './entity/User';
+import { Users } from './entity/Users';
 import * as console from 'node:console';
+import { Bots } from './entity/Bots';
+import { SpotGridSettings } from './entity/grid_spot/SpotGridSettings';
 
 export const DatabaseService = new DataSource({
     type: 'postgres',
@@ -10,7 +12,7 @@ export const DatabaseService = new DataSource({
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
     database: 'tradeBotApp',
-    entities: [User],
+    entities: [Users, Bots, SpotGridSettings],
     synchronize: false,
     logging: false,
 });

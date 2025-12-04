@@ -1,10 +1,16 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    OneToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
+import { StopLossSettings } from './StopLossSettings';
+import { Bots } from '../Bots';
 
 @Entity('full_spot_settings')
 export class FullSpotSettings {
-    @PrimaryColumn('bigint', {
-        nullable: false,
-    })
+    @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
     @Column('text', {
@@ -42,13 +48,10 @@ export class FullSpotSettings {
     })
     profit_per_crypto: number;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    stop_loss_settings_id: number;
+    @OneToOne(() => StopLossSettings, { cascade: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'stop_loss_settings_id' })
+    stop_loss_settings: StopLossSettings;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    bot_id: number;
+    @OneToOne(() => Bots, (bot: Bots) => bot.full_spot_settings)
+    bot: Bots;
 }

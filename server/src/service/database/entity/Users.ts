@@ -1,8 +1,9 @@
 import 'reflect-metadata';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Bots } from './Bots';
 
 @Entity('users')
-export class User {
+export class Users {
     @PrimaryColumn('text', {
         nullable: false,
     })
@@ -12,4 +13,7 @@ export class User {
         nullable: false,
     })
     created_at: Date;
+
+    @OneToMany(() => Bots, (bot: Bots) => bot.user_id)
+    bots: Bots[];
 }

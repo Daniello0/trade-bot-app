@@ -1,10 +1,9 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { FullSpotSettings } from './FullSpotSettings';
 
 @Entity('stop_loss_settings')
 export class StopLossSettings {
-    @PrimaryColumn('bigint', {
-        nullable: false,
-    })
+    @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
     @Column('text', {
@@ -22,8 +21,9 @@ export class StopLossSettings {
     })
     stop_loss_time_value: number;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    full_spot_settings_id: number;
+    @OneToOne(
+        () => FullSpotSettings,
+        (settings: FullSpotSettings) => settings.stop_loss_settings
+    )
+    full_spot_settings: FullSpotSettings;
 }

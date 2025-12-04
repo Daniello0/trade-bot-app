@@ -1,10 +1,17 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    OneToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
+import { GridSettings } from './GridSettings';
+import { LevelsSettings } from './LevelsSettings';
+import { Bots } from '../Bots';
 
 @Entity('spot_grid_settings')
 export class SpotGridSettings {
-    @PrimaryColumn('bigint', {
-        nullable: false,
-    })
+    @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
     @Column('integer', {
@@ -22,16 +29,6 @@ export class SpotGridSettings {
     })
     crypto: string;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    grid_settings_id: number;
-
-    @Column('integer', {
-        nullable: false,
-    })
-    levels_settings_id: number;
-
     @Column('text', {
         nullable: false,
     })
@@ -47,8 +44,14 @@ export class SpotGridSettings {
     })
     update_grid_interval_time: number;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    bot_id: number;
+    @OneToOne(() => GridSettings, { cascade: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'grid_settings_id' })
+    grid_settings: GridSettings;
+
+    @OneToOne(() => LevelsSettings, { cascade: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'levels_settings_id' })
+    levels_settings: LevelsSettings;
+
+    @OneToOne(() => Bots, (bot: Bots) => bot.spot_grid_settings)
+    bot: Bots;
 }

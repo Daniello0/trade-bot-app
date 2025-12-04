@@ -1,10 +1,9 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { SpotGridSettings } from './SpotGridSettings';
 
 @Entity('levels_settings')
 export class LevelsSettings {
-    @PrimaryColumn('bigint', {
-        nullable: false,
-    })
+    @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
     @Column('text', {
@@ -27,8 +26,9 @@ export class LevelsSettings {
     })
     profit_dynamic: number;
 
-    @Column('integer', {
-        nullable: false,
-    })
-    spot_grid_settings_id: number;
+    @OneToOne(
+        () => SpotGridSettings,
+        (settings: SpotGridSettings) => settings.levels_settings
+    )
+    spot_grid_settings: SpotGridSettings;
 }
