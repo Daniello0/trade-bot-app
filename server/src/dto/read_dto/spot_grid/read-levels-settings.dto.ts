@@ -1,0 +1,7 @@
+export class ReadLevelsSettingsDto {
+    id: number;
+    type: string;
+    count_static?: number;
+    price_per_bet_static?: number;
+    profit_dynamic?: number;
+}

@@ -1,8 +1,8 @@
 import {
     botCreationParams,
-    createBot,
-    getAllBots,
-    getBot,
+    createBotService,
+    getAllBotsService,
+    getBotService,
 } from '../src/service/database/bot_service/BotService';
 import { spotGridSettingsType } from '../src/service/database/bot_service/grid_spot/SpotGridSettingsService';
 import { gridSettingsType } from '../src/service/database/bot_service/grid_spot/GridSettingsService';
@@ -48,11 +48,11 @@ const botData: botCreationParams = {
 };
 
 const createBotTest = async () => {
-    await createBot(botData);
+    await createBotService(botData);
 };
 
 const getBotTest = async () => {
-    return await getBot({
+    return await getBotService({
         userId: 'some_uuid',
         botId: 3,
         botType: 'spotGrid',
@@ -66,6 +66,6 @@ const getUserTest = async () => {
 void (async () => {
     await initTypeOrm();
     console.log(await getBotTest());
-    console.log(await getAllBots('some_uuid'));
+    console.log(await getAllBotsService('some_uuid'));
     console.log(await getUserTest());
 })();

@@ -18,7 +18,9 @@ export type botCreationParams = {
     full_spot_settings_data?: any;
 };
 
-export const createBot = async (botData: botCreationParams): Promise<Bots> => {
+export const createBotService = async (
+    botData: botCreationParams
+): Promise<Bots> => {
     return await DatabaseService.transaction(
         async (transactionalEntityManager: EntityManager): Promise<Bots> => {
             let settingsEntity: SpotGridSettings | FullSpotSettings | null =
@@ -66,7 +68,7 @@ export const createBot = async (botData: botCreationParams): Promise<Bots> => {
     );
 };
 
-export const getBot = async (getBotData: {
+export const getBotService = async (getBotData: {
     userId: string;
     botId: number;
     botType: string;
@@ -89,7 +91,7 @@ export const getBot = async (getBotData: {
     });
 };
 
-export const getAllBots = async (userId: string) => {
+export const getAllBotsService = async (userId: string) => {
     return DatabaseService.manager.find(Bots, {
         where: {
             user_id: userId,
