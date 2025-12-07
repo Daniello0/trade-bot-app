@@ -6,3 +6,11 @@ export const createUser = async (userId: string) => {
         id: userId,
     });
 };
+
+export const getUser = async (userId: string) => {
+    return await DatabaseService.manager.findOne(Users, {
+        where: {
+            id: userId,
+        },
+    });
+};

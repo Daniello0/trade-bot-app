@@ -14,6 +14,6 @@ export class Users {
     })
     created_at: Date;
 
-    @OneToMany(() => Bots, (bot: Bots) => bot.user_id)
+    @OneToMany(() => Bots, (bot: Bots) => bot.user)
     bots: Bots[];
 }

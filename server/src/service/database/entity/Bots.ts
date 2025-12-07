@@ -7,9 +7,9 @@ import {
     OneToOne,
     PrimaryColumn,
 } from 'typeorm';
-import { Users } from './Users';
 import { FullSpotSettings } from './full_spot/FullSpotSettings';
 import { SpotGridSettings } from './grid_spot/SpotGridSettings';
+import { Users } from './Users';
 
 @Entity('bots')
 export class Bots {
@@ -38,9 +38,9 @@ export class Bots {
     })
     bot_type: string;
 
-    @ManyToOne(() => Users, (user: Users) => user.bots)
+    /*@ManyToOne(() => Users, (user: Users) => user.bots)
     @JoinColumn({ name: 'user_id' })
-    user: Users;
+    user: Users;*/
 
     @OneToOne(() => FullSpotSettings, {
         nullable: true,
@@ -57,4 +57,8 @@ export class Bots {
     })
     @JoinColumn({ name: 'spot_grid_bot_settings_id' })
     spot_grid_settings: SpotGridSettings;
+
+    @ManyToOne(() => Users, (user: Users) => user.bots)
+    @JoinColumn({ name: 'user_id' })
+    user: Users;
 }

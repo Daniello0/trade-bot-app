@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { GridSettings } from './GridSettings';
 import { LevelsSettings } from './LevelsSettings';
-import { Bots } from '../Bots';
+import {Bots} from "../Bots";
 
 @Entity('spot_grid_settings')
 export class SpotGridSettings {
