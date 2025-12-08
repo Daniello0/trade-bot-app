@@ -1,19 +1,18 @@
 import {
-    botCreationParams,
-    createBotService,
     getAllBotsService,
     getBotService,
 } from '../src/service/database/bot_service/BotService';
-import { spotGridSettingsType } from '../src/service/database/bot_service/grid_spot/SpotGridSettingsService';
-import { gridSettingsType } from '../src/service/database/bot_service/grid_spot/GridSettingsService';
-import { levelsSettingsType } from '../src/service/database/bot_service/grid_spot/LevelsSettingsService';
 import * as console from 'node:console';
 import { initTypeOrm } from '../src/service/database/InitTypeOrm';
 import { getUser } from '../src/service/database/user_service/UserService';
+import { CreateGridSettingsDto } from '../src/dto/create_dto/spot_grid/create-grid-settings.dto';
+import { CreateLevelsSettingsDto } from '../src/dto/create_dto/spot_grid/create-levels-settings.dto';
+import { CreateSpotGridSettingsDto } from '../src/dto/create_dto/spot_grid/create-spot-grid-settings.dto';
+import { CreateBotDto } from '../src/dto/create_dto/create-bot-dto';
 
 console.log('Start Test.');
 
-const gridSettings: gridSettingsType = {
+const gridSettings: CreateGridSettingsDto = {
     lower_bound_dynamic: undefined,
     lower_bound_static: 0,
     type: '',
@@ -21,14 +20,14 @@ const gridSettings: gridSettingsType = {
     upper_bound_static: 0,
 };
 
-const levelsSettings: levelsSettingsType = {
+const levelsSettings: CreateLevelsSettingsDto = {
     count_static: 0,
     price_per_bet_static: 0,
     profit_dynamic: 0,
     type: '',
 };
 
-const spotGridSettingsData: spotGridSettingsType = {
+const spotGridSettingsData: CreateSpotGridSettingsDto = {
     candle_length: 0,
     crypto: '',
     grid_settings: gridSettings,
@@ -39,16 +38,15 @@ const spotGridSettingsData: spotGridSettingsType = {
     update_grid_interval_type: '',
 };
 
-const botData: botCreationParams = {
+const botData: CreateBotDto = {
     bot_type: 'spotGrid',
     deposit: 0,
     name: '',
     spot_grid_settings_data: spotGridSettingsData,
-    user_id: 'some_uuid',
 };
 
 const createBotTest = async () => {
-    await createBotService(botData);
+    // await (botData, 'some_uuid 2');
 };
 
 const getBotTest = async () => {
@@ -65,6 +63,7 @@ const getUserTest = async () => {
 
 void (async () => {
     await initTypeOrm();
+    await createBotTest();
     console.log(await getBotTest());
     console.log(await getAllBotsService('some_uuid'));
     console.log(await getUserTest());

@@ -1,27 +1,14 @@
 import { EntityManager } from 'typeorm';
 import { DatabaseService } from '../../InitTypeOrm';
 import { SpotGridSettings } from '../../entity/grid_spot/SpotGridSettings';
-import { createGridSettings, gridSettingsType } from './GridSettingsService';
-import {
-    createLevelsSettings,
-    levelsSettingsType,
-} from './LevelsSettingsService';
+import { createGridSettings } from './GridSettingsService';
+import { createLevelsSettings } from './LevelsSettingsService';
 import { GridSettings } from '../../entity/grid_spot/GridSettings';
 import { LevelsSettings } from '../../entity/grid_spot/LevelsSettings';
-
-export type spotGridSettingsType = {
-    history_length: number;
-    candle_length: number;
-    crypto: string;
-    stop_loss_type: string;
-    update_grid_interval_type: string;
-    update_grid_interval_time?: number;
-    grid_settings: gridSettingsType;
-    levels_settings: levelsSettingsType;
-};
+import { CreateSpotGridSettingsDto } from '../../../../dto/create_dto/spot_grid/create-spot-grid-settings.dto';
 
 export const createSpotGridSettings = async (
-    spotGridSettingsData: spotGridSettingsType,
+    spotGridSettingsData: CreateSpotGridSettingsDto,
     manager?: EntityManager
 ): Promise<SpotGridSettings> => {
     const entityManager: EntityManager = manager || DatabaseService.manager;

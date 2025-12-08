@@ -1,25 +1,14 @@
 import { DatabaseService } from '../InitTypeOrm';
 import { Bots } from '../entity/Bots';
-import {
-    createSpotGridSettings,
-    spotGridSettingsType,
-} from './grid_spot/SpotGridSettingsService';
+import { createSpotGridSettings } from './grid_spot/SpotGridSettingsService';
 import { SpotGridSettings } from '../entity/grid_spot/SpotGridSettings';
 import { FullSpotSettings } from '../entity/full_spot/FullSpotSettings';
 import { EntityManager } from 'typeorm';
+import { CreateBotDto } from '../../../dto/create_dto/create-bot-dto';
 
-export type botCreationParams = {
-    user_id: string;
-    name: string;
-    deposit: number;
-    bot_type: 'spotGrid' | 'fullSpot';
-
-    spot_grid_settings_data?: spotGridSettingsType;
-    full_spot_settings_data?: any;
-};
-
-export const createBotService = async (
-    botData: botCreationParams
+/*export const createBotService = async (
+    botData: CreateBotDto,
+    userId: string
 ): Promise<Bots> => {
     return await DatabaseService.transaction(
         async (transactionalEntityManager: EntityManager): Promise<Bots> => {
@@ -48,12 +37,10 @@ export const createBotService = async (
             const botRepository =
                 transactionalEntityManager.getRepository(Bots);
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             const newBot: Bots = botRepository.create({
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                user_id: botData.user_id,
+                user_id: userId,
                 name: botData.name,
                 deposit: botData.deposit,
                 bot_type: botData.bot_type,
@@ -66,7 +53,7 @@ export const createBotService = async (
             return await botRepository.save(newBot);
         }
     );
-};
+};*/
 
 export const getBotService = async (getBotData: {
     userId: string;

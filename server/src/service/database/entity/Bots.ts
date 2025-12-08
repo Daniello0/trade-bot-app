@@ -5,7 +5,7 @@ import {
     JoinColumn,
     ManyToOne,
     OneToOne,
-    PrimaryColumn,
+    PrimaryGeneratedColumn,
 } from 'typeorm';
 import { FullSpotSettings } from './full_spot/FullSpotSettings';
 import { SpotGridSettings } from './grid_spot/SpotGridSettings';
@@ -13,9 +13,7 @@ import { Users } from './Users';
 
 @Entity('bots')
 export class Bots {
-    @PrimaryColumn('bigint', {
-        nullable: false,
-    })
+    @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
     @Column('text', {

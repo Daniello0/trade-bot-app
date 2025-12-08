@@ -1,42 +1,187 @@
 import { Injectable } from '@nestjs/common';
+import { CreateBotDto } from '../dto/create_dto/create-bot-dto';
 import {
-    botCreationParams,
-    createBotService,
-    getAllBotsService,
-    getBotService,
-} from './database/bot_service/BotService';
+    ReadBotDetailsDto,
+    ReadBotSummaryDto,
+} from '../dto/read_dto/read-bot.dto';
+import { DatabaseService } from './database/InitTypeOrm';
+import { Bots } from './database/entity/Bots';
+import { EntityManager } from 'typeorm';
+import { SpotGridSettings } from './database/entity/grid_spot/SpotGridSettings';
+import { FullSpotSettings } from './database/entity/full_spot/FullSpotSettings';
+import { createSpotGridSettings } from './database/bot_service/grid_spot/SpotGridSettingsService';
 
 @Injectable()
 export class BotService {
-    async getBot(botData: {
-        userId: string;
-        botId: number;
-        botType: string;
-    }): Promise<string> {
-        return JSON.stringify(await getBotService(botData));
-    }
-
     async getBotSummary(botData: {
         userId: string;
         botId: number;
         botType: string;
-    }): Promise<string> {
-        return JSON.stringify(await getBotService(botData));
+    }): Promise<ReadBotSummaryDto | null> {
+        const bots = await DatabaseService.manager.findOne(Bots, {
+            where: {
+                user_id: botData.userId,
+                id: botData.botId,
+                bot_type: botData.botType,
+            },
+        });
+
+        if (!bots) return null;
+
+        return {
+            id: bots.id,
+            user_id: bots.user_id,
+            name: bots.name,
+            deposit: bots.deposit,
+            bot_type: bots.bot_type,
+        };
     }
 
     async getBotDetails(botData: {
         userId: string;
         botId: number;
         botType: string;
-    }): Promise<string> {
-        return JSON.stringify(await getBotService(botData));
+    }): Promise<ReadBotDetailsDto | null> {
+        const bots = await DatabaseService.manager.findOne(Bots, {
+            where: {
+                user_id: botData.userId,
+                id: botData.botId,
+                bot_type: botData.botType,
+            },
+            relations: {
+                spot_grid_settings: {
+                    grid_settings: true,
+                    levels_settings: true,
+                },
+                full_spot_settings: {
+                    stop_loss_settings: true,
+                },
+            },
+        });
+
+        if (!bots) return null;
+
+        return {
+            id: bots.id,
+            user_id: bots.user_id,
+            name: bots.name,
+            deposit: bots.deposit,
+            bot_type: bots.bot_type,
+            full_spot_settings: null,
+            spot_grid_settings: {
+                history_length: bots.spot_grid_settings.history_length,
+                candle_length: bots.spot_grid_settings.candle_length,
+                crypto: bots.spot_grid_settings.crypto,
+                stop_loss_type: bots.spot_grid_settings.stop_loss_type,
+                update_grid_interval_type:
+                    bots.spot_grid_settings.update_grid_interval_type,
+                update_grid_interval_time:
+                    bots.spot_grid_settings.update_grid_interval_time,
+                grid_settings: {
+                    type: bots.spot_grid_settings.grid_settings.type,
+                    lower_bound_static:
+                        bots.spot_grid_settings.grid_settings
+                            .lower_bound_static,
+                    upper_bound_static:
+                        bots.spot_grid_settings.grid_settings
+                            .upper_bound_static,
+                    lower_bound_dynamic:
+                        bots.spot_grid_settings.grid_settings
+                            .lower_bound_dynamic,
+                    upper_bound_dynamic:
+                        bots.spot_grid_settings.grid_settings
+                            .upper_bound_dynamic,
+                },
+                levels_settings: {
+                    type: bots.spot_grid_settings.levels_settings.type,
+                    count_static:
+                        bots.spot_grid_settings.levels_settings.count_static,
+                    price_per_bet_static:
+                        bots.spot_grid_settings.levels_settings
+                            .price_per_bet_static,
+                    profit_dynamic:
+                        bots.spot_grid_settings.levels_settings.profit_dynamic,
+                },
+            },
+        };
     }
 
-    async createBot(botParams: botCreationParams): Promise<void> {
-        await createBotService(botParams);
+    async createBot(botData: CreateBotDto, userId: string): Promise<void> {
+        await DatabaseService.transaction(
+            async (
+                transactionalEntityManager: EntityManager
+            ): Promise<Bots> => {
+                let settingsEntity: SpotGridSettings | FullSpotSettings | null =
+                    null;
+
+                if (
+                    botData.bot_type === 'spotGrid' &&
+                    botData.spot_grid_settings_data
+                ) {
+                    settingsEntity = await createSpotGridSettings(
+                        botData.spot_grid_settings_data,
+                        transactionalEntityManager
+                    );
+                } else if (
+                    botData.bot_type === 'fullSpot' &&
+                    botData.full_spot_settings_data
+                ) {
+                    throw new Error(
+                        'Full Spot bot creation is not implemented yet.'
+                    );
+                } else {
+                    throw new Error(
+                        'Invalid bot_type or missing settings data.'
+                    );
+                }
+
+                const botRepository =
+                    transactionalEntityManager.getRepository(Bots);
+
+                const newBot: Bots = botRepository.create({
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    user_id: userId,
+                    name: botData.name,
+                    deposit: botData.deposit,
+                    bot_type: botData.bot_type,
+
+                    spot_grid_settings:
+                        botData.bot_type === 'spotGrid' ? settingsEntity : null,
+                    full_spot_settings: null,
+                });
+
+                return await botRepository.save(newBot);
+            }
+        );
     }
 
-    async getAllBots(userId: string): Promise<string> {
-        return JSON.stringify(await getAllBotsService(userId));
+    async getAllBotsSummary(
+        userId: string
+    ): Promise<ReadBotSummaryDto[] | undefined> {
+        const bots = await DatabaseService.manager.find(Bots, {
+            where: {
+                user_id: userId,
+            },
+            relations: {
+                spot_grid_settings: {
+                    grid_settings: true,
+                    levels_settings: true,
+                },
+                full_spot_settings: {
+                    stop_loss_settings: true,
+                },
+            },
+        });
+
+        return bots.map((bot: Bots) => {
+            return {
+                id: bot.id,
+                user_id: bot.user_id,
+                name: bot.name,
+                deposit: bot.deposit,
+                bot_type: bot.bot_type,
+            };
+        });
     }
 }

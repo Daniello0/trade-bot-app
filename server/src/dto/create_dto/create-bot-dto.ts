@@ -23,5 +23,5 @@ export class CreateBotDto {
     @Type(() => CreateSpotGridSettingsDto)
     spot_grid_settings_data?: CreateSpotGridSettingsDto;
 
-    // full_spot_settings_data?: any;
+    full_spot_settings_data?: any;
 }

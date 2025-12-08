@@ -1,18 +1,10 @@
 import { DatabaseService } from '../../InitTypeOrm';
 import { GridSettings } from '../../entity/grid_spot/GridSettings';
 import { EntityManager } from 'typeorm';
-
-export type gridSettingsType = {
-    id?: number;
-    type: string;
-    lower_bound_static?: number;
-    upper_bound_static?: number;
-    lower_bound_dynamic?: string;
-    upper_bound_dynamic?: string;
-};
+import { CreateGridSettingsDto } from '../../../../dto/create_dto/spot_grid/create-grid-settings.dto';
 
 export const createGridSettings = async (
-    gridSettings: gridSettingsType,
+    gridSettings: CreateGridSettingsDto,
     manager?: EntityManager
 ): Promise<GridSettings> => {
     const entityManager = manager || DatabaseService.manager;

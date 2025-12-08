@@ -2,7 +2,6 @@ import { ReadGridSettingsDto } from './read-grid-settings.dto';
 import { ReadLevelsSettingsDto } from './read-levels-settings.dto';
 
 export class ReadSpotGridSettingsDto {
-    id: number;
     history_length: number;
     candle_length: number;
     crypto: string;
