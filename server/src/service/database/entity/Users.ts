@@ -11,6 +11,7 @@ export class Users {
 
     @Column('timestamp without time zone', {
         nullable: false,
+        default: () => 'CURRENT_TIMESTAMP',
     })
     created_at: Date;
 

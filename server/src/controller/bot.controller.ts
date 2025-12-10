@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     HttpCode,
     HttpStatus,
@@ -67,5 +68,20 @@ export class BotController {
     ): Promise<ReadBotDetailsDto | null> {
         const botData = { userId, botId, botType };
         return this.botService.getBotDetails(botData);
+    }
+
+    @Delete(':botId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteBot(
+        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Param('botId', ParseIntPipe) botId: number
+    ): Promise<void> {
+        const userId: string | undefined = req.userId;
+
+        if (userId) {
+            return this.botService.deleteBot(botId, userId);
+        } else {
+            throw new Error('User id is not defined.');
+        }
     }
 }

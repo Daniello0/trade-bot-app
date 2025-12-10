@@ -62,7 +62,7 @@ export const getBotService = async (getBotData: {
 }) => {
     return await DatabaseService.manager.findOne(Bots, {
         where: {
-            user_id: getBotData.userId,
+            user: { id: getBotData.userId },
             id: getBotData.botId,
             bot_type: getBotData.botType,
         },
@@ -81,7 +81,7 @@ export const getBotService = async (getBotData: {
 export const getAllBotsService = async (userId: string) => {
     return DatabaseService.manager.find(Bots, {
         where: {
-            user_id: userId,
+            user: { id: userId },
         },
         relations: {
             spot_grid_settings: {

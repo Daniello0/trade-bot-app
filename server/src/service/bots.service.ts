@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBotDto } from '../dto/create_dto/create-bot-dto';
 import {
     ReadBotDetailsDto,
@@ -20,7 +20,7 @@ export class BotService {
     }): Promise<ReadBotSummaryDto | null> {
         const bots = await DatabaseService.manager.findOne(Bots, {
             where: {
-                user_id: botData.userId,
+                user: { id: botData.userId },
                 id: botData.botId,
                 bot_type: botData.botType,
             },
@@ -30,9 +30,7 @@ export class BotService {
 
         return {
             id: bots.id,
-            user_id: bots.user_id,
             name: bots.name,
-            deposit: bots.deposit,
             bot_type: bots.bot_type,
         };
     }
@@ -44,7 +42,7 @@ export class BotService {
     }): Promise<ReadBotDetailsDto | null> {
         const bots = await DatabaseService.manager.findOne(Bots, {
             where: {
-                user_id: botData.userId,
+                user: { id: botData.userId },
                 id: botData.botId,
                 bot_type: botData.botType,
             },
@@ -63,7 +61,6 @@ export class BotService {
 
         return {
             id: bots.id,
-            user_id: bots.user_id,
             name: bots.name,
             deposit: bots.deposit,
             bot_type: bots.bot_type,
@@ -141,7 +138,9 @@ export class BotService {
                 const newBot: Bots = botRepository.create({
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    user_id: userId,
+                    user: {
+                        id: userId,
+                    },
                     name: botData.name,
                     deposit: botData.deposit,
                     bot_type: botData.bot_type,
@@ -161,7 +160,7 @@ export class BotService {
     ): Promise<ReadBotSummaryDto[] | undefined> {
         const bots = await DatabaseService.manager.find(Bots, {
             where: {
-                user_id: userId,
+                user: { id: userId },
             },
             relations: {
                 spot_grid_settings: {
@@ -177,11 +176,39 @@ export class BotService {
         return bots.map((bot: Bots) => {
             return {
                 id: bot.id,
-                user_id: bot.user_id,
                 name: bot.name,
-                deposit: bot.deposit,
                 bot_type: bot.bot_type,
             };
+        });
+    }
+
+    async deleteBot(botId: number, userId: string): Promise<void> {
+        const botRepository = DatabaseService.getRepository(Bots);
+
+        const botToRemove = await botRepository.findOne({
+            where: {
+                id: botId,
+                user: { id: userId },
+            },
+            relations: {
+                spot_grid_settings: {
+                    grid_settings: true,
+                    levels_settings: true,
+                },
+                full_spot_settings: {
+                    stop_loss_settings: true,
+                },
+            },
+        });
+
+        if (!botToRemove) {
+            throw new NotFoundException(
+                `Bot with ID "${botId}" not found or you don't have permission to delete it.`
+            );
+        }
+
+        await botRepository.remove(botToRemove, {
+            transaction: true,
         });
     }
 }

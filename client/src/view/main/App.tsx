@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
-import {getAllBots} from "../../service/BotService";
+import {deleteBot, getAllBots} from "../../service/BotService";
 import {ReadBotSummary} from "../../api/Types";
 
 function App() {
@@ -39,6 +39,11 @@ function App() {
         })()
     }, []);
 
+    const handleDeleteButtonClick = async (botId: number) => {
+        await deleteBot(botId);
+        setData(await getAllBots());
+    }
+
     if (status === 'connected' && data) {
         return (
             <div className="App">
@@ -71,7 +76,8 @@ function App() {
                                 <div className="column-actions">
                                     <button className="action-button">Консоль</button>
                                     <button className="action-button secondary">Редактировать</button>
-                                    <button className="action-button danger">Удалить</button>
+                                    <button className="action-button danger"
+                                            onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
                                     <button className="action-button success">Пуск</button>
                                 </div>
                             </div>

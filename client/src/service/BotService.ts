@@ -36,3 +36,12 @@ export const getAllBots = async () => {
         return;
     }
 }
+
+export const deleteBot = async (botId: number): Promise<void> => {
+    try {
+        await fetch(backendUrl + `/bots/${botId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+        });
+    } catch (error) {}
+}

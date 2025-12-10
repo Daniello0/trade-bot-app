@@ -25,7 +25,7 @@ export const DatabaseService = new DataSource({
         FullSpotSettings,
         StopLossSettings,
     ],
-    synchronize: false,
+    synchronize: true,
     logging: false,
 });
 

@@ -1,5 +1,5 @@
-import {Column, Entity, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
-import {SpotGridSettings} from "./SpotGridSettings";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { SpotGridSettings } from './SpotGridSettings';
 
 @Entity('levels_settings')
 export class LevelsSettings {
