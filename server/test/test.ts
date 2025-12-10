@@ -28,7 +28,7 @@ const levelsSettings: CreateLevelsSettingsDto = {
 };
 
 const spotGridSettingsData: CreateSpotGridSettingsDto = {
-    candle_length: 0,
+    candle_length: '5m',
     crypto: '',
     grid_settings: gridSettings,
     history_length: 0,

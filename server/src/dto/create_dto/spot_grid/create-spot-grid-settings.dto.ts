@@ -12,8 +12,8 @@ export class CreateSpotGridSettingsDto {
     @IsNumber()
     history_length: number;
 
-    @IsNumber()
-    candle_length: number;
+    @IsString()
+    candle_length: string;
 
     @IsString()
     crypto: string;

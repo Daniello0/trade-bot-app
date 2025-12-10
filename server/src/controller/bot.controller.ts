@@ -1,40 +1,52 @@
 import {
+    Body,
     Controller,
     Get,
-    Post,
-    Param,
-    Body,
-    ParseIntPipe,
-    Query,
     HttpCode,
     HttpStatus,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    Req,
 } from '@nestjs/common';
 import { BotService } from '../service/bots.service';
 import { CreateBotDto } from '../dto/create_dto/create-bot-dto';
-import { ReadBotSummaryDto } from '../dto/read_dto/read-bot.dto';
+import {
+    ReadBotDetailsDto,
+    ReadBotSummaryDto,
+} from '../dto/read_dto/read-bot.dto';
+import * as user_idMiddleware from '../middleware/user_id.middleware';
 
-@Controller('users/:userId/bots')
+@Controller('/bots')
 export class BotController {
     constructor(private readonly botService: BotService) {}
 
-    @Post()
+    @Post('/create')
     @HttpCode(HttpStatus.CREATED)
     async createBot(
-        @Param('userId') userId: string,
+        @Req() req: user_idMiddleware.RequestWithUserId,
         @Body() createBotDto: CreateBotDto
     ): Promise<void> {
-        const botParams = {
-            ...createBotDto,
-            user_id: userId,
-        };
-        return this.botService.createBot(botParams, userId);
+        const userId: string | undefined = req.userId;
+
+        if (userId) {
+            return this.botService.createBot(createBotDto, userId);
+        } else {
+            throw new Error('User id is not defined.');
+        }
     }
 
-    @Get()
+    @Get('/all')
     async getAllBotsSummary(
-        @Param('userId') userId: string
+        @Req() req: user_idMiddleware.RequestWithUserId
     ): Promise<ReadBotSummaryDto[] | undefined> {
-        return this.botService.getAllBotsSummary(userId);
+        const userId: string | undefined = req.userId;
+        if (userId) {
+            return this.botService.getAllBotsSummary(userId);
+        } else {
+            throw new Error('User id is not defined.');
+        }
     }
 
     @Get(':botId/summary')
@@ -52,7 +64,7 @@ export class BotController {
         @Param('userId') userId: string,
         @Param('botId', ParseIntPipe) botId: number,
         @Query('botType') botType: string
-    ): Promise<ReadBotSummaryDto | null> {
+    ): Promise<ReadBotDetailsDto | null> {
         const botData = { userId, botId, botType };
         return this.botService.getBotDetails(botData);
     }

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
+import {getAllBots} from "../../service/BotService";
+import {ReadBotSummary} from "../../api/Types";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -23,8 +25,7 @@ function App() {
                     console.log(response);
 
                     if (response.ok) {
-                        const responseData: string = await response.text();
-                        setData(responseData);
+                        setData(await getAllBots());
                         setStatus('connected');
                     } else {
                         setStatus('disconnected');
@@ -38,7 +39,7 @@ function App() {
         })()
     }, []);
 
-    if (status === 'connected') {
+    if (status === 'connected' && data) {
         return (
             <div className="App">
                 <div className="header">
@@ -60,6 +61,21 @@ function App() {
                         <div className="header-column-actions">Действия</div>
                     </div>
                     <div className="table-data">
+                        {data.map((bot: ReadBotSummary) => (
+                            <div className="table-row" key={bot.id}>
+                                <div className="column-name">{bot.name}</div>
+                                <div className="column-type">{bot.bot_type}</div>
+                                <div className="column-status">
+                                    <span className="status-badge status-stopped">disabled</span>
+                                </div>
+                                <div className="column-actions">
+                                    <button className="action-button">Консоль</button>
+                                    <button className="action-button secondary">Редактировать</button>
+                                    <button className="action-button danger">Удалить</button>
+                                    <button className="action-button success">Пуск</button>
+                                </div>
+                            </div>
+                        ))}
                         <div className="table-row">
                             <div className="column-name">Bot1</div>
                             <div className="column-type">Spot Grid Bot</div>

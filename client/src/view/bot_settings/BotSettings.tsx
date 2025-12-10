@@ -7,6 +7,8 @@ import { FullSpotSettings as FullSpotSettingsType } from '../../schema/FullSpotB
 import { SpotGridSettings } from './SpotGridSettings';
 import { FullSpotSettings } from './FullSpotSettings';
 import './BotSettings.css';
+import {createBot} from "../../service/BotService";
+import {CreateBot, CreateGridSettings, CreateLevelsSettings, CreateSpotGridSettings} from "../../api/Types";
 
 const defaultSpotGridSettings: SpotGridSettingsType = {
     historyLength: 100,
@@ -63,9 +65,78 @@ function BotSettings() {
     }, [botType, setValue]);
 
     const onSubmit: SubmitHandler<BotConfig> = (data) => {
-        console.log("Сохраненные настройки бота:", data);
-        alert("Настройки сохранены! (см. консоль)");
-        navigate("/");
+        (async () => {
+            console.log("Сырые данные из формы:", data);
+
+            let payload: CreateBot;
+
+            if (data.botType === 'spotGrid') {
+                const settings = data.settings as SpotGridSettingsType;
+
+                const gridSettingsPayload: CreateGridSettings = {
+                    type: settings.gridSizeType,
+                    lower_bound_static: settings.gridSizeType === 'static' ? settings.staticGrid?.lowerBound : undefined,
+                    upper_bound_static: settings.gridSizeType === 'static' ? settings.staticGrid?.upperBound : undefined,
+                    lower_bound_dynamic: settings.gridSizeType === 'auto' ? settings.autoGrid?.lower : undefined,
+                    upper_bound_dynamic: settings.gridSizeType === 'auto' ? settings.autoGrid?.upper : undefined,
+                };
+
+                const levelsSettingsPayload: CreateLevelsSettings = {
+                    type: settings.levelCountType,
+                    count_static: settings.levelCountType === 'static' ? settings.staticLevels?.count : undefined,
+                    price_per_bet_static: settings.levelCountType === 'static' ? settings.staticLevels?.pricePerBet : undefined,
+                    profit_dynamic: settings.levelCountType === 'dynamic' ? settings.dynamicLevels?.profitPerLevel : undefined,
+                };
+
+                const spotGridSettingsData: CreateSpotGridSettings = {
+                    history_length: settings.historyLength,
+                    candle_length: settings.candleLength,
+                    crypto: settings.crypto,
+                    stop_loss_type: settings.stopLossType,
+                    update_grid_interval_type: settings.updateGridIntervalType || '', // Убедимся, что значение не undefined
+                    update_grid_interval_time: settings.updateGridIntervalTime,
+                    grid_settings: gridSettingsPayload,
+                    levels_settings: levelsSettingsPayload,
+                };
+
+                payload = {
+                    name: data.name.trim(),
+                    bot_type: data.botType,
+                    deposit: data.deposit,
+                    spot_grid_settings_data: spotGridSettingsData,
+                    full_spot_settings_data: undefined,
+                };
+
+            } else if (data.botType === 'fullSpot') {
+                const settings = data.settings as FullSpotSettingsType;
+
+                payload = {
+                    name: data.name.trim(),
+                    bot_type: data.botType,
+                    deposit: data.deposit,
+                    full_spot_settings_data: {
+                        ignore_list: settings.ignoreList,
+                        max_active_cryptos: settings.maxActiveCryptos,
+                        price_per_bet: settings.pricePerBet,
+                        crypto_list_type: settings.cryptoListType,
+                        crypto_list_static: settings.manualCryptoList?.join(','), // Преобразуем массив в строку, если нужно
+                        indicators: settings.indicators.join(','),
+                        profit_per_crypto: settings.profitPerCrypto,
+                        stop_loss_settings_id: 0,
+                    },
+                };
+            } else {
+                console.error("Unknown bot type!");
+                return;
+            }
+
+            console.log("Отправляемые на бэкенд данные:", payload);
+
+            await createBot(payload);
+
+            alert("Настройки сохранены! (см. консоль)");
+            navigate("/");
+        })();
     };
 
     return (
