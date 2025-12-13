@@ -62,12 +62,16 @@ export class BotController {
 
     @Get(':botId/details')
     async getBotDetails(
-        @Param('userId') userId: string,
-        @Param('botId', ParseIntPipe) botId: number,
-        @Query('botType') botType: string
+        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Param('botId', ParseIntPipe) botId: number
     ): Promise<ReadBotDetailsDto | null> {
-        const botData = { userId, botId, botType };
-        return this.botService.getBotDetails(botData);
+        const userId: string | undefined = req.userId;
+        if (userId) {
+            const botData = { userId, botId };
+            return this.botService.getBotDetails(botData);
+        } else {
+            throw new Error('User id is not defined.');
+        }
     }
 
     @Delete(':botId')

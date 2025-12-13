@@ -44,6 +44,10 @@ function App() {
         setData(await getAllBots());
     }
 
+    const handleEditButtonClick = (botId: number) => {
+        navigate(`/edit-bot/${botId}`);
+    }
+
     if (status === 'connected' && data) {
         return (
             <div className="App">
@@ -75,7 +79,8 @@ function App() {
                                 </div>
                                 <div className="column-actions">
                                     <button className="action-button">Консоль</button>
-                                    <button className="action-button secondary">Редактировать</button>
+                                    <button className="action-button secondary"
+                                    onClick={() => handleEditButtonClick(bot.id)} >Редактировать</button>
                                     <button className="action-button danger"
                                             onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
                                     <button className="action-button success">Пуск</button>

@@ -15,6 +15,7 @@ root.render(
           <Routes>
               <Route path="/" element={<App />} />
               <Route path="/add-bot" element={<BotSettings />} />
+              <Route path={"/edit-bot/:botId"} element={<BotSettings />} />
               <Route path="*" element={<div><h1>Страница не найдена (404)</h1></div>} />
           </Routes>
       </BrowserRouter>

@@ -53,16 +53,14 @@ interface ReadSpotGridSettings {
 export interface CreateBot {
     name: string;
     deposit: number;
-    bot_type: 'spotGrid' | 'fullSpot';
+    bot_type: string;
     spot_grid_settings_data?: CreateSpotGridSettings;
     full_spot_settings_data?: any;
 }
 
 export interface ReadBotSummary {
     id: number;
-    user_id: string;
     name: string;
-    deposit: number;
     bot_type: string;
 }
 

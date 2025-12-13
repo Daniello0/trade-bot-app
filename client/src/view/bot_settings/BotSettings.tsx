@@ -1,55 +1,77 @@
-import React, { useEffect } from 'react';
-import {NavigateFunction, useNavigate} from "react-router";
+import React, {useEffect, useState} from 'react';
+import {NavigateFunction, useNavigate, useParams} from "react-router";
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { SpotGridSettings } from './SpotGridSettings';
 import './BotSettings.css';
-import { createBot } from "../../service/BotService";
-import { CreateBot, CreateGridSettings, CreateLevelsSettings, CreateSpotGridSettings } from "../../api/Types";
+import {createBot, getBot} from "../../service/BotService";
+import {
+    CreateBot,
+    CreateGridSettings,
+    CreateLevelsSettings,
+    CreateSpotGridSettings,
+    ReadBotDetails
+} from "../../api/Types";
+import {mapReadBotToCreateBot} from "../../service/BotTypeMapper";
 
-const defaultGridSettings: CreateGridSettings = {
+const gridSettings: CreateGridSettings = {
     type: 'static',
     lower_bound_static: 0,
     upper_bound_static: 0,
 };
 
-const defaultLevelsSettings: CreateLevelsSettings = {
+const levelsSettings: CreateLevelsSettings = {
     type: 'static',
     count_static: 10,
     price_per_bet_static: 100,
 };
 
-const defaultSpotGridSettingsData: CreateSpotGridSettings = {
+const spotGridSettingsData: CreateSpotGridSettings = {
     history_length: 100,
     candle_length: '5m',
     crypto: 'MNT',
     stop_loss_type: 'hard',
     update_grid_interval_type: 'byCandle',
     update_grid_interval_time: undefined,
-    grid_settings: defaultGridSettings,
-    levels_settings: defaultLevelsSettings,
+    grid_settings: gridSettings,
+    levels_settings: levelsSettings,
 };
 
-const defaultValues: CreateBot = {
+const values: CreateBot = {
     bot_type: 'spotGrid',
     name: 'My Bot',
     deposit: 1000,
-    spot_grid_settings_data: defaultSpotGridSettingsData,
+    spot_grid_settings_data: spotGridSettingsData,
     full_spot_settings_data: undefined,
 };
 
 function BotSettings() {
     const navigate: NavigateFunction = useNavigate();
 
-    const { register, control, handleSubmit, watch, setValue } = useForm<CreateBot>({
-        defaultValues,
+    const { register, control, handleSubmit, watch, setValue, reset } = useForm<CreateBot>({
+        defaultValues: values,
     });
 
     const botType = watch('bot_type');
     const deposit = watch('deposit');
 
+    const [isEditing, setIsEditing] = useState(false);
+    const { botId } = useParams<{botId: string}>();
+
+    useEffect(() => {
+        (async () => {
+            if (botId) {
+                setIsEditing(true);
+                console.log(botId);
+                const botToEdit: ReadBotDetails = await getBot(parseInt(botId));
+                console.log(botToEdit)
+                reset(mapReadBotToCreateBot(botToEdit));
+            }
+        })()
+    }, [botId, reset]);
+
     useEffect(() => {
         if (botType === 'spotGrid') {
-            setValue('spot_grid_settings_data', defaultSpotGridSettingsData);
+            setValue('spot_grid_settings_data', spotGridSettingsData);
             setValue('full_spot_settings_data', undefined);
         } else if (botType === 'fullSpot') {
             setValue('spot_grid_settings_data', undefined);
@@ -61,6 +83,7 @@ function BotSettings() {
         const error: Error | undefined = await createBot(data);
         if (error) {
             alert(error.message);
+            return;
         }
         navigate("/");
     };
@@ -82,13 +105,15 @@ function BotSettings() {
                     </div>
                 </fieldset>
 
-                <fieldset className="form-section">
-                    <legend>Тип бота</legend>
-                    <div className="radio-group horizontal">
-                        <label><input type="radio" {...register('bot_type')} value="spotGrid" /> Spot Grid Bot</label>
-                        <label><input type="radio" {...register('bot_type')} value="fullSpot" /> Full Spot Bot</label>
-                    </div>
-                </fieldset>
+                {!isEditing && (
+                    <fieldset className="form-section">
+                        <legend>Тип бота</legend>
+                        <div className="radio-group horizontal">
+                            <label><input type="radio" {...register('bot_type')} value="spotGrid" /> Spot Grid Bot</label>
+                            <label><input type="radio" {...register('bot_type')} value="fullSpot" /> Full Spot Bot</label>
+                        </div>
+                    </fieldset>
+                )}
 
                 {botType === 'spotGrid' && <SpotGridSettings control={control} watch={watch} setValue={setValue} deposit={deposit} />}
                 {botType === 'fullSpot' && <h2>Временно недоступен</h2>}

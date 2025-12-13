@@ -38,13 +38,11 @@ export class BotService {
     async getBotDetails(botData: {
         userId: string;
         botId: number;
-        botType: string;
     }): Promise<ReadBotDetailsDto | null> {
         const bots = await DatabaseService.manager.findOne(Bots, {
             where: {
                 user: { id: botData.userId },
                 id: botData.botId,
-                bot_type: botData.botType,
             },
             relations: {
                 spot_grid_settings: {

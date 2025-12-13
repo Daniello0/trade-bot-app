@@ -41,11 +41,32 @@ export const getAllBots = async () => {
     }
 }
 
-export const deleteBot = async (botId: number): Promise<void> => {
+export const getBot = async (botId: number) => {
+    try {
+        const res = await fetch(backendUrl + `/bots/${botId}/details`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (res.ok) {
+            return await res.json();
+        }
+
+    } catch (error) {
+        return new Error('Ошибка при получении деталей бота');
+    }
+}
+
+export const deleteBot = async (botId: number): Promise<Error | undefined> => {
     try {
         await fetch(backendUrl + `/bots/${botId}`, {
             method: 'DELETE',
             credentials: 'include',
         });
-    } catch (error) {}
+    } catch (error) {
+        return new Error('Ошибка при удалении бота');
+    }
 }
