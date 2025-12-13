@@ -1,4 +1,10 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    OneToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import { SpotGridSettings } from './SpotGridSettings';
 
 @Entity('grid_settings')
@@ -33,7 +39,11 @@ export class GridSettings {
 
     @OneToOne(
         () => SpotGridSettings,
-        (settings: SpotGridSettings) => settings.grid_settings
+        (settings: SpotGridSettings) => settings.grid_settings,
+        {
+            onDelete: 'CASCADE',
+        }
     )
+    @JoinColumn({ name: 'spot_grid_settings_id' })
     spot_grid_settings: SpotGridSettings;
 }

@@ -27,24 +27,19 @@ export class Bots {
     @Column('text', { nullable: false })
     bot_type: string;
 
-    @OneToOne(() => FullSpotSettings, {
+    @OneToOne(() => FullSpotSettings, (settings) => settings.bot, {
         nullable: true,
         cascade: true,
-        onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'full_spot_bot_settings_id' })
     full_spot_settings: FullSpotSettings;
 
-    @OneToOne(() => SpotGridSettings, {
+    @OneToOne(() => SpotGridSettings, (settings) => settings.bot, {
         nullable: true,
         cascade: true,
-        onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'spot_grid_bot_settings_id' })
     spot_grid_settings: SpotGridSettings;
 
     @ManyToOne(() => Users, (user: Users) => user.bots, {
-        cascade: true,
         onDelete: 'CASCADE',
     })
     @JoinColumn({ name: 'user_id' })

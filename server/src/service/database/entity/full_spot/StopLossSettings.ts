@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
 import { FullSpotSettings } from './FullSpotSettings';
 
 @Entity('stop_loss_settings')
@@ -23,7 +23,11 @@ export class StopLossSettings {
 
     @OneToOne(
         () => FullSpotSettings,
-        (settings: FullSpotSettings) => settings.stop_loss_settings
+        (settings: FullSpotSettings) => settings.stop_loss_settings,
+        {
+            onDelete: 'CASCADE',
+        }
     )
+    @JoinColumn({ name: 'full_spot_settings_id' })
     full_spot_settings: FullSpotSettings;
 }

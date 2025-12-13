@@ -44,14 +44,27 @@ export class SpotGridSettings {
     })
     update_grid_interval_time: number;
 
-    @OneToOne(() => GridSettings, { cascade: true, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'grid_settings_id' })
+    @OneToOne(
+        () => GridSettings,
+        (settings: GridSettings) => settings.spot_grid_settings,
+        {
+            cascade: true,
+        }
+    )
     grid_settings: GridSettings;
 
-    @OneToOne(() => LevelsSettings, { cascade: true, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'levels_settings_id' })
+    @OneToOne(
+        () => LevelsSettings,
+        (settings: LevelsSettings) => settings.spot_grid_settings,
+        {
+            cascade: true,
+        }
+    )
     levels_settings: LevelsSettings;
 
-    @OneToOne(() => Bots, (bot: Bots) => bot.spot_grid_settings)
+    @OneToOne(() => Bots, (bot: Bots) => bot.spot_grid_settings, {
+        onDelete: 'CASCADE',
+    })
+    @JoinColumn({ name: 'bot_id' })
     bot: Bots;
 }

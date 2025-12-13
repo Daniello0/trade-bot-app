@@ -6,7 +6,7 @@ import {
     PrimaryGeneratedColumn,
 } from 'typeorm';
 import { StopLossSettings } from './StopLossSettings';
-import {Bots} from "../Bots";
+import { Bots } from '../Bots';
 
 @Entity('full_spot_settings')
 export class FullSpotSettings {
@@ -48,10 +48,18 @@ export class FullSpotSettings {
     })
     profit_per_crypto: number;
 
-    @OneToOne(() => StopLossSettings, { cascade: true, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'stop_loss_settings_id' })
+    @OneToOne(
+        () => StopLossSettings,
+        (settings) => settings.full_spot_settings,
+        {
+            cascade: true,
+        }
+    )
     stop_loss_settings: StopLossSettings;
 
-    @OneToOne(() => Bots, (bot: Bots) => bot.full_spot_settings)
+    @OneToOne(() => Bots, (bot: Bots) => bot.full_spot_settings, {
+        onDelete: 'CASCADE',
+    })
+    @JoinColumn({ name: 'bot_id' })
     bot: Bots;
 }
