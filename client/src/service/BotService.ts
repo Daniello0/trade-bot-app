@@ -2,9 +2,9 @@ import {CreateBot} from "../api/Types";
 
 const backendUrl = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
 
-export const createBot = async (botParams: CreateBot) => {
+export const createBot = async (botParams: CreateBot): Promise<Error | undefined> => {
     try {
-        await fetch(backendUrl + '/bots/create', {
+        const res = await fetch(backendUrl + '/bots/create', {
             method: 'POST',
             credentials: 'include',
             body: JSON.stringify(botParams),
@@ -12,9 +12,13 @@ export const createBot = async (botParams: CreateBot) => {
                 'Content-Type': 'application/json',
             }
         });
+
+        if (res.status === 500) {
+            return new Error('Ошибка при создании бота');
+        }
+
     } catch (error) {
-        console.error(error);
-        return;
+        return new Error('Ошибка при создании бота');
     }
 }
 

@@ -82,19 +82,6 @@ function App() {
                                 </div>
                             </div>
                         ))}
-                        <div className="table-row">
-                            <div className="column-name">Bot1</div>
-                            <div className="column-type">Spot Grid Bot</div>
-                            <div className="column-status">
-                                <span className="status-badge status-stopped">disabled</span>
-                            </div>
-                            <div className="column-actions">
-                                <button className="action-button">Консоль</button>
-                                <button className="action-button secondary">Редактировать</button>
-                                <button className="action-button danger">Удалить</button>
-                                <button className="action-button success">Пуск</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div className="add-bot-button" onClick={() => {navigate('/add-bot')}}>Добавить бота</div>

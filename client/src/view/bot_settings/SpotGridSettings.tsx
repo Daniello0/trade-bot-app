@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { Control, UseFormSetValue, UseFormWatch, useController } from 'react-hook-form';
-import { BotConfig } from '../../schema/BotSettings';
 import './SpotGridSettings.css';
+import {CreateBot} from "../../api/Types";
 
-type ControlType = Control<BotConfig>;
-type WatchType = UseFormWatch<BotConfig>;
-type SetValueType = UseFormSetValue<BotConfig>;
+type ControlType = Control<CreateBot>;
+type WatchType = UseFormWatch<CreateBot>;
+type SetValueType = UseFormSetValue<CreateBot>;
 
 interface SpotGridSettingsProps {
     control: ControlType;
@@ -15,35 +15,44 @@ interface SpotGridSettingsProps {
 }
 
 export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGridSettingsProps) {
-    const { field: historyLengthField } = useController({ name: 'settings.historyLength', control });
-    const { field: candleLengthField } = useController({ name: 'settings.candleLength', control });
-    const { field: cryptoField } = useController({ name: 'settings.crypto', control });
-    const { field: gridSizeTypeField } = useController({ name: 'settings.gridSizeType', control });
-    const { field: staticGridLowerField } = useController({ name: 'settings.staticGrid.lowerBound', control });
-    const { field: staticGridUpperField } = useController({ name: 'settings.staticGrid.upperBound', control });
-    const { field: autoGridLowerField } = useController({ name: 'settings.autoGrid.lower', control });
-    const { field: autoGridUpperField } = useController({ name: 'settings.autoGrid.upper', control });
-    const { field: levelCountTypeField } = useController({ name: 'settings.levelCountType', control });
-    const { field: staticLevelsCountField } = useController({ name: 'settings.staticLevels.count', control });
-    const { field: staticLevelsPriceField } = useController({ name: 'settings.staticLevels.pricePerBet', control });
-    const { field: dynamicLevelsProfitField } = useController({ name: 'settings.dynamicLevels.profitPerLevel', control });
-    const { field: stopLossTypeField } = useController({ name: 'settings.stopLossType', control });
-    const { field: updateGridIntervalTypeField } = useController({ name: 'settings.updateGridIntervalType', control });
-    const { field: updateGridIntervalTimeField } = useController({ name: 'settings.updateGridIntervalTime', control });
+    const { field: historyLengthField } = useController({ name: 'spot_grid_settings_data.history_length', control });
+    const { field: candleLengthField } = useController({ name: 'spot_grid_settings_data.candle_length', control });
+    const { field: cryptoField } = useController({ name: 'spot_grid_settings_data.crypto', control });
+    const { field: gridSizeTypeField } = useController({ name: 'spot_grid_settings_data.grid_settings.type', control });
+    const { field: staticGridLowerField } = useController({ name: 'spot_grid_settings_data.grid_settings.lower_bound_static', control });
+    const { field: staticGridUpperField } = useController({ name: 'spot_grid_settings_data.grid_settings.upper_bound_static', control });
+    const { field: autoGridLowerField } = useController({ name: 'spot_grid_settings_data.grid_settings.lower_bound_dynamic', control });
+    const { field: autoGridUpperField } = useController({ name: 'spot_grid_settings_data.grid_settings.upper_bound_dynamic', control });
+    const { field: levelCountTypeField } = useController({ name: 'spot_grid_settings_data.levels_settings.type', control });
+    const { field: staticLevelsCountField } = useController({ name: 'spot_grid_settings_data.levels_settings.count_static', control });
+    const { field: staticLevelsPriceField } = useController({ name: 'spot_grid_settings_data.levels_settings.price_per_bet_static', control });
+    const { field: dynamicLevelsProfitField } = useController({ name: 'spot_grid_settings_data.levels_settings.profit_dynamic', control });
+    const { field: stopLossTypeField } = useController({ name: 'spot_grid_settings_data.stop_loss_type', control });
+    const { field: updateGridIntervalTypeField } = useController({ name: 'spot_grid_settings_data.update_grid_interval_type', control });
+    const { field: updateGridIntervalTimeField } = useController({ name: 'spot_grid_settings_data.update_grid_interval_time', control });
 
-    const gridSizeType = watch('settings.gridSizeType');
-    const levelCountType = watch('settings.levelCountType');
-    const updateGridIntervalType = watch('settings.updateGridIntervalType');
-    const staticLevelsCount = watch('settings.staticLevels.count') || 1;
+    const gridSizeType = watch('spot_grid_settings_data.grid_settings.type');
+    const levelCountType = watch('spot_grid_settings_data.levels_settings.type');
+    const updateGridIntervalType = watch('spot_grid_settings_data.update_grid_interval_type');
+    const staticLevelsCount = watch('spot_grid_settings_data.levels_settings.count_static') || 1;
 
     useEffect(() => {
-        if (gridSizeType === 'static') setValue('settings.autoGrid', undefined);
-        else if (gridSizeType === 'auto') setValue('settings.staticGrid', undefined);
+        if (gridSizeType === 'static') {
+            setValue('spot_grid_settings_data.grid_settings.lower_bound_dynamic', undefined);
+            setValue('spot_grid_settings_data.grid_settings.upper_bound_dynamic', undefined);
+        } else if (gridSizeType === 'auto') {
+            setValue('spot_grid_settings_data.grid_settings.lower_bound_static', undefined);
+            setValue('spot_grid_settings_data.grid_settings.upper_bound_static', undefined);
+        }
     }, [gridSizeType, setValue]);
 
     useEffect(() => {
-        if (levelCountType === 'static') setValue('settings.dynamicLevels', undefined);
-        else if (levelCountType === 'dynamic') setValue('settings.staticLevels', undefined);
+        if (levelCountType === 'static') {
+            setValue('spot_grid_settings_data.levels_settings.profit_dynamic', undefined);
+        } else if (levelCountType === 'dynamic') {
+            setValue('spot_grid_settings_data.levels_settings.count_static', undefined);
+            setValue('spot_grid_settings_data.levels_settings.price_per_bet_static', undefined);
+        }
     }, [levelCountType, setValue]);
 
     return (

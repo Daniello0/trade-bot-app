@@ -135,6 +135,8 @@ export class BotService {
                 const botRepository =
                     transactionalEntityManager.getRepository(Bots);
 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 const newBot: Bots = botRepository.create({
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
