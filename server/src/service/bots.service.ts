@@ -9,7 +9,10 @@ import { Bots } from './database/entity/Bots';
 import { EntityManager } from 'typeorm';
 import { SpotGridSettings } from './database/entity/grid_spot/SpotGridSettings';
 import { FullSpotSettings } from './database/entity/full_spot/FullSpotSettings';
-import { createSpotGridSettings } from './database/bot_service/grid_spot/SpotGridSettingsService';
+import {
+    createSpotGridSettings,
+    updateSpotGridSettings,
+} from './database/bot_service/grid_spot/SpotGridSettingsService';
 
 @Injectable()
 export class BotService {
@@ -210,5 +213,57 @@ export class BotService {
         await botRepository.remove(botToRemove, {
             transaction: true,
         });
+    }
+
+    async updateBot(
+        botId: number,
+        userId: string,
+        updateData: CreateBotDto
+    ): Promise<void> {
+        await DatabaseService.transaction(
+            async (transactionalEntityManager) => {
+                const botRepository =
+                    transactionalEntityManager.getRepository(Bots);
+
+                const botToUpdate = await botRepository.findOne({
+                    where: { id: botId, user: { id: userId } },
+                    relations: {
+                        spot_grid_settings: true,
+                        full_spot_settings: true,
+                    },
+                });
+
+                if (!botToUpdate) {
+                    throw new NotFoundException(
+                        `Bot with ID "${botId}" not found or permission denied.`
+                    );
+                }
+
+                const {
+                    spot_grid_settings_data,
+                    full_spot_settings_data,
+                    ...botFields
+                } = updateData;
+
+                if (Object.keys(botFields).length > 0) {
+                    await botRepository.update(botId, botFields);
+                }
+
+                if (spot_grid_settings_data && botToUpdate.spot_grid_settings) {
+                    await updateSpotGridSettings(
+                        botToUpdate.spot_grid_settings.id,
+                        userId,
+                        spot_grid_settings_data,
+                        transactionalEntityManager
+                    );
+                }
+
+                if (full_spot_settings_data && botToUpdate.full_spot_settings) {
+                    throw new Error(
+                        'Full Spot bot update is not implemented yet.'
+                    );
+                }
+            }
+        );
     }
 }

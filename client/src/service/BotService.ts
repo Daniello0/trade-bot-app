@@ -60,7 +60,9 @@ export const getBot = async (botId: number) => {
     }
 }
 
-export const deleteBot = async (botId: number): Promise<Error | undefined> => {
+export const deleteBot = async (
+    botId: number
+): Promise<Error | undefined> => {
     try {
         await fetch(backendUrl + `/bots/${botId}`, {
             method: 'DELETE',
@@ -68,5 +70,23 @@ export const deleteBot = async (botId: number): Promise<Error | undefined> => {
         });
     } catch (error) {
         return new Error('Ошибка при удалении бота');
+    }
+}
+
+export const updateBot = async (
+    botId: number,
+    updateBotData: CreateBot
+): Promise<Error | undefined> => {
+    try {
+        await fetch(backendUrl + `/bots/${botId}`, {
+            method: 'PATCH',
+            credentials: 'include',
+            body: JSON.stringify(updateBotData),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    } catch (error) {
+        return new Error('Ошибка при обновлении бота');
     }
 }

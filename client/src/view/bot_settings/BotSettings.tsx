@@ -3,7 +3,7 @@ import {NavigateFunction, useNavigate, useParams} from "react-router";
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { SpotGridSettings } from './SpotGridSettings';
 import './BotSettings.css';
-import {createBot, getBot} from "../../service/BotService";
+import {createBot, getBot, updateBot} from "../../service/BotService";
 import {
     CreateBot,
     CreateGridSettings,
@@ -78,7 +78,7 @@ function BotSettings() {
         }
     }, [botType, setValue]);
 
-    const onSubmit: SubmitHandler<CreateBot> = async (data: CreateBot) => {
+    const onCreate: SubmitHandler<CreateBot> = async (data: CreateBot) => {
         console.log("Отправляемые на бэкенд данные:", data);
         const error: Error | undefined = await createBot(data);
         if (error) {
@@ -88,10 +88,24 @@ function BotSettings() {
         navigate("/");
     };
 
+    const onUpdate: SubmitHandler<CreateBot> = async (data: CreateBot) => {
+        console.log("Данные для обновления:", data);
+        if (!botId) {
+            alert("Ошибка при создании бота");
+            return;
+        } else {
+            const error: Error | undefined = await updateBot(parseInt(botId), data);
+            if (error) {
+                alert(error.message);
+            }
+            navigate("/");
+        }
+    }
+
     return (
         <div className="bot-settings-page">
-            <form className="bot-settings-form" onSubmit={handleSubmit(onSubmit)}>
-                <h1>Настройки ботов</h1>
+            <form className="bot-settings-form" onSubmit={isEditing? handleSubmit(onUpdate) : handleSubmit(onCreate)}>
+                <h1>{isEditing? "Редактирование бота" : "Создание бота"}</h1>
 
                 <fieldset className="form-section">
                     <legend>Общие</legend>
@@ -120,7 +134,7 @@ function BotSettings() {
 
                 <div className="form-actions">
                     <button type="button" className="action-button secondary" onClick={() => navigate(-1)}>Назад</button>
-                    <button type="submit" className="add-bot-button">Сохранить</button>
+                    <button type="submit" className="add-bot-button">{isEditing? "Сохранить" : "Создать"}</button>
                 </div>
             </form>
         </div>

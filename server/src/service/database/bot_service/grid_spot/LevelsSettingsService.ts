@@ -16,3 +16,13 @@ export const createLevelsSettings = async (
 
     return await entityManager.save(newSettings);
 };
+
+export const updateLevelsSettings = async (
+    levelsSettingsId: number,
+    updateData: CreateLevelsSettingsDto,
+    manager?: EntityManager
+): Promise<void> => {
+    const entityManager = manager || DatabaseService.manager;
+
+    await entityManager.update(LevelsSettings, levelsSettingsId, updateData);
+};

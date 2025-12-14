@@ -7,6 +7,7 @@ import {
     HttpStatus,
     Param,
     ParseIntPipe,
+    Patch,
     Post,
     Query,
     Req,
@@ -84,6 +85,21 @@ export class BotController {
 
         if (userId) {
             return this.botService.deleteBot(botId, userId);
+        } else {
+            throw new Error('User id is not defined.');
+        }
+    }
+
+    @Patch(':botId')
+    async updateBot(
+        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Param('botId', ParseIntPipe) botId: number,
+        @Body() updateBotData: CreateBotDto
+    ): Promise<void> {
+        const userId: string | undefined = req.userId;
+
+        if (userId) {
+            return this.botService.updateBot(botId, userId, updateBotData);
         } else {
             throw new Error('User id is not defined.');
         }

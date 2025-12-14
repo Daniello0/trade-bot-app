@@ -16,3 +16,13 @@ export const createGridSettings = async (
 
     return await entityManager.save(newSettings);
 };
+
+export const updateGridSettings = async (
+    gridSettingsId: number,
+    updateData: CreateGridSettingsDto,
+    manager?: EntityManager
+): Promise<void> => {
+    const entityManager = manager || DatabaseService.manager;
+
+    await entityManager.update(GridSettings, gridSettingsId, updateData);
+};

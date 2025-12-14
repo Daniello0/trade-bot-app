@@ -1,11 +1,15 @@
 import { EntityManager } from 'typeorm';
 import { DatabaseService } from '../../InitTypeOrm';
 import { SpotGridSettings } from '../../entity/grid_spot/SpotGridSettings';
-import { createGridSettings } from './GridSettingsService';
-import { createLevelsSettings } from './LevelsSettingsService';
+import { createGridSettings, updateGridSettings } from './GridSettingsService';
+import {
+    createLevelsSettings,
+    updateLevelsSettings,
+} from './LevelsSettingsService';
 import { GridSettings } from '../../entity/grid_spot/GridSettings';
 import { LevelsSettings } from '../../entity/grid_spot/LevelsSettings';
 import { CreateSpotGridSettingsDto } from '../../../../dto/create_dto/spot_grid/create-spot-grid-settings.dto';
+import { NotFoundException } from '@nestjs/common';
 
 export const createSpotGridSettings = async (
     spotGridSettingsData: CreateSpotGridSettingsDto,
@@ -41,4 +45,49 @@ export const createSpotGridSettings = async (
     );
 
     return await entityManager.save(newSettings);
+};
+
+export const updateSpotGridSettings = async (
+    spotGridSettingsId: number,
+    userId: string,
+    updateData: CreateSpotGridSettingsDto,
+    manager?: EntityManager
+): Promise<void> => {
+    const entityManager = manager || DatabaseService.manager;
+
+    const settingsToUpdate = await entityManager.findOne(SpotGridSettings, {
+        where: {
+            id: spotGridSettingsId,
+            bot: { user: { id: userId } },
+        },
+        relations: {
+            grid_settings: true,
+            levels_settings: true,
+        },
+    });
+
+    if (!settingsToUpdate) {
+        throw new NotFoundException(
+            `SpotGridSettings with ID "${spotGridSettingsId}" not found or permission denied.`
+        );
+    }
+
+    const { grid_settings, levels_settings, ...spotGridFields } = updateData;
+
+    await updateGridSettings(
+        settingsToUpdate.grid_settings.id,
+        grid_settings,
+        entityManager
+    );
+    await updateLevelsSettings(
+        settingsToUpdate.levels_settings.id,
+        levels_settings,
+        entityManager
+    );
+
+    await entityManager.update(
+        SpotGridSettings,
+        spotGridSettingsId,
+        spotGridFields
+    );
 };
