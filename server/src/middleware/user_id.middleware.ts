@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { createUser } from '../service/database/user_service/UserService';
+import { UserService } from '../service/user.service';
 
 export interface RequestWithUserId extends Request {
     userId?: string;
@@ -11,6 +11,8 @@ export interface RequestWithUserId extends Request {
 
 @Injectable()
 export class AssignUserIdMiddleware implements NestMiddleware {
+    constructor(private readonly userService: UserService) {}
+
     async use(req: RequestWithUserId, res: Response, next: NextFunction) {
         const { v4: uuidv4 } = await import('uuid');
         if (!req.cookies?.user_id) {
@@ -23,7 +25,7 @@ export class AssignUserIdMiddleware implements NestMiddleware {
                 path: '/',
             });
             req.userId = newUserId;
-            await createUser(newUserId);
+            await this.userService.createUser(newUserId);
         } else {
             req.userId = req.cookies.user_id;
         }

@@ -4,7 +4,6 @@ import {
 } from '../src/service/database/bot_service/BotService';
 import * as console from 'node:console';
 import { initTypeOrm } from '../src/service/database/InitTypeOrm';
-import { getUser } from '../src/service/database/user_service/UserService';
 import { CreateGridSettingsDto } from '../src/dto/create_dto/spot_grid/create-grid-settings.dto';
 import { CreateLevelsSettingsDto } from '../src/dto/create_dto/spot_grid/create-levels-settings.dto';
 import { CreateSpotGridSettingsDto } from '../src/dto/create_dto/spot_grid/create-spot-grid-settings.dto';
@@ -57,14 +56,9 @@ const getBotTest = async () => {
     });
 };
 
-const getUserTest = async () => {
-    return await getUser('some_uuid');
-};
-
 void (async () => {
     await initTypeOrm();
     await createBotTest();
     console.log(await getBotTest());
     console.log(await getAllBotsService('some_uuid'));
-    console.log(await getUserTest());
 })();

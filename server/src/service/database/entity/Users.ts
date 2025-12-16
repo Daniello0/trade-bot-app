@@ -15,6 +15,16 @@ export class Users {
     })
     created_at: Date;
 
+    @Column('text', {
+        nullable: true,
+    })
+    api_key: string;
+
+    @Column('text', {
+        nullable: true,
+    })
+    api_secret: string;
+
     @OneToMany(() => Bots, (bot: Bots) => bot.user)
     bots: Bots[];
 }
