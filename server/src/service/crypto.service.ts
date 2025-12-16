@@ -9,8 +9,8 @@ export class CryptoService {
     private readonly algorithm = 'aes-256-cbc';
 
     constructor() {
-        this.key = Buffer.from(String(process.env.ENCRYPTION_KEY), 'utf8');
-        this.iv = Buffer.from(String(process.env.ENCRYPTION_IV), 'utf8');
+        this.key = Buffer.from(String(process.env.ENCRYPTION_KEY), 'hex');
+        this.iv = Buffer.from(String(process.env.ENCRYPTION_IV), 'hex');
     }
 
     encrypt(text: string): string {

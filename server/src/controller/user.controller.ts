@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import * as user_idMiddleware from '../middleware/user_id.middleware';
+import { CreateUserKeysDto } from '../dto/create_dto/create-user-keys.dto';
 
 @Controller('/user')
 export class UserController {
@@ -18,8 +19,7 @@ export class UserController {
     @HttpCode(HttpStatus.OK)
     async addKeys(
         @Req() req: user_idMiddleware.RequestWithUserId,
-        @Body() api_key: string,
-        @Body() api_secret: string
+        @Body() { api_key, api_secret }: CreateUserKeysDto
     ): Promise<void> {
         const userId: string | undefined = req.userId;
         if (userId) {

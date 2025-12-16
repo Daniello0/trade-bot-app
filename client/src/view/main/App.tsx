@@ -3,7 +3,9 @@ import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
-import {ReadBotSummary} from "../../api/Types";
+import {UserKeys, ReadBotSummary} from "../../api/Types";
+import {openApiKeysModal} from "../../service/SwalService";
+import {createUserKeys} from "../../service/UserService";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -48,13 +50,25 @@ function App() {
         navigate(`/edit-bot/${botId}`);
     }
 
+    const handleSettingsButtonClick = async () => {
+        const keys: UserKeys | undefined = await openApiKeysModal();
+
+        if (!keys) {
+            return;
+        }
+
+        const error: Error | undefined = await createUserKeys(keys);
+        if (error) {
+            alert(error.message);
+            return;
+        }
+    }
+
     if (status === 'connected' && data) {
         return (
             <div className="App">
                 <div className="header">
-                    <div className="settings" onClick={() => {
-                        alert('Настройки')
-                    }}>Settings</div>
+                    <div className="settings" onClick={() => handleSettingsButtonClick()}>Settings</div>
                     <div className="singup" onClick={() => {
                         alert('Зарегистрироваться')
                     }}>Sing up</div>

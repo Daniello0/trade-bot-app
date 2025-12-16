@@ -73,3 +73,8 @@ export interface ReadBotDetails {
     full_spot_settings?: any;
     spot_grid_settings?: ReadSpotGridSettings;
 }
+
+export interface UserKeys {
+    api_key: string;
+    api_secret: string;
+}
