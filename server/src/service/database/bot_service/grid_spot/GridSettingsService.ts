@@ -7,7 +7,7 @@ export const createGridSettings = async (
     gridSettings: CreateGridSettingsDto,
     manager?: EntityManager
 ): Promise<GridSettings> => {
-    const entityManager = manager || DatabaseService.manager;
+    const entityManager: EntityManager = manager || DatabaseService.manager;
 
     const newSettings: GridSettings = entityManager.create(
         GridSettings,
@@ -22,7 +22,7 @@ export const updateGridSettings = async (
     updateData: CreateGridSettingsDto,
     manager?: EntityManager
 ): Promise<void> => {
-    const entityManager = manager || DatabaseService.manager;
+    const entityManager: EntityManager = manager || DatabaseService.manager;
 
     await entityManager.update(GridSettings, gridSettingsId, updateData);
 };

@@ -1,6 +1,6 @@
 import Swal from 'sweetalert2';
 import { UserKeys } from "../api/Types";
-import { getUserKeys } from "./UserService"; // Предполагаем, что эта функция возвращает Promise<UserKeys | undefined>
+import { getUserKeys } from "./UserService";
 
 export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
 
@@ -31,7 +31,7 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
                 apiKeyInput.value = existingKeys.api_key || '';
 
                 if (existingKeys.api_secret) {
-                    secretKeyInput.placeholder = '******** (уже сохранен)';
+                    secretKeyInput.value = existingKeys.api_secret;
                 }
             }
         },
@@ -55,6 +55,6 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
 
         console.log('Отправляем на сервер:', formValues);
         Swal.fire('Успех', 'Ключи зашифрованы и сохранены', 'success');
-        return formValues; // Возвращаем новые значения
+        return formValues;
     }
 };

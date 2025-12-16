@@ -27,21 +27,11 @@ export const createSpotGridSettings = async (
         entityManager
     );
 
-    const newSettings: SpotGridSettings = entityManager.create(
-        SpotGridSettings,
-        {
-            history_length: spotGridSettingsData.history_length,
-            candle_length: spotGridSettingsData.candle_length,
-            crypto: spotGridSettingsData.crypto,
-            stop_loss_type: spotGridSettingsData.stop_loss_type,
-            update_grid_interval_type:
-                spotGridSettingsData.update_grid_interval_type,
-            update_grid_interval_time:
-                spotGridSettingsData.update_grid_interval_time,
-
-            grid_settings: savedGridSettings,
-            levels_settings: savedLevelsSettings,
-        }
+    const newSettings: SpotGridSettings = createSavedSpotGridSettings(
+        entityManager,
+        spotGridSettingsData,
+        savedGridSettings,
+        savedLevelsSettings
     );
 
     return await entityManager.save(newSettings);
@@ -55,16 +45,11 @@ export const updateSpotGridSettings = async (
 ): Promise<void> => {
     const entityManager = manager || DatabaseService.manager;
 
-    const settingsToUpdate = await entityManager.findOne(SpotGridSettings, {
-        where: {
-            id: spotGridSettingsId,
-            bot: { user: { id: userId } },
-        },
-        relations: {
-            grid_settings: true,
-            levels_settings: true,
-        },
-    });
+    const settingsToUpdate = await getSpotGridSettings(
+        spotGridSettingsId,
+        userId,
+        entityManager
+    );
 
     if (!settingsToUpdate) {
         throw new NotFoundException(
@@ -90,4 +75,42 @@ export const updateSpotGridSettings = async (
         spotGridSettingsId,
         spotGridFields
     );
+};
+
+const createSavedSpotGridSettings = (
+    entityManager: EntityManager,
+    spotGridSettingsData: CreateSpotGridSettingsDto,
+    savedGridSettings: GridSettings,
+    savedLevelsSettings: LevelsSettings
+) => {
+    return entityManager.create(SpotGridSettings, {
+        history_length: spotGridSettingsData.history_length,
+        candle_length: spotGridSettingsData.candle_length,
+        crypto: spotGridSettingsData.crypto,
+        stop_loss_type: spotGridSettingsData.stop_loss_type,
+        update_grid_interval_type:
+            spotGridSettingsData.update_grid_interval_type,
+        update_grid_interval_time:
+            spotGridSettingsData.update_grid_interval_time,
+
+        grid_settings: savedGridSettings,
+        levels_settings: savedLevelsSettings,
+    });
+};
+
+const getSpotGridSettings = async (
+    spotGridSettingsId: number,
+    userId: string,
+    entityManager: EntityManager
+) => {
+    return await entityManager.findOne(SpotGridSettings, {
+        where: {
+            id: spotGridSettingsId,
+            bot: { user: { id: userId } },
+        },
+        relations: {
+            grid_settings: true,
+            levels_settings: true,
+        },
+    });
 };

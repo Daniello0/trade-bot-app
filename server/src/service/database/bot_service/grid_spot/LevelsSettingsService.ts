@@ -7,7 +7,7 @@ export const createLevelsSettings = async (
     levelsSettings: CreateLevelsSettingsDto,
     manager?: EntityManager
 ): Promise<LevelsSettings> => {
-    const entityManager = manager || DatabaseService.manager;
+    const entityManager: EntityManager = manager || DatabaseService.manager;
 
     const newSettings: LevelsSettings = entityManager.create(
         LevelsSettings,
@@ -22,7 +22,7 @@ export const updateLevelsSettings = async (
     updateData: CreateLevelsSettingsDto,
     manager?: EntityManager
 ): Promise<void> => {
-    const entityManager = manager || DatabaseService.manager;
+    const entityManager: EntityManager = manager || DatabaseService.manager;
 
     await entityManager.update(LevelsSettings, levelsSettingsId, updateData);
 };
