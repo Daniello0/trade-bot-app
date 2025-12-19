@@ -4,6 +4,7 @@ import { Bots } from './Bots';
 
 @Entity('users')
 export class Users {
+    // todo: replace to uuid
     @PrimaryColumn('text', {
         nullable: false,
     })

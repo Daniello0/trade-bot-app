@@ -1,13 +1,13 @@
 import { DataSource } from 'typeorm';
 import * as process from 'node:process';
-import { Users } from './entity/Users';
+import { Users } from '../entity/Users';
 import * as console from 'node:console';
-import { Bots } from './entity/Bots';
-import { SpotGridSettings } from './entity/grid_spot/SpotGridSettings';
-import { LevelsSettings } from './entity/grid_spot/LevelsSettings';
-import { GridSettings } from './entity/grid_spot/GridSettings';
-import { FullSpotSettings } from './entity/full_spot/FullSpotSettings';
-import { StopLossSettings } from './entity/full_spot/StopLossSettings';
+import { Bots } from '../entity/Bots';
+import { SpotGridSettings } from '../entity/SpotGridSettings';
+import { LevelsSettings } from '../entity/LevelsSettings';
+import { GridSettings } from '../entity/GridSettings';
+import { FullSpotSettings } from '../entity/FullSpotSettings';
+import { StopLossSettings } from '../entity/StopLossSettings';
 
 export const DatabaseService = new DataSource({
     type: 'postgres',
@@ -29,7 +29,7 @@ export const DatabaseService = new DataSource({
     logging: false,
 });
 
-export const initTypeOrm = async () => {
+export const initTypeorm = async () => {
     try {
         await DatabaseService.initialize();
     } catch (error) {

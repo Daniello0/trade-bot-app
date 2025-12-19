@@ -6,7 +6,7 @@ import {
     PrimaryGeneratedColumn,
 } from 'typeorm';
 import { StopLossSettings } from './StopLossSettings';
-import { Bots } from '../Bots';
+import { Bots } from './Bots';
 
 @Entity('full_spot_settings')
 export class FullSpotSettings {

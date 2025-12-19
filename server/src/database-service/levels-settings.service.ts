@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
-import { DatabaseService } from '../../InitTypeOrm';
-import { LevelsSettings } from '../../entity/grid_spot/LevelsSettings';
-import { CreateLevelsSettingsDto } from '../../../../dto/create_dto/spot_grid/create-levels-settings.dto';
+import { DatabaseService } from './init-typeorm';
+import { LevelsSettings } from '../entity/LevelsSettings';
+import { CreateLevelsSettingsDto } from '../dto/create_dto/spot_grid/create-levels-settings.dto';
 
 export const createLevelsSettings = async (
     levelsSettings: CreateLevelsSettingsDto,

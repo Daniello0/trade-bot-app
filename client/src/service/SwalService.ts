@@ -13,6 +13,7 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
         return;
     }
 
+    // todo: remove editing DOM code; use react-modal (npm) and .jsx
     const { value: formValues } = await Swal.fire({
         title: 'Настройки API ключей',
         html:
@@ -54,7 +55,7 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
         }
 
         console.log('Отправляем на сервер:', formValues);
-        Swal.fire('Успех', 'Ключи зашифрованы и сохранены', 'success');
+        Swal.fire('Успех', 'Ключи сохранены', 'success');
         return formValues;
     }
 };

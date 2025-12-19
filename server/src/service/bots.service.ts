@@ -4,15 +4,15 @@ import {
     ReadBotDetailsDto,
     ReadBotSummaryDto,
 } from '../dto/read_dto/read-bot.dto';
-import { DatabaseService } from './database/InitTypeOrm';
-import { Bots } from './database/entity/Bots';
+import { DatabaseService } from '../database-service/init-typeorm';
+import { Bots } from '../entity/Bots';
 import { EntityManager } from 'typeorm';
-import { SpotGridSettings } from './database/entity/grid_spot/SpotGridSettings';
-import { FullSpotSettings } from './database/entity/full_spot/FullSpotSettings';
+import { SpotGridSettings } from '../entity/SpotGridSettings';
+import { FullSpotSettings } from '../entity/FullSpotSettings';
 import {
     createSpotGridSettings,
     updateSpotGridSettings,
-} from './database/bot_service/grid_spot/SpotGridSettingsService';
+} from '../database-service/spot-grid-settings.service';
 
 @Injectable()
 export class BotService {

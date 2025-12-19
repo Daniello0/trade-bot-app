@@ -18,7 +18,7 @@ import {
     ReadBotDetailsDto,
     ReadBotSummaryDto,
 } from '../dto/read_dto/read-bot.dto';
-import * as user_idMiddleware from '../middleware/user_id.middleware';
+import * as user_idMiddleware from '../middleware/user-id.middleware';
 
 @Controller('/bots')
 export class BotController {
@@ -51,6 +51,7 @@ export class BotController {
         }
     }
 
+    // todo delete?
     @Get(':botId/summary')
     async getBotSummary(
         @Param('userId') userId: string,

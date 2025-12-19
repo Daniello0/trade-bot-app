@@ -8,8 +8,8 @@ import {
     PrimaryGeneratedColumn,
     Unique,
 } from 'typeorm';
-import { FullSpotSettings } from './full_spot/FullSpotSettings';
-import { SpotGridSettings } from './grid_spot/SpotGridSettings';
+import { FullSpotSettings } from './FullSpotSettings';
+import { SpotGridSettings } from './SpotGridSettings';
 import { Users } from './Users';
 
 @Entity('bots')

@@ -3,7 +3,7 @@ import { AppModule } from './module/app.module';
 import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 import * as process from 'node:process';
-import { initTypeOrm } from './service/database/InitTypeOrm';
+import { initTypeorm } from './database-service/init-typeorm';
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ async function bootstrap() {
     });
     app.use(cookieParser());
 
-    await initTypeOrm();
+    await initTypeorm();
 
     await app.listen(process.env.APP_PORT || 3001);
 }

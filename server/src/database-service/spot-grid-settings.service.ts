@@ -1,14 +1,17 @@
 import { EntityManager } from 'typeorm';
-import { DatabaseService } from '../../InitTypeOrm';
-import { SpotGridSettings } from '../../entity/grid_spot/SpotGridSettings';
-import { createGridSettings, updateGridSettings } from './GridSettingsService';
+import { DatabaseService } from './init-typeorm';
+import { SpotGridSettings } from '../entity/SpotGridSettings';
+import {
+    createGridSettings,
+    updateGridSettings,
+} from './grid-settings.service';
 import {
     createLevelsSettings,
     updateLevelsSettings,
-} from './LevelsSettingsService';
-import { GridSettings } from '../../entity/grid_spot/GridSettings';
-import { LevelsSettings } from '../../entity/grid_spot/LevelsSettings';
-import { CreateSpotGridSettingsDto } from '../../../../dto/create_dto/spot_grid/create-spot-grid-settings.dto';
+} from './levels-settings.service';
+import { GridSettings } from '../entity/GridSettings';
+import { LevelsSettings } from '../entity/LevelsSettings';
+import { CreateSpotGridSettingsDto } from '../dto/create_dto/spot_grid/create-spot-grid-settings.dto';
 import { NotFoundException } from '@nestjs/common';
 
 export const createSpotGridSettings = async (
