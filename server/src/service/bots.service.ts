@@ -1,14 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateBotDto } from '../dto/create_dto/create-bot-dto';
-import {
-    ReadBotDetailsDto,
-    ReadBotSummaryDto,
-} from '../dto/read_dto/read-bot.dto';
+import { CreateBotDto } from '../dto/create-bot-dto';
+import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import { DatabaseService } from '../database-service/init-typeorm';
 import { Bots } from '../entity/Bots';
 import { EntityManager } from 'typeorm';
 import { SpotGridSettings } from '../entity/SpotGridSettings';
-import { FullSpotSettings } from '../entity/FullSpotSettings';
 import {
     createSpotGridSettings,
     updateSpotGridSettings,
@@ -51,9 +47,6 @@ export class BotService {
                 spot_grid_settings: {
                     grid_settings: true,
                     levels_settings: true,
-                },
-                full_spot_settings: {
-                    stop_loss_settings: true,
                 },
             },
         });
@@ -109,8 +102,7 @@ export class BotService {
             async (
                 transactionalEntityManager: EntityManager
             ): Promise<Bots> => {
-                let settingsEntity: SpotGridSettings | FullSpotSettings | null =
-                    null;
+                let settingsEntity: SpotGridSettings | null = null;
 
                 if (
                     botData.bot_type === 'spotGrid' &&
@@ -121,8 +113,8 @@ export class BotService {
                         transactionalEntityManager
                     );
                 } else if (
-                    botData.bot_type === 'fullSpot' &&
-                    botData.full_spot_settings_data
+                    botData.bot_type === 'fullSpot'
+                    // botData.full_spot_settings_data
                 ) {
                     throw new Error(
                         'Full Spot bot creation is not implemented yet.'
@@ -170,9 +162,6 @@ export class BotService {
                     grid_settings: true,
                     levels_settings: true,
                 },
-                full_spot_settings: {
-                    stop_loss_settings: true,
-                },
             },
         });
 
@@ -197,9 +186,6 @@ export class BotService {
                 spot_grid_settings: {
                     grid_settings: true,
                     levels_settings: true,
-                },
-                full_spot_settings: {
-                    stop_loss_settings: true,
                 },
             },
         });
@@ -229,7 +215,6 @@ export class BotService {
                     where: { id: botId, user: { id: userId } },
                     relations: {
                         spot_grid_settings: true,
-                        full_spot_settings: true,
                     },
                 });
 
@@ -241,7 +226,7 @@ export class BotService {
 
                 const {
                     spot_grid_settings_data,
-                    full_spot_settings_data,
+                    // full_spot_settings_data,
                     ...botFields
                 } = updateData;
 
@@ -256,9 +241,7 @@ export class BotService {
                         spot_grid_settings_data,
                         transactionalEntityManager
                     );
-                }
-
-                if (full_spot_settings_data && botToUpdate.full_spot_settings) {
+                } else {
                     throw new Error(
                         'Full Spot bot update is not implemented yet.'
                     );

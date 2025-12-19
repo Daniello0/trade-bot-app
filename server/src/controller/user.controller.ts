@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
-import { CreateUserKeysDto } from '../dto/create_dto/create-user-keys.dto';
+import { CreateUserKeysDto } from '../dto/create-user-keys.dto';
 
 @Controller('/user')
 export class UserController {

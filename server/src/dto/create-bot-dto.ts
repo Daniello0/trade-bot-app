@@ -6,8 +6,7 @@ import {
     IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CreateSpotGridSettingsDto } from './spot_grid/create-spot-grid-settings.dto';
-import { CreateFullSpotSettingsDto } from './full_spot/create-full-spot-settings.dto';
+import { CreateSpotGridSettingsDto } from './create-spot-grid-settings.dto';
 
 export class CreateBotDto {
     @IsString()
@@ -24,5 +23,5 @@ export class CreateBotDto {
     @Type(() => CreateSpotGridSettingsDto)
     spot_grid_settings_data?: CreateSpotGridSettingsDto;
 
-    full_spot_settings_data?: CreateFullSpotSettingsDto;
+    // full_spot_settings_data?: CreateFullSpotSettingsDto;
 }

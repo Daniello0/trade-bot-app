@@ -8,7 +8,6 @@ import {
     PrimaryGeneratedColumn,
     Unique,
 } from 'typeorm';
-import { FullSpotSettings } from './FullSpotSettings';
 import { SpotGridSettings } from './SpotGridSettings';
 import { Users } from './Users';
 
@@ -26,12 +25,6 @@ export class Bots {
 
     @Column('text', { nullable: false })
     bot_type: string;
-
-    @OneToOne(() => FullSpotSettings, (settings) => settings.bot, {
-        nullable: true,
-        cascade: true,
-    })
-    full_spot_settings: FullSpotSettings;
 
     @OneToOne(() => SpotGridSettings, (settings) => settings.bot, {
         nullable: true,

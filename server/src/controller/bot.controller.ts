@@ -13,11 +13,8 @@ import {
     Req,
 } from '@nestjs/common';
 import { BotService } from '../service/bots.service';
-import { CreateBotDto } from '../dto/create_dto/create-bot-dto';
-import {
-    ReadBotDetailsDto,
-    ReadBotSummaryDto,
-} from '../dto/read_dto/read-bot.dto';
+import { CreateBotDto } from '../dto/create-bot-dto';
+import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
 
 @Controller('/bots')

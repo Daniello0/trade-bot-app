@@ -11,7 +11,7 @@ import {
 } from './levels-settings.service';
 import { GridSettings } from '../entity/GridSettings';
 import { LevelsSettings } from '../entity/LevelsSettings';
-import { CreateSpotGridSettingsDto } from '../dto/create_dto/spot_grid/create-spot-grid-settings.dto';
+import { CreateSpotGridSettingsDto } from '../dto/create-spot-grid-settings.dto';
 import { NotFoundException } from '@nestjs/common';
 
 export const createSpotGridSettings = async (

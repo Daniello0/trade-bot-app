@@ -6,8 +6,6 @@ import { Bots } from '../entity/Bots';
 import { SpotGridSettings } from '../entity/SpotGridSettings';
 import { LevelsSettings } from '../entity/LevelsSettings';
 import { GridSettings } from '../entity/GridSettings';
-import { FullSpotSettings } from '../entity/FullSpotSettings';
-import { StopLossSettings } from '../entity/StopLossSettings';
 
 export const DatabaseService = new DataSource({
     type: 'postgres',
@@ -22,8 +20,6 @@ export const DatabaseService = new DataSource({
         SpotGridSettings,
         LevelsSettings,
         GridSettings,
-        FullSpotSettings,
-        StopLossSettings,
     ],
     synchronize: true,
     logging: false,

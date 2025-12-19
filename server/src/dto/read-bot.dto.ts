@@ -1,4 +1,4 @@
-import { ReadSpotGridSettingsDto } from './spot_grid/read-spot-grid-settings.dto';
+import { ReadSpotGridSettingsDto } from './read-spot-grid-settings.dto';
 
 export class ReadBotSummaryDto {
     id: number;

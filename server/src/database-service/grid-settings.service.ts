@@ -1,7 +1,7 @@
 import { DatabaseService } from './init-typeorm';
 import { GridSettings } from '../entity/GridSettings';
 import { EntityManager } from 'typeorm';
-import { CreateGridSettingsDto } from '../dto/create_dto/spot_grid/create-grid-settings.dto';
+import { CreateGridSettingsDto } from '../dto/create-grid-settings.dto';
 
 // todo repository
 export const createGridSettings = async (
