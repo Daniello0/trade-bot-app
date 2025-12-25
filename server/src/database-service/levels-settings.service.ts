@@ -1,28 +1,35 @@
-import { EntityManager } from 'typeorm';
-import { DatabaseService } from './init-typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { LevelsSettings } from '../entity/LevelsSettings';
 import { CreateLevelsSettingsDto } from '../dto/create-levels-settings.dto';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
-export const createLevelsSettings = async (
-    levelsSettings: CreateLevelsSettingsDto,
-    manager?: EntityManager
-): Promise<LevelsSettings> => {
-    const entityManager: EntityManager = manager || DatabaseService.manager;
+@Injectable()
+export class LevelsSettingsService {
+    constructor(
+        @InjectRepository(LevelsSettings)
+        private readonly levelsRepository: Repository<LevelsSettings>
+    ) {}
 
-    const newSettings: LevelsSettings = entityManager.create(
-        LevelsSettings,
-        levelsSettings
-    );
+    async create(
+        levelsSettings: CreateLevelsSettingsDto,
+        manager?: EntityManager
+    ): Promise<LevelsSettings> {
+        const repository: Repository<LevelsSettings> = manager
+            ? manager.getRepository(LevelsSettings)
+            : this.levelsRepository;
+        const newSettings: LevelsSettings = repository.create(levelsSettings);
+        return await repository.save(newSettings);
+    }
 
-    return await entityManager.save(newSettings);
-};
-
-export const updateLevelsSettings = async (
-    levelsSettingsId: number,
-    updateData: CreateLevelsSettingsDto,
-    manager?: EntityManager
-): Promise<void> => {
-    const entityManager: EntityManager = manager || DatabaseService.manager;
-
-    await entityManager.update(LevelsSettings, levelsSettingsId, updateData);
-};
+    async update(
+        levelsSettingsId: number,
+        updateData: CreateLevelsSettingsDto,
+        manager?: EntityManager
+    ): Promise<void> {
+        const repository: Repository<LevelsSettings> = manager
+            ? manager.getRepository(LevelsSettings)
+            : this.levelsRepository;
+        await repository.update(levelsSettingsId, updateData);
+    }
+}

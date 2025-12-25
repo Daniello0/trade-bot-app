@@ -1,29 +1,35 @@
-import { DatabaseService } from './init-typeorm';
 import { GridSettings } from '../entity/GridSettings';
-import { EntityManager } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateGridSettingsDto } from '../dto/create-grid-settings.dto';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
-// todo repository
-export const createGridSettings = async (
-    gridSettings: CreateGridSettingsDto,
-    manager?: EntityManager
-): Promise<GridSettings> => {
-    const entityManager: EntityManager = manager || DatabaseService.manager;
+@Injectable()
+export class GridSettingsService {
+    constructor(
+        @InjectRepository(GridSettings)
+        private readonly gridRepository: Repository<GridSettings>
+    ) {}
 
-    const newSettings: GridSettings = entityManager.create(
-        GridSettings,
-        gridSettings
-    );
+    async create(
+        gridSettings: CreateGridSettingsDto,
+        manager?: EntityManager
+    ): Promise<GridSettings> {
+        const repository: Repository<GridSettings> = manager
+            ? manager.getRepository(GridSettings)
+            : this.gridRepository;
+        const newSettings = repository.create(gridSettings);
+        return await repository.save(newSettings);
+    }
 
-    return await entityManager.save(newSettings);
-};
-
-export const updateGridSettings = async (
-    gridSettingsId: number,
-    updateData: CreateGridSettingsDto,
-    manager?: EntityManager
-): Promise<void> => {
-    const entityManager: EntityManager = manager || DatabaseService.manager;
-
-    await entityManager.update(GridSettings, gridSettingsId, updateData);
-};
+    async update(
+        gridSettingsId: number,
+        updateData: CreateGridSettingsDto,
+        manager?: EntityManager
+    ): Promise<void> {
+        const repository: Repository<GridSettings> = manager
+            ? manager.getRepository(GridSettings)
+            : this.gridRepository;
+        await repository.update(gridSettingsId, updateData);
+    }
+}

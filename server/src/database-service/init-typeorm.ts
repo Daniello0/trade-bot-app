@@ -14,13 +14,7 @@ export const DatabaseService = new DataSource({
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
     database: 'tradeBotApp',
-    entities: [
-        Users,
-        Bots,
-        SpotGridSettings,
-        LevelsSettings,
-        GridSettings,
-    ],
+    entities: [Users, Bots, SpotGridSettings, LevelsSettings, GridSettings],
     synchronize: true,
     logging: false,
 });

@@ -9,13 +9,13 @@ import {
     ParseIntPipe,
     Patch,
     Post,
-    Query,
     Req,
 } from '@nestjs/common';
-import { BotService } from '../service/bots.service';
+import { BotService } from '../service/bot.service';
 import { CreateBotDto } from '../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
+import { Bots } from '../entity/Bots';
 
 @Controller('/bots')
 export class BotController {
@@ -26,14 +26,9 @@ export class BotController {
     async createBot(
         @Req() req: user_idMiddleware.RequestWithUserId,
         @Body() createBotDto: CreateBotDto
-    ): Promise<void> {
+    ): Promise<Bots> {
         const userId: string | undefined = req.userId;
-
-        if (userId) {
-            return this.botService.createBot(createBotDto, userId);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        return this.botService.create(createBotDto, userId);
     }
 
     @Get('/all')
@@ -41,22 +36,7 @@ export class BotController {
         @Req() req: user_idMiddleware.RequestWithUserId
     ): Promise<ReadBotSummaryDto[] | undefined> {
         const userId: string | undefined = req.userId;
-        if (userId) {
-            return this.botService.getAllBotsSummary(userId);
-        } else {
-            throw new Error('User id is not defined.');
-        }
-    }
-
-    // todo delete?
-    @Get(':botId/summary')
-    async getBotSummary(
-        @Param('userId') userId: string,
-        @Param('botId', ParseIntPipe) botId: number,
-        @Query('botType') botType: string
-    ): Promise<ReadBotSummaryDto | null> {
-        const botData = { userId, botId, botType };
-        return this.botService.getBotSummary(botData);
+        return this.botService.findAllSummaries(userId);
     }
 
     @Get(':botId/details')
@@ -65,12 +45,8 @@ export class BotController {
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<ReadBotDetailsDto | null> {
         const userId: string | undefined = req.userId;
-        if (userId) {
-            const botData = { userId, botId };
-            return this.botService.getBotDetails(botData);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        const botData = { userId, botId };
+        return this.botService.findOneDetails(botData);
     }
 
     @Delete(':botId')
@@ -80,12 +56,7 @@ export class BotController {
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<void> {
         const userId: string | undefined = req.userId;
-
-        if (userId) {
-            return this.botService.deleteBot(botId, userId);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        return this.botService.remove(botId, userId);
     }
 
     @Patch(':botId')
@@ -95,11 +66,6 @@ export class BotController {
         @Body() updateBotData: CreateBotDto
     ): Promise<void> {
         const userId: string | undefined = req.userId;
-
-        if (userId) {
-            return this.botService.updateBot(botId, userId, updateBotData);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        return this.botService.update(botId, userId, updateBotData);
     }
 }

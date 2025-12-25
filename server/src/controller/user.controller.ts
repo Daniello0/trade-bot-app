@@ -22,11 +22,7 @@ export class UserController {
         @Body() { api_key, api_secret }: CreateUserKeysDto
     ): Promise<void> {
         const userId: string | undefined = req.userId;
-        if (userId) {
-            return this.userService.saveApiKeys(userId, api_key, api_secret);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        return this.userService.saveApiKeys(userId, api_key, api_secret);
     }
 
     @Get('/keys')
@@ -35,10 +31,6 @@ export class UserController {
         @Req() req: user_idMiddleware.RequestWithUserId
     ): Promise<{ api_key: string; api_secret: string }> {
         const userId: string | undefined = req.userId;
-        if (userId) {
-            return this.userService.getApiKeys(userId);
-        } else {
-            throw new Error('User id is not defined.');
-        }
+        return this.userService.getApiKeys(userId);
     }
 }

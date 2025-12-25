@@ -8,7 +8,13 @@ import { Repository } from 'typeorm';
 export class UserService {
     constructor(private readonly cryptoService: CryptoService) {}
 
-    async saveApiKeys(userId: string, apiKey: string, secretKey: string) {
+    async saveApiKeys(
+        userId: string | undefined,
+        apiKey: string,
+        secretKey: string
+    ) {
+        if (!userId) throw new Error('User id is not defined.');
+
         const encryptedApiKey = this.cryptoService.encrypt(apiKey);
         const encryptedSecretKey = this.cryptoService.encrypt(secretKey);
 
@@ -20,8 +26,10 @@ export class UserService {
     }
 
     async getApiKeys(
-        userId: string
+        userId: string | undefined
     ): Promise<{ api_key: string; api_secret: string }> {
+        if (!userId) throw new Error('User id is not defined.');
+
         const userRepository: Repository<Users> =
             DatabaseService.getRepository(Users);
         const user = await userRepository.findOneBy({ id: userId });
