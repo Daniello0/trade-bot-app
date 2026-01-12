@@ -30,11 +30,11 @@ export class BotService {
                 let settingsEntity: SpotGridSettings | undefined = undefined;
 
                 if (
-                    createDto.bot_type === 'spotGrid' &&
-                    createDto.spot_grid_settings_data
+                    createDto.botType === 'spotGrid' &&
+                    createDto.spotGridSettingsData
                 ) {
                     settingsEntity = await this.spotGridSettingsService.create(
-                        createDto.spot_grid_settings_data,
+                        createDto.spotGridSettingsData,
                         transactionalEntityManager
                     );
                 }
@@ -42,7 +42,7 @@ export class BotService {
                 const newBot = this.botRepository.create({
                     ...createDto,
                     user: { id: userId },
-                    spot_grid_settings: settingsEntity,
+                    spotGridSettings: settingsEntity,
                 });
 
                 return await transactionalEntityManager.save(newBot);
@@ -64,7 +64,7 @@ export class BotService {
         return bots.map((bot) => ({
             id: bot.id,
             name: bot.name,
-            bot_type: bot.bot_type,
+            botType: bot.botType,
             deposit: bot.deposit,
         }));
     }
@@ -76,9 +76,9 @@ export class BotService {
         const bot = await this.botRepository.findOne({
             where: { id: botData.botId, user: { id: botData.userId } },
             relations: {
-                spot_grid_settings: {
-                    grid_settings: true,
-                    levels_settings: true,
+                spotGridSettings: {
+                    gridSettings: true,
+                    levelsSettings: true,
                 },
             },
         });
@@ -104,7 +104,7 @@ export class BotService {
 
                 const botToUpdate = await botRepository.findOne({
                     where: { id: botId, user: { id: userId } },
-                    relations: { spot_grid_settings: true },
+                    relations: { spotGridSettings: true },
                 });
 
                 if (!botToUpdate) {
@@ -113,17 +113,17 @@ export class BotService {
                     );
                 }
 
-                const { spot_grid_settings_data, ...botFields } = updateData;
+                const { spotGridSettingsData, ...botFields } = updateData;
 
                 if (Object.keys(botFields).length > 0) {
                     await botRepository.update(botId, botFields);
                 }
 
-                if (spot_grid_settings_data && botToUpdate.spot_grid_settings) {
+                if (spotGridSettingsData && botToUpdate.spotGridSettings) {
                     await this.spotGridSettingsService.update(
-                        botToUpdate.spot_grid_settings.id,
+                        botToUpdate.spotGridSettings.id,
                         userId,
-                        spot_grid_settings_data,
+                        spotGridSettingsData,
                         transactionalEntityManager
                     );
                 }
@@ -139,9 +139,9 @@ export class BotService {
         const botToRemove = await this.botRepository.findOne({
             where: { id: botId, user: { id: userId } },
             relations: {
-                spot_grid_settings: {
-                    grid_settings: true,
-                    levels_settings: true,
+                spotGridSettings: {
+                    gridSettings: true,
+                    levelsSettings: true,
                 },
             },
         });

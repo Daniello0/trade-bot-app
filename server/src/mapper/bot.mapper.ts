@@ -12,42 +12,42 @@ export const mapBotToReadBotDetailsDto = (
     }
 
     let spotGridSettingsDto: ReadSpotGridSettingsDto | undefined = undefined;
-    if (bot.spot_grid_settings) {
-        const spotSettings = bot.spot_grid_settings;
+
+    if (bot.spotGridSettings) {
+        const spotSettings = bot.spotGridSettings;
 
         const gridSettingsDto: ReadGridSettingsDto = {
-            type: spotSettings.grid_settings.type,
-            lower_bound_static: spotSettings.grid_settings.lower_bound_static,
-            upper_bound_static: spotSettings.grid_settings.upper_bound_static,
-            lower_bound_dynamic: spotSettings.grid_settings.lower_bound_dynamic,
-            upper_bound_dynamic: spotSettings.grid_settings.upper_bound_dynamic,
+            type: spotSettings.gridSettings.type,
+            lowerBoundStatic: spotSettings.gridSettings.lowerBoundStatic,
+            upperBoundStatic: spotSettings.gridSettings.upperBoundStatic,
+            lowerBoundDynamic: spotSettings.gridSettings.lowerBoundDynamic,
+            upperBoundDynamic: spotSettings.gridSettings.upperBoundDynamic,
         };
 
         const levelsSettingsDto: ReadLevelsSettingsDto = {
-            type: spotSettings.levels_settings.type,
-            count_static: spotSettings.levels_settings.count_static,
-            price_per_bet_static:
-                spotSettings.levels_settings.price_per_bet_static,
-            profit_dynamic: spotSettings.levels_settings.profit_dynamic,
+            type: spotSettings.levelsSettings.type,
+            countStatic: spotSettings.levelsSettings.countStatic,
+            pricePerBetStatic: spotSettings.levelsSettings.pricePerBetStatic,
+            profitDynamic: spotSettings.levelsSettings.profitDynamic,
         };
 
         spotGridSettingsDto = {
-            history_length: spotSettings.history_length,
-            candle_length: spotSettings.candle_length,
+            historyLength: spotSettings.historyLength,
+            candleLength: spotSettings.candleLength,
             crypto: spotSettings.crypto,
-            stop_loss_type: spotSettings.stop_loss_type,
-            update_grid_interval_type: spotSettings.update_grid_interval_type,
-            update_grid_interval_time: spotSettings.update_grid_interval_time,
-            grid_settings: gridSettingsDto,
-            levels_settings: levelsSettingsDto,
+            stopLossType: spotSettings.stopLossType,
+            updateGridIntervalType: spotSettings.updateGridIntervalType,
+            updateGridIntervalTime: spotSettings.updateGridIntervalTime,
+            gridSettings: gridSettingsDto,
+            levelsSettings: levelsSettingsDto,
         };
     }
 
     return {
         id: bot.id,
         name: bot.name,
-        bot_type: bot.bot_type,
+        botType: bot.botType,
         deposit: bot.deposit,
-        spot_grid_settings: spotGridSettingsDto,
+        spotGridSettings: spotGridSettingsDto,
     };
 };

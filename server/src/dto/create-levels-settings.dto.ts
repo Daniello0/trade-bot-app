@@ -6,13 +6,13 @@ export class CreateLevelsSettingsDto {
 
     @IsNumber()
     @IsOptional()
-    count_static?: number;
+    countStatic?: number;
 
     @IsNumber()
     @IsOptional()
-    price_per_bet_static?: number;
+    pricePerBetStatic?: number;
 
     @IsNumber()
     @IsOptional()
-    profit_dynamic?: number;
+    profitDynamic?: number;
 }

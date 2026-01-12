@@ -25,26 +25,24 @@ export class SpotGridSettingsService {
             : this.spotGridRepository;
 
         const savedGridSettings = await this.gridSettingsService.create(
-            spotGridSettingsData.grid_settings,
+            spotGridSettingsData.gridSettings,
             manager
         );
         const savedLevelsSettings = await this.levelsSettingsService.create(
-            spotGridSettingsData.levels_settings,
+            spotGridSettingsData.levelsSettings,
             manager
         );
 
         const newSettings: SpotGridSettings = spotGridRepository.create({
-            history_length: spotGridSettingsData.history_length,
-            candle_length: spotGridSettingsData.candle_length,
+            historyLength: spotGridSettingsData.historyLength,
+            candleLength: spotGridSettingsData.candleLength,
             crypto: spotGridSettingsData.crypto,
-            stop_loss_type: spotGridSettingsData.stop_loss_type,
-            update_grid_interval_type:
-                spotGridSettingsData.update_grid_interval_type,
-            update_grid_interval_time:
-                spotGridSettingsData.update_grid_interval_time,
+            stopLossType: spotGridSettingsData.stopLossType,
+            updateGridIntervalType: spotGridSettingsData.updateGridIntervalType,
+            updateGridIntervalTime: spotGridSettingsData.updateGridIntervalTime,
 
-            grid_settings: savedGridSettings,
-            levels_settings: savedLevelsSettings,
+            gridSettings: savedGridSettings,
+            levelsSettings: savedLevelsSettings,
         });
 
         return await spotGridRepository.save(newSettings);
@@ -62,7 +60,7 @@ export class SpotGridSettingsService {
 
         const settingsToUpdate = await repository.findOne({
             where: { id: spotGridSettingsId, bot: { user: { id: userId } } },
-            relations: { grid_settings: true, levels_settings: true },
+            relations: { gridSettings: true, levelsSettings: true },
         });
 
         if (!settingsToUpdate) {
@@ -71,17 +69,16 @@ export class SpotGridSettingsService {
             );
         }
 
-        const { grid_settings, levels_settings, ...spotGridFields } =
-            updateData;
+        const { gridSettings, levelsSettings, ...spotGridFields } = updateData;
 
         await this.gridSettingsService.update(
-            settingsToUpdate.grid_settings.id,
-            grid_settings,
+            settingsToUpdate.gridSettings.id,
+            gridSettings,
             manager
         );
         await this.levelsSettingsService.update(
-            settingsToUpdate.levels_settings.id,
-            levels_settings,
+            settingsToUpdate.levelsSettings.id,
+            levelsSettings,
             manager
         );
 

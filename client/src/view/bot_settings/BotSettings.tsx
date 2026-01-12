@@ -15,33 +15,33 @@ import {mapReadBotToCreateBot} from "../../service/BotTypeMapper";
 
 const gridSettings: CreateGridSettings = {
     type: 'static',
-    lower_bound_static: 0,
-    upper_bound_static: 0,
+    lowerBoundStatic: 0,
+    upperBoundStatic: 0,
 };
 
 const levelsSettings: CreateLevelsSettings = {
     type: 'static',
-    count_static: 10,
-    price_per_bet_static: 100,
+    countStatic: 10,
+    pricePerBetStatic: 100,
 };
 
 const spotGridSettingsData: CreateSpotGridSettings = {
-    history_length: 100,
-    candle_length: '5m',
+    historyLength: 100,
+    candleLength: '5m',
     crypto: 'MNT',
-    stop_loss_type: 'hard',
-    update_grid_interval_type: 'byCandle',
-    update_grid_interval_time: undefined,
-    grid_settings: gridSettings,
-    levels_settings: levelsSettings,
+    stopLossType: 'hard',
+    updateGridIntervalType: 'byCandle',
+    updateGridIntervalTime: undefined,
+    gridSettings: gridSettings,
+    levelsSettings: levelsSettings,
 };
 
 const values: CreateBot = {
-    bot_type: 'spotGrid',
+    botType: 'spotGrid',
     name: 'My Bot',
     deposit: 1000,
-    spot_grid_settings_data: spotGridSettingsData,
-    full_spot_settings_data: undefined,
+    spotGridSettingsData: spotGridSettingsData,
+    fullSpotSettingsData: undefined,
 };
 
 function BotSettings() {
@@ -51,7 +51,7 @@ function BotSettings() {
         defaultValues: values,
     });
 
-    const botType = watch('bot_type');
+    const botType = watch('botType');
     const deposit = watch('deposit');
 
     const [isEditing, setIsEditing] = useState(false);
@@ -71,10 +71,10 @@ function BotSettings() {
 
     useEffect(() => {
         if (botType === 'spotGrid') {
-            setValue('spot_grid_settings_data', spotGridSettingsData);
-            setValue('full_spot_settings_data', undefined);
+            setValue('spotGridSettingsData', spotGridSettingsData);
+            setValue('fullSpotSettingsData', undefined);
         } else if (botType === 'fullSpot') {
-            setValue('spot_grid_settings_data', undefined);
+            setValue('spotGridSettingsData', undefined);
         }
     }, [botType, setValue]);
 
@@ -123,8 +123,8 @@ function BotSettings() {
                     <fieldset className="form-section">
                         <legend>Тип бота</legend>
                         <div className="radio-group horizontal">
-                            <label><input type="radio" {...register('bot_type')} value="spotGrid" /> Spot Grid Bot</label>
-                            <label><input type="radio" {...register('bot_type')} value="fullSpot" /> Full Spot Bot</label>
+                            <label><input type="radio" {...register('botType')} value="spotGrid" /> Spot Grid Bot</label>
+                            <label><input type="radio" {...register('botType')} value="fullSpot" /> Full Spot Bot</label>
                         </div>
                     </fieldset>
                 )}

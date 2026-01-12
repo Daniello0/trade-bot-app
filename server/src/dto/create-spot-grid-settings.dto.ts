@@ -10,29 +10,29 @@ import { Type } from 'class-transformer';
 
 export class CreateSpotGridSettingsDto {
     @IsNumber()
-    history_length: number;
+    historyLength: number;
 
     @IsString()
-    candle_length: string;
+    candleLength: string;
 
     @IsString()
     crypto: string;
 
     @IsString()
-    stop_loss_type: string;
+    stopLossType: string;
 
     @IsString()
-    update_grid_interval_type: string;
+    updateGridIntervalType: string;
 
     @IsNumber()
     @IsOptional()
-    update_grid_interval_time?: number;
+    updateGridIntervalTime?: number;
 
     @ValidateNested()
     @Type(() => CreateGridSettingsDto)
-    grid_settings: CreateGridSettingsDto;
+    gridSettings: CreateGridSettingsDto;
 
     @ValidateNested()
     @Type(() => CreateLevelsSettingsDto)
-    levels_settings: CreateLevelsSettingsDto;
+    levelsSettings: CreateLevelsSettingsDto;
 }

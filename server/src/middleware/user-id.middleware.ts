@@ -5,7 +5,7 @@ import { UserService } from '../service/user.service';
 export interface RequestWithUserId extends Request {
     userId?: string;
     cookies: {
-        user_id?: string;
+        userId?: string;
     };
 }
 
@@ -15,9 +15,9 @@ export class AssignUserIdMiddleware implements NestMiddleware {
 
     async use(req: RequestWithUserId, res: Response, next: NextFunction) {
         const { v4: uuidv4 } = await import('uuid');
-        if (!req.cookies?.user_id) {
+        if (!req.cookies?.userId) {
             const newUserId: string = uuidv4();
-            res.cookie('user_id', newUserId, {
+            res.cookie('userId', newUserId, {
                 maxAge: 365 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
                 sameSite: 'lax',
@@ -27,7 +27,7 @@ export class AssignUserIdMiddleware implements NestMiddleware {
             req.userId = newUserId;
             await this.userService.createUser(newUserId);
         } else {
-            req.userId = req.cookies.user_id;
+            req.userId = req.cookies.userId;
         }
         next();
     }

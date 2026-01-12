@@ -6,17 +6,17 @@ export class CreateGridSettingsDto {
 
     @IsNumber()
     @IsOptional()
-    lower_bound_static?: number;
+    lowerBoundStatic?: number;
 
     @IsNumber()
     @IsOptional()
-    upper_bound_static?: number;
+    upperBoundStatic?: number;
 
     @IsString()
     @IsOptional()
-    lower_bound_dynamic?: string;
+    lowerBoundDynamic?: string;
 
     @IsString()
     @IsOptional()
-    upper_bound_dynamic?: string;
+    upperBoundDynamic?: string;
 }

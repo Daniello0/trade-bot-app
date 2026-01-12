@@ -20,14 +20,14 @@ export class UserService {
 
         const userRepository = DatabaseService.getRepository(Users);
         await userRepository.update(userId, {
-            api_key: encryptedApiKey,
-            api_secret: encryptedSecretKey,
+            apiKey: encryptedApiKey,
+            apiSecret: encryptedSecretKey,
         });
     }
 
     async getApiKeys(
         userId: string | undefined
-    ): Promise<{ api_key: string; api_secret: string }> {
+    ): Promise<{ apiKey: string; apiSecret: string }> {
         if (!userId) throw new Error('User id is not defined.');
 
         const userRepository: Repository<Users> =
@@ -36,10 +36,10 @@ export class UserService {
 
         if (!user) throw new Error('User not found');
 
-        const api_key = this.cryptoService.decrypt(user.api_key);
-        const api_secret = this.cryptoService.decrypt(user.api_secret);
+        const apiKey: string = this.cryptoService.decrypt(user.apiKey);
+        const apiSecret: string = this.cryptoService.decrypt(user.apiSecret);
 
-        return { api_key, api_secret };
+        return { apiKey, apiSecret };
     }
 
     async createUser(userId: string) {

@@ -87,7 +87,7 @@ function App() {
                         {data.map((bot: ReadBotSummary) => (
                             <div className="table-row" key={bot.id}>
                                 <div className="column-name">{bot.name}</div>
-                                <div className="column-type">{bot.bot_type}</div>
+                                <div className="column-type">{bot.botType}</div>
                                 <div className="column-status">
                                     <span className="status-badge status-stopped">disabled</span>
                                 </div>

@@ -1,80 +1,80 @@
 export interface CreateGridSettings {
     type: string;
-    lower_bound_static?: number;
-    upper_bound_static?: number;
-    lower_bound_dynamic?: string;
-    upper_bound_dynamic?: string;
+    lowerBoundStatic?: number;
+    upperBoundStatic?: number;
+    lowerBoundDynamic?: string;
+    upperBoundDynamic?: string;
 }
 
 export interface CreateLevelsSettings {
     type: string;
-    count_static?: number;
-    price_per_bet_static?: number;
-    profit_dynamic?: number;
+    countStatic?: number;
+    pricePerBetStatic?: number;
+    profitDynamic?: number;
 }
 
 export interface CreateSpotGridSettings {
-    history_length: number;
-    candle_length: string;
+    historyLength: number;
+    candleLength: string;
     crypto: string;
-    stop_loss_type: string;
-    update_grid_interval_type: string;
-    update_grid_interval_time?: number;
-    grid_settings: CreateGridSettings;
-    levels_settings: CreateLevelsSettings;
+    stopLossType: string;
+    updateGridIntervalType: string;
+    updateGridIntervalTime?: number;
+    gridSettings: CreateGridSettings;
+    levelsSettings: CreateLevelsSettings;
 }
 
 interface ReadLevelsSettings {
     type: string;
-    count_static?: number;
-    price_per_bet_static?: number;
-    profit_dynamic?: number;
+    countStatic?: number;
+    pricePerBetStatic?: number;
+    profitDynamic?: number;
 }
 
 interface ReadGridSettings {
     type: string;
-    lower_bound_static?: number;
-    upper_bound_static?: number;
-    lower_bound_dynamic?: string;
-    upper_bound_dynamic?: string;
+    lowerBoundStatic?: number;
+    upperBoundStatic?: number;
+    lowerBoundDynamic?: string;
+    upperBoundDynamic?: string;
 }
 
 interface ReadSpotGridSettings {
-    history_length: number;
-    candle_length: number;
+    historyLength: number;
+    candleLength: number;
     crypto: string;
-    stop_loss_type: string;
-    update_grid_interval_type: string;
-    update_grid_interval_time?: number;
-    grid_settings: ReadGridSettings;
-    levels_settings: ReadLevelsSettings;
+    stopLossType: string;
+    updateGridIntervalType: string;
+    updateGridIntervalTime?: number;
+    gridSettings: ReadGridSettings;
+    levelsSettings: ReadLevelsSettings;
 }
 
 export interface CreateBot {
     name: string;
     deposit: number;
-    bot_type: string;
-    spot_grid_settings_data?: CreateSpotGridSettings;
-    full_spot_settings_data?: any;
+    botType: string;
+    spotGridSettingsData?: CreateSpotGridSettings;
+    fullSpotSettingsData?: any;
 }
 
 export interface ReadBotSummary {
     id: number;
     name: string;
-    bot_type: string;
+    botType: string;
 }
 
 export interface ReadBotDetails {
     id: number;
-    user_id: string;
+    userId: string;
     name: string;
     deposit: number;
-    bot_type: string;
-    full_spot_settings?: any;
-    spot_grid_settings?: ReadSpotGridSettings;
+    botType: string;
+    fullSpotSettings?: any;
+    spotGridSettings?: ReadSpotGridSettings;
 }
 
 export interface UserKeys {
-    api_key: string;
-    api_secret: string;
+    apiKey: string;
+    apiSecret: string;
 }

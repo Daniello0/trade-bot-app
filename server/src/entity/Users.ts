@@ -5,26 +5,27 @@ import { Bots } from './Bots';
 @Entity('users')
 export class Users {
     // todo: replace to uuid
-    @PrimaryColumn('text', {
-        nullable: false,
-    })
+    @PrimaryColumn('text', { nullable: false })
     id: string;
 
     @Column('timestamp without time zone', {
         nullable: false,
         default: () => 'CURRENT_TIMESTAMP',
+        name: 'created_at',
     })
-    created_at: Date;
+    createdAt: Date;
 
     @Column('text', {
         nullable: true,
+        name: 'api_key',
     })
-    api_key: string;
+    apiKey: string;
 
     @Column('text', {
         nullable: true,
+        name: 'api_secret',
     })
-    api_secret: string;
+    apiSecret: string;
 
     @OneToMany(() => Bots, (bot: Bots) => bot.user)
     bots: Bots[];

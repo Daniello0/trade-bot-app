@@ -16,12 +16,12 @@ export class CreateBotDto {
     deposit: number;
 
     @IsEnum(['spotGrid', 'fullSpot'])
-    bot_type: 'spotGrid' | 'fullSpot';
+    botType: 'spotGrid' | 'fullSpot';
 
     @IsOptional()
     @ValidateNested()
     @Type(() => CreateSpotGridSettingsDto)
-    spot_grid_settings_data?: CreateSpotGridSettingsDto;
+    spotGridSettingsData?: CreateSpotGridSettingsDto;
 
-    // full_spot_settings_data?: CreateFullSpotSettingsDto;
+    // fullSpotSettingsData?: CreateFullSpotSettingsDto;
 }

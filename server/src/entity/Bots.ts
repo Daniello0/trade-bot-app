@@ -24,17 +24,17 @@ export class Bots {
     deposit: number;
 
     @Column('text', { nullable: false })
-    bot_type: string;
+    botType: string;
 
     @OneToOne(() => SpotGridSettings, (settings) => settings.bot, {
         nullable: true,
         cascade: true,
     })
-    spot_grid_settings: SpotGridSettings;
+    spotGridSettings: SpotGridSettings;
 
     @ManyToOne(() => Users, (user: Users) => user.bots, {
         onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'user_id' })
+    @JoinColumn({ name: 'userId' })
     user: Users;
 }

@@ -29,10 +29,10 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
             const secretKeyInput = document.getElementById('swal-input-secret') as HTMLInputElement;
 
             if (existingKeys) {
-                apiKeyInput.value = existingKeys.api_key || '';
+                apiKeyInput.value = existingKeys.apiKey || '';
 
-                if (existingKeys.api_secret) {
-                    secretKeyInput.value = existingKeys.api_secret;
+                if (existingKeys.apiSecret) {
+                    secretKeyInput.value = existingKeys.apiSecret;
                 }
             }
         },
@@ -42,14 +42,14 @@ export const openApiKeysModal = async (): Promise<UserKeys | undefined> => {
             const secretKey = (document.getElementById('swal-input-secret') as HTMLInputElement).value;
 
             return {
-                api_key: apiKey,
-                api_secret: secretKey
+                apiKey: apiKey,
+                apiSecret: secretKey
             }
         }
     });
 
     if (formValues) {
-        if (!formValues.api_key && !formValues.api_secret) {
+        if (!formValues.apiKey && !formValues.apiSecret) {
             Swal.fire('Отменено', 'Вы не ввели новые ключи.', 'info');
             return;
         }

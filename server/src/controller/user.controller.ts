@@ -19,17 +19,17 @@ export class UserController {
     @HttpCode(HttpStatus.OK)
     async addKeys(
         @Req() req: user_idMiddleware.RequestWithUserId,
-        @Body() { api_key, api_secret }: CreateUserKeysDto
+        @Body() { apiKey, apiSecret }: CreateUserKeysDto
     ): Promise<void> {
         const userId: string | undefined = req.userId;
-        return this.userService.saveApiKeys(userId, api_key, api_secret);
+        return this.userService.saveApiKeys(userId, apiKey, apiSecret);
     }
 
     @Get('/keys')
     @HttpCode(HttpStatus.OK)
     async getKeys(
         @Req() req: user_idMiddleware.RequestWithUserId
-    ): Promise<{ api_key: string; api_secret: string }> {
+    ): Promise<{ apiKey: string; apiSecret: string }> {
         const userId: string | undefined = req.userId;
         return this.userService.getApiKeys(userId);
     }
