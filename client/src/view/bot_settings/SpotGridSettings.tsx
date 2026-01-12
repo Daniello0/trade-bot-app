@@ -14,6 +14,7 @@ interface SpotGridSettingsProps {
     deposit: number;
 }
 
+//todo: make easier
 export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGridSettingsProps) {
     const { field: historyLengthField } = useController({ name: 'spotGridSettingsData.historyLength', control });
     const { field: candleLengthField } = useController({ name: 'spotGridSettingsData.candleLength', control });

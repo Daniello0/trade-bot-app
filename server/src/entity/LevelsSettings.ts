@@ -27,7 +27,9 @@ export class LevelsSettings {
     @OneToOne(
         () => SpotGridSettings,
         (settings: SpotGridSettings) => settings.levelsSettings,
-        { onDelete: 'CASCADE' }
+        {
+            onDelete: 'CASCADE',
+        }
     )
     @JoinColumn({ name: 'spotGridSettingsId' })
     spotGridSettings: SpotGridSettings;

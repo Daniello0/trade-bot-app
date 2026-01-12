@@ -4,13 +4,16 @@ import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary} from "../../api/Types";
-import {openApiKeysModal} from "../../service/SwalService";
-import {createUserKeys} from "../../service/UserService";
+import {createUserKeys, getUserKeys} from "../../service/UserService";
+import {ApiKeysModal} from "../bot_settings/ApiKeysModal";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
     const [data, setData] = useState<any>(null);
     const navigate: NavigateFunction = useNavigate();
+
+    const [isKeysModalOpen, setKeysModalOpen] = useState(false);
+    const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
     useEffect(() => {
         (async () => {
@@ -51,18 +54,23 @@ function App() {
     }
 
     const handleSettingsButtonClick = async () => {
-        const keys: UserKeys | undefined = await openApiKeysModal();
-
-        if (!keys) {
-            return;
+        try {
+            const keys = await getUserKeys();
+            setExistingKeys(keys);
+            setKeysModalOpen(true);
+        } catch (error) {
+            alert('Ошибка! Не удалось загрузить текущие ключи');
         }
+    };
 
-        const error: Error | undefined = await createUserKeys(keys);
-        if (error) {
-            alert(error.message);
-            return;
+    const handleSaveKeys = async (keys: UserKeys) => {
+        try {
+            await createUserKeys(keys);
+            setKeysModalOpen(false);
+        } catch (error) {
+            alert('Ошибка! Не удалось сохранить ключи');
         }
-    }
+    };
 
     if (status === 'connected' && data) {
         return (
@@ -104,6 +112,12 @@ function App() {
                     </div>
                 </div>
                 <div className="add-bot-button" onClick={() => {navigate('/add-bot')}}>Добавить бота</div>
+                <ApiKeysModal
+                    isOpen={isKeysModalOpen}
+                    onClose={() => setKeysModalOpen(false)}
+                    onSave={handleSaveKeys}
+                    initialData={existingKeys}
+                />
             </div>
         )
     }

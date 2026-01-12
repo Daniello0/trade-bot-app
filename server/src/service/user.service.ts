@@ -45,6 +45,8 @@ export class UserService {
     async createUser(userId: string) {
         await DatabaseService.manager.save(Users, {
             id: userId,
+            apiKey: this.cryptoService.encrypt(''),
+            apiSecret: this.cryptoService.encrypt(''),
         });
     }
 }

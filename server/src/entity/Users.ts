@@ -11,19 +11,21 @@ export class Users {
     @Column('timestamp without time zone', {
         nullable: false,
         default: () => 'CURRENT_TIMESTAMP',
-        name: 'created_at',
+        name: 'createdAt',
     })
     createdAt: Date;
 
     @Column('text', {
-        nullable: true,
-        name: 'api_key',
+        nullable: false,
+        name: 'apiKey',
+        default: '',
     })
     apiKey: string;
 
     @Column('text', {
-        nullable: true,
-        name: 'api_secret',
+        nullable: false,
+        name: 'apiSecret',
+        default: '',
     })
     apiSecret: string;
 

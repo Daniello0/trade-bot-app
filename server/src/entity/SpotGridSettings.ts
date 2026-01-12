@@ -14,22 +14,22 @@ export class SpotGridSettings {
     @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
-    @Column('integer', { nullable: false, name: 'history_length' })
+    @Column('integer', { nullable: false, name: 'historyLength' })
     historyLength: number;
 
-    @Column('text', { nullable: false, name: 'candle_length' })
+    @Column('text', { nullable: false, name: 'candleLength' })
     candleLength: string;
 
     @Column('text', { nullable: false })
     crypto: string;
 
-    @Column('text', { nullable: false, name: 'stop_loss_type' })
+    @Column('text', { nullable: false, name: 'stopLossType' })
     stopLossType: string;
 
-    @Column('text', { nullable: false, name: 'update_grid_interval_type' })
+    @Column('text', { nullable: false, name: 'updateGridIntervalType' })
     updateGridIntervalType: string;
 
-    @Column('integer', { nullable: true, name: 'update_grid_interval_time' })
+    @Column('integer', { nullable: true, name: 'updateGridIntervalTime' })
     updateGridIntervalTime: number;
 
     @OneToOne(
@@ -37,7 +37,6 @@ export class SpotGridSettings {
         (settings: GridSettings) => settings.spotGridSettings,
         { cascade: true }
     )
-    @JoinColumn({ name: 'grid_settings_id' })
     gridSettings: GridSettings;
 
     @OneToOne(
@@ -45,12 +44,11 @@ export class SpotGridSettings {
         (settings: LevelsSettings) => settings.spotGridSettings,
         { cascade: true }
     )
-    @JoinColumn({ name: 'levels_settings_id' })
     levelsSettings: LevelsSettings;
 
     @OneToOne(() => Bots, (bot: Bots) => bot.spotGridSettings, {
         onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'bot_id' })
+    @JoinColumn({ name: 'botId' })
     bot: Bots;
 }
