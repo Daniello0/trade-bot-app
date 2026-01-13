@@ -11,6 +11,6 @@ export class ReadBotDetailsDto {
     name: string;
     deposit: number;
     botType: string;
-    fullSpotSettings?: any;
+    // fullSpotSettings?: any;
     spotGridSettings?: ReadSpotGridSettingsDto;
 }

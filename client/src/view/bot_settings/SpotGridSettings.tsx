@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Control, UseFormSetValue, UseFormWatch, useController } from 'react-hook-form';
 import './SpotGridSettings.css';
 import { CreateBot } from "../../api/Types";
@@ -14,33 +14,32 @@ interface SpotGridSettingsProps {
     deposit: number;
 }
 
-//todo: make easier
-export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGridSettingsProps) {
-    const { field: historyLengthField } = useController({ name: 'spotGridSettingsData.historyLength', control });
+export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsProps) {
+    // const { field: historyLengthField } = useController({ name: 'spotGridSettingsData.historyLength', control });
     const { field: candleLengthField } = useController({ name: 'spotGridSettingsData.candleLength', control });
     const { field: cryptoField } = useController({ name: 'spotGridSettingsData.crypto', control });
 
-    const { field: gridSizeTypeField } = useController({ name: 'spotGridSettingsData.gridSettings.type', control });
-    const { field: staticGridLowerField } = useController({ name: 'spotGridSettingsData.gridSettings.lowerBoundStatic', control });
-    const { field: staticGridUpperField } = useController({ name: 'spotGridSettingsData.gridSettings.upperBoundStatic', control });
+    // const { field: gridSizeTypeField } = useController({ name: 'spotGridSettingsData.gridSettings.type', control });
+    // const { field: staticGridLowerField } = useController({ name: 'spotGridSettingsData.gridSettings.lowerBoundStatic', control });
+    // const { field: staticGridUpperField } = useController({ name: 'spotGridSettingsData.gridSettings.upperBoundStatic', control });
     const { field: autoGridLowerField } = useController({ name: 'spotGridSettingsData.gridSettings.lowerBoundDynamic', control });
     const { field: autoGridUpperField } = useController({ name: 'spotGridSettingsData.gridSettings.upperBoundDynamic', control });
 
-    const { field: levelCountTypeField } = useController({ name: 'spotGridSettingsData.levelsSettings.type', control });
+    // const { field: levelCountTypeField } = useController({ name: 'spotGridSettingsData.levelsSettings.type', control });
     const { field: staticLevelsCountField } = useController({ name: 'spotGridSettingsData.levelsSettings.countStatic', control });
     const { field: staticLevelsPriceField } = useController({ name: 'spotGridSettingsData.levelsSettings.pricePerBetStatic', control });
-    const { field: dynamicLevelsProfitField } = useController({ name: 'spotGridSettingsData.levelsSettings.profitDynamic', control });
+    // const { field: dynamicLevelsProfitField } = useController({ name: 'spotGridSettingsData.levelsSettings.profitDynamic', control });
 
-    const { field: stopLossTypeField } = useController({ name: 'spotGridSettingsData.stopLossType', control });
-    const { field: updateGridIntervalTypeField } = useController({ name: 'spotGridSettingsData.updateGridIntervalType', control });
-    const { field: updateGridIntervalTimeField } = useController({ name: 'spotGridSettingsData.updateGridIntervalTime', control });
+    // const { field: stopLossTypeField } = useController({ name: 'spotGridSettingsData.stopLossType', control });
+    // const { field: updateGridIntervalTypeField } = useController({ name: 'spotGridSettingsData.updateGridIntervalType', control });
+    // const { field: updateGridIntervalTimeField } = useController({ name: 'spotGridSettingsData.updateGridIntervalTime', control });
 
-    const gridSizeType = watch('spotGridSettingsData.gridSettings.type');
-    const levelCountType = watch('spotGridSettingsData.levelsSettings.type');
-    const updateGridIntervalType = watch('spotGridSettingsData.updateGridIntervalType');
+    // const gridSizeType = watch('spotGridSettingsData.gridSettings.type');
+    // const levelCountType = watch('spotGridSettingsData.levelsSettings.type');
+    // const updateGridIntervalType = watch('spotGridSettingsData.updateGridIntervalType');
     const staticLevelsCount = watch('spotGridSettingsData.levelsSettings.countStatic') || 1;
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (gridSizeType === 'static') {
             setValue('spotGridSettingsData.gridSettings.lowerBoundDynamic', undefined);
             setValue('spotGridSettingsData.gridSettings.upperBoundDynamic', undefined);
@@ -48,24 +47,24 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
             setValue('spotGridSettingsData.gridSettings.lowerBoundStatic', undefined);
             setValue('spotGridSettingsData.gridSettings.upperBoundStatic', undefined);
         }
-    }, [gridSizeType, setValue]);
+    }, [gridSizeType, setValue]);*/
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (levelCountType === 'static') {
             setValue('spotGridSettingsData.levelsSettings.profitDynamic', undefined);
         } else if (levelCountType === 'dynamic') {
             setValue('spotGridSettingsData.levelsSettings.countStatic', undefined);
             setValue('spotGridSettingsData.levelsSettings.pricePerBetStatic', undefined);
         }
-    }, [levelCountType, setValue]);
+    }, [levelCountType, setValue]);*/
 
     return (
         <fieldset className="form-section bot-specific-settings">
             <legend>Настройки Spot Grid Bot</legend>
 
             <div className="form-group">
-                <label>Длина истории (кол-во свечей, максимум - 1000)</label>
-                <input type="number" {...historyLengthField} />
+                <label>Длина истории - 1000 свечей</label>
+                {/*<input type="number" {...historyLengthField} />*/}
             </div>
 
             <div className="form-group">
@@ -73,14 +72,14 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
                 <select {...candleLengthField}>
                     <option value="1m">1м</option>
                     <option value="5m">5м</option>
-                    <option value="15m">15м</option>
+                    {/*<option value="15m">15м</option>*/}
                 </select>
             </div>
 
             <div className="form-group">
                 <label>Криптовалюта</label>
                 <select {...cryptoField}>
-                    <option value="MNT">MNT</option>
+                    {/*<option value="MNT">MNT</option>*/}
                     <option value="BTC">BTC</option>
                     <option value="ETH">ETH</option>
                 </select>
@@ -89,37 +88,37 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
             <div className="form-group full-width">
                 <label>Размер сетки</label>
                 <div className="radio-group vertical nested">
-                    <label>
+                    {/*<label>
                         <input type="radio" {...gridSizeTypeField} value="static" checked={gridSizeType === 'static'} />
                         Статическая
-                    </label>
+                    </label>*/}
 
-                    {gridSizeType === 'static' && (
+                    {/*{gridSizeType === 'static' && (
                         <div className="sub-group">
                             <input type="number" placeholder="Нижняя граница" {...staticGridLowerField} />
                             <input type="number" placeholder="Верхняя граница" {...staticGridUpperField} />
                         </div>
-                    )}
+                    )}*/}
 
-                    <label>
+                    {/*<label>
                         <input type="radio" {...gridSizeTypeField} value="auto" checked={gridSizeType === 'auto'} />
-                        Динамическая (автоподбор по истории: {historyLengthField.value} свечей по {candleLengthField.value})
-                    </label>
+                        Динамическая (автоподбор по истории: 1000 свечей по {candleLengthField.value})
+                    </label>*/}
 
-                    {gridSizeType === 'auto' && (
+                    {(
                         <div className="sub-group grid-bounds">
                             <div>
-                                <p>Нижняя:</p>
-                                <label><input type="radio" {...autoGridLowerField} value="min" checked={autoGridLowerField.value === 'min'} /> min</label>
+                                <p>Нижняя граница:</p>
+                                {/*<label><input type="radio" {...autoGridLowerField} value="min" checked={autoGridLowerField.value === 'min'} /> min</label>*/}
                                 <label><input type="radio" {...autoGridLowerField} value="10%" checked={autoGridLowerField.value === '10%'} /> 10%</label>
                                 <label><input type="radio" {...autoGridLowerField} value="q1" checked={autoGridLowerField.value === 'q1'} /> Q1</label>
                             </div>
 
                             <div>
-                                <p>Верхняя:</p>
+                                <p>Верхняя граница:</p>
                                 <label><input type="radio" {...autoGridUpperField} value="q3" checked={autoGridUpperField.value === 'q3'} /> Q3</label>
                                 <label><input type="radio" {...autoGridUpperField} value="90%" checked={autoGridUpperField.value === '90%'} /> 90%</label>
-                                <label><input type="radio" {...autoGridUpperField} value="max" checked={autoGridUpperField.value === 'max'} /> max</label>
+                                {/*<label><input type="radio" {...autoGridUpperField} value="max" checked={autoGridUpperField.value === 'max'} /> max</label>*/}
                             </div>
                         </div>
                     )}
@@ -129,12 +128,12 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
             <div className="form-group full-width">
                 <label>Кол-во уровней и цена за ставку</label>
                 <div className="radio-group vertical nested">
-                    <label>
+                    {/*<label>
                         <input type="radio" {...levelCountTypeField} value="static" checked={levelCountType === 'static'} />
                         Статическое
-                    </label>
+                    </label>*/}
 
-                    {levelCountType === 'static' && (
+                    {(
                         <div className="sub-group">
                             <input type="number" placeholder="Кол-во уровней (5, 10...)" {...staticLevelsCountField} />
                             <input type="number" placeholder="Цена за ставку ($)" {...staticLevelsPriceField} />
@@ -142,22 +141,22 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
                         </div>
                     )}
 
-                    <label>
+                    {/*<label>
                         <input type="radio" {...levelCountTypeField} value="dynamic" checked={levelCountType === 'dynamic'} />
                         Динамическое (подбор по профиту)
-                    </label>
+                    </label>*/}
 
-                    {levelCountType === 'dynamic' && (
+                    {/*{levelCountType === 'dynamic' && (
                         <div className="sub-group">
                             <input type="number" placeholder="Профит на уровень ($)" step="0.1" {...dynamicLevelsProfitField} />
                         </div>
-                    )}
+                    )}*/}
                 </div>
             </div>
 
             <div className="form-group full-width">
-                <label>Стоп-лосс</label>
-                <div className="radio-group vertical nested">
+                <label>Стоп-лосс - при выходе ставки за пределы сетки — мгновенная продажа</label>
+                {/*<div className="radio-group vertical nested">
                     <label>
                         <input type="radio" {...stopLossTypeField} value="hard" checked={stopLossTypeField.value === 'hard'} />
                         Жесткий <span className="radio-description">(при выходе ставки за пределы сетки — мгновенная продажа)</span>
@@ -167,13 +166,13 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
                         <input type="radio" {...stopLossTypeField} value="soft" checked={stopLossTypeField.value === 'soft'} />
                         Мягкий <span className="radio-description">(Если ставка вышла за пределы сетки — смещает ее к границам сетки)</span>
                     </label>
-                </div>
+                </div>*/}
             </div>
 
-            {gridSizeType === 'auto' && (
+            {(
                 <div className="form-group full-width">
-                    <label>Обновлять сетку раз в...</label>
-                    <div className="radio-group vertical nested">
+                    <label>Обновление сетки исходя из длины свечи ({candleLengthField.value})</label>
+                    {/*<div className="radio-group vertical nested">
                         <label>
                             <input type="radio" {...updateGridIntervalTypeField} value="byTime" checked={updateGridIntervalType === 'byTime'} />
                             N минут
@@ -189,7 +188,7 @@ export function SpotGridSettings({ control, watch, setValue, deposit }: SpotGrid
                             <input type="radio" {...updateGridIntervalTypeField} value="byCandle" checked={updateGridIntervalType === 'byCandle'} />
                             Исходя из длины свечи ({candleLengthField.value})
                         </label>
-                    </div>
+                    </div>*/}
                 </div>
             )}
         </fieldset>

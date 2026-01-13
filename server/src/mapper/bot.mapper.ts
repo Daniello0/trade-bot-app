@@ -17,27 +17,18 @@ export const mapBotToReadBotDetailsDto = (
         const spotSettings = bot.spotGridSettings;
 
         const gridSettingsDto: ReadGridSettingsDto = {
-            type: spotSettings.gridSettings.type,
-            lowerBoundStatic: spotSettings.gridSettings.lowerBoundStatic,
-            upperBoundStatic: spotSettings.gridSettings.upperBoundStatic,
             lowerBoundDynamic: spotSettings.gridSettings.lowerBoundDynamic,
             upperBoundDynamic: spotSettings.gridSettings.upperBoundDynamic,
         };
 
         const levelsSettingsDto: ReadLevelsSettingsDto = {
-            type: spotSettings.levelsSettings.type,
             countStatic: spotSettings.levelsSettings.countStatic,
             pricePerBetStatic: spotSettings.levelsSettings.pricePerBetStatic,
-            profitDynamic: spotSettings.levelsSettings.profitDynamic,
         };
 
         spotGridSettingsDto = {
-            historyLength: spotSettings.historyLength,
             candleLength: spotSettings.candleLength,
             crypto: spotSettings.crypto,
-            stopLossType: spotSettings.stopLossType,
-            updateGridIntervalType: spotSettings.updateGridIntervalType,
-            updateGridIntervalTime: spotSettings.updateGridIntervalTime,
             gridSettings: gridSettingsDto,
             levelsSettings: levelsSettingsDto,
         };

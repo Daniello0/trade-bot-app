@@ -2,12 +2,12 @@ import { ReadGridSettingsDto } from './read-grid-settings.dto';
 import { ReadLevelsSettingsDto } from './read-levels-settings.dto';
 
 export class ReadSpotGridSettingsDto {
-    historyLength: number;
+    // historyLength: number;
     candleLength: string;
     crypto: string;
-    stopLossType: string;
+    /*stopLossType: string;
     updateGridIntervalType: string;
-    updateGridIntervalTime?: number;
+    updateGridIntervalTime?: number;*/
     gridSettings: ReadGridSettingsDto;
     levelsSettings: ReadLevelsSettingsDto;
 }

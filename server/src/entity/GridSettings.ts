@@ -12,19 +12,19 @@ export class GridSettings {
     @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
+    // @Column('text', { nullable: false })
+    // type: string;
+    //
+    // @Column('numeric', { nullable: true })
+    // lowerBoundStatic: number;
+    //
+    // @Column('numeric', { nullable: true })
+    // upperBoundStatic: number;
+
     @Column('text', { nullable: false })
-    type: string;
-
-    @Column('numeric', { nullable: true })
-    lowerBoundStatic: number;
-
-    @Column('numeric', { nullable: true })
-    upperBoundStatic: number;
-
-    @Column('text', { nullable: true })
     lowerBoundDynamic: string;
 
-    @Column('text', { nullable: true })
+    @Column('text', { nullable: false })
     upperBoundDynamic: string;
 
     @OneToOne(

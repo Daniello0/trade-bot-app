@@ -34,12 +34,8 @@ export class SpotGridSettingsService {
         );
 
         const newSettings: SpotGridSettings = spotGridRepository.create({
-            historyLength: spotGridSettingsData.historyLength,
             candleLength: spotGridSettingsData.candleLength,
             crypto: spotGridSettingsData.crypto,
-            stopLossType: spotGridSettingsData.stopLossType,
-            updateGridIntervalType: spotGridSettingsData.updateGridIntervalType,
-            updateGridIntervalTime: spotGridSettingsData.updateGridIntervalTime,
 
             gridSettings: savedGridSettings,
             levelsSettings: savedLevelsSettings,

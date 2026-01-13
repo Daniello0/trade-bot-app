@@ -1,18 +1,16 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CreateLevelsSettingsDto {
-    @IsString()
-    type: string;
+    /*@IsString()
+    type: string;*/
 
     @IsNumber()
-    @IsOptional()
-    countStatic?: number;
+    countStatic: number;
 
     @IsNumber()
-    @IsOptional()
-    pricePerBetStatic?: number;
+    pricePerBetStatic: number;
 
-    @IsNumber()
+    /*@IsNumber()
     @IsOptional()
-    profitDynamic?: number;
+    profitDynamic?: number;*/
 }

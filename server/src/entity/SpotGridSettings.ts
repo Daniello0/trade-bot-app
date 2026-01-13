@@ -14,8 +14,8 @@ export class SpotGridSettings {
     @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
-    @Column('integer', { nullable: false, name: 'historyLength' })
-    historyLength: number;
+    // @Column('integer', { nullable: false, name: 'historyLength' })
+    // historyLength: number;
 
     @Column('text', { nullable: false, name: 'candleLength' })
     candleLength: string;
@@ -23,14 +23,14 @@ export class SpotGridSettings {
     @Column('text', { nullable: false })
     crypto: string;
 
-    @Column('text', { nullable: false, name: 'stopLossType' })
-    stopLossType: string;
-
-    @Column('text', { nullable: false, name: 'updateGridIntervalType' })
-    updateGridIntervalType: string;
-
-    @Column('integer', { nullable: true, name: 'updateGridIntervalTime' })
-    updateGridIntervalTime: number;
+    // @Column('text', { nullable: false, name: 'stopLossType' })
+    // stopLossType: string;
+    //
+    // @Column('text', { nullable: false, name: 'updateGridIntervalType' })
+    // updateGridIntervalType: string;
+    //
+    // @Column('integer', { nullable: true, name: 'updateGridIntervalTime' })
+    // updateGridIntervalTime: number;
 
     @OneToOne(
         () => GridSettings,

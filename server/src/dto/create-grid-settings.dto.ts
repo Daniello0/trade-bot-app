@@ -1,7 +1,7 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateGridSettingsDto {
-    @IsString()
+    /*@IsString()
     type: string;
 
     @IsNumber()
@@ -10,13 +10,11 @@ export class CreateGridSettingsDto {
 
     @IsNumber()
     @IsOptional()
-    upperBoundStatic?: number;
+    upperBoundStatic?: number;*/
 
     @IsString()
-    @IsOptional()
-    lowerBoundDynamic?: string;
+    lowerBoundDynamic: string;
 
     @IsString()
-    @IsOptional()
-    upperBoundDynamic?: string;
+    upperBoundDynamic: string;
 }

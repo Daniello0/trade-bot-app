@@ -12,17 +12,17 @@ export class LevelsSettings {
     @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
-    @Column('text', { nullable: false })
-    type: string;
+    // @Column('text', { nullable: false })
+    // type: string;
 
-    @Column('integer', { nullable: true })
+    @Column('integer', { nullable: false })
     countStatic: number;
 
-    @Column('numeric', { nullable: true })
+    @Column('numeric', { nullable: false })
     pricePerBetStatic: number;
 
-    @Column('numeric', { nullable: true })
-    profitDynamic: number;
+    // @Column('numeric', { nullable: true })
+    // profitDynamic: number;
 
     @OneToOne(
         () => SpotGridSettings,

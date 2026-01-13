@@ -1,6 +1,4 @@
 import {
-    IsNumber,
-    IsOptional,
     IsString,
     ValidateNested,
 } from 'class-validator';
@@ -9,8 +7,8 @@ import { CreateLevelsSettingsDto } from './create-levels-settings.dto';
 import { Type } from 'class-transformer';
 
 export class CreateSpotGridSettingsDto {
-    @IsNumber()
-    historyLength: number;
+    /*@IsNumber()
+    historyLength: number;*/
 
     @IsString()
     candleLength: string;
@@ -18,7 +16,7 @@ export class CreateSpotGridSettingsDto {
     @IsString()
     crypto: string;
 
-    @IsString()
+    /*@IsString()
     stopLossType: string;
 
     @IsString()
@@ -26,7 +24,7 @@ export class CreateSpotGridSettingsDto {
 
     @IsNumber()
     @IsOptional()
-    updateGridIntervalTime?: number;
+    updateGridIntervalTime?: number;*/
 
     @ValidateNested()
     @Type(() => CreateGridSettingsDto)
