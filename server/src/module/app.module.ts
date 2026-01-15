@@ -17,6 +17,7 @@ import { SpotGridSettingsService } from '../database-service/spot-grid-settings.
 import { GridSettingsService } from '../database-service/grid-settings.service';
 import { LevelsSettingsService } from '../database-service/levels-settings.service';
 import { DatabaseService } from '../database-service/init-typeorm';
+import { BotGateway } from '../gateway/bot.gateway';
 
 @Module({
     imports: [
@@ -38,6 +39,8 @@ import { DatabaseService } from '../database-service/init-typeorm';
         SpotGridSettingsService,
         GridSettingsService,
         LevelsSettingsService,
+
+        BotGateway,
     ],
 })
 export class AppModule implements NestModule {

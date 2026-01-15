@@ -6,6 +6,7 @@ import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary} from "../../api/Types";
 import {createUserKeys, getUserKeys} from "../../service/UserService";
 import {ApiKeysModal} from "../bot_settings/ApiKeysModal";
+import {useSocket} from "../../hooks/useSocket";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -14,6 +15,9 @@ function App() {
 
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
+
+    const { isConnected, sendMessage, subscribe, lastMessage } = useSocket();
+    const [logs, setLogs] = useState<any[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -43,6 +47,23 @@ function App() {
             await checkConnection();
         })()
     }, []);
+
+    useEffect(() => {
+        // Подписываемся на событие 'botUpdate'
+        const unsubscribe = subscribe('botUpdate', (data) => {
+            setLogs((prev) => [...prev, data]);
+            console.log(data);
+        });
+
+        // Важно: отписываемся при размонтировании
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [subscribe]);
+
+    const handleStartBotButtonClick = (botId: number) => {
+        sendMessage('startBot', { botId: botId });
+    };
 
     const handleDeleteButtonClick = async (botId: number) => {
         await deleteBot(botId);
@@ -105,7 +126,8 @@ function App() {
                                     onClick={() => handleEditButtonClick(bot.id)} >Редактировать</button>
                                     <button className="action-button danger"
                                             onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
-                                    <button className="action-button success">Пуск</button>
+                                    <button className="action-button success" onClick={() => handleStartBotButtonClick(bot.id)}>
+                                        {isConnected? "Пуск" : "Стоп"}</button>
                                 </div>
                             </div>
                         ))}

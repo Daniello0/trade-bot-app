@@ -16,10 +16,14 @@ import { CreateBotDto } from '../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
 import { Bots } from '../entity/Bots';
+import { BotManagerService } from '../service/bot-manager.service';
 
 @Controller('/bots')
 export class BotController {
-    constructor(private readonly botService: BotService) {}
+    constructor(
+        private readonly botService: BotService,
+        private readonly botManager: BotManagerService
+    ) {}
 
     @Post('/create')
     @HttpCode(HttpStatus.CREATED)
@@ -67,5 +71,21 @@ export class BotController {
     ): Promise<void> {
         const userId: string | undefined = req.userId;
         return this.botService.update(botId, userId, updateBotData);
+    }
+
+    @Post(':botId/start')
+    @HttpCode(HttpStatus.OK)
+    start(
+        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Param('botId') botId: string
+    ) {
+        const userId = req.userId;
+        return this.botManager.startBot(botId, userId);
+    }
+
+    @Post(':botId/stop')
+    @HttpCode(HttpStatus.OK)
+    stop(@Param('botId') botId: string): void {
+        return this.botManager.stopBot(botId);
     }
 }
