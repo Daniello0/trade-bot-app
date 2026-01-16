@@ -86,7 +86,7 @@ body {
   align-items: center;
   padding: 20px 25px;
   border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.2s ease;
+  transition: background-color 0.1s ease;
 }
 
 .table-data > .table-row:last-child {

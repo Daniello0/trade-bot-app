@@ -26,6 +26,9 @@ export class Bots {
     @Column('text', { nullable: false })
     botType: string;
 
+    @Column('text', { nullable: false, default: 'stopped' })
+    status: 'stopped' | 'running';
+
     @OneToOne(() => SpotGridSettings, (settings) => settings.bot, {
         nullable: true,
         cascade: true,

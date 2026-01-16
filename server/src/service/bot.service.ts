@@ -6,7 +6,10 @@ import { CreateBotDto } from '../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import { SpotGridSettingsService } from '../database-service/spot-grid-settings.service';
 import { SpotGridSettings } from '../entity/SpotGridSettings';
-import { mapBotToReadBotDetailsDto } from '../mapper/bot.mapper';
+import {
+    mapBotToReadBotDetailsDto,
+    mapBotToReadBotSummaryDto,
+} from '../mapper/bot.mapper';
 
 @Injectable()
 export class BotService {
@@ -66,6 +69,7 @@ export class BotService {
             name: bot.name,
             botType: bot.botType,
             deposit: bot.deposit,
+            status: bot.status,
         }));
     }
 
@@ -86,6 +90,19 @@ export class BotService {
         if (!bot) return null;
 
         return mapBotToReadBotDetailsDto(bot);
+    }
+
+    async findOneSummary(
+        userId: string | undefined,
+        botId: number
+    ): Promise<ReadBotSummaryDto | null> {
+        const bot = await this.botRepository.findOne({
+            where: { id: botId, user: { id: userId } },
+        });
+
+        if (!bot) return null;
+
+        return mapBotToReadBotSummaryDto(bot);
     }
 
     async update(
@@ -153,5 +170,26 @@ export class BotService {
         }
 
         await this.botRepository.remove(botToRemove);
+    }
+
+    async switchBotStatus(
+        botId: number,
+        userId: string | undefined
+    ): Promise<void> {
+        if (!userId) {
+            throw new NotFoundException('User not found.');
+        }
+
+        const bot = await this.botRepository.findOne({
+            where: { id: botId, user: { id: userId } },
+        });
+
+        if (!bot) {
+            throw new NotFoundException(`Bot with ID "${botId}" not found.`);
+        }
+
+        bot.status = bot.status === 'running' ? 'stopped' : 'running';
+
+        await this.botRepository.save(bot);
     }
 }

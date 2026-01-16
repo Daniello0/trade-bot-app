@@ -73,19 +73,24 @@ export class BotController {
         return this.botService.update(botId, userId, updateBotData);
     }
 
-    @Post(':botId/start')
+    @Post(':botId/toggle')
     @HttpCode(HttpStatus.OK)
-    start(
+    async toggleBot(
         @Req() req: user_idMiddleware.RequestWithUserId,
-        @Param('botId') botId: string
-    ) {
-        const userId = req.userId;
-        return this.botManager.startBot(botId, userId);
-    }
+        @Param('botId', ParseIntPipe) botId: number
+    ): Promise<void> {
+        const userId: string | undefined = req.userId;
+        const bot: ReadBotSummaryDto | null =
+            await this.botService.findOneSummary(userId, botId);
 
-    @Post(':botId/stop')
-    @HttpCode(HttpStatus.OK)
-    stop(@Param('botId') botId: string): void {
-        return this.botManager.stopBot(botId);
+        if (!bot) {
+            throw new Error(`Bot with ID "${botId}" not found.`);
+        }
+
+        if (bot.status === 'running') {
+            return this.botManager.stopBot(String(botId), userId);
+        } else if (bot.status === 'stopped') {
+            return this.botManager.startBot(String(botId), userId);
+        }
     }
 }

@@ -12,7 +12,6 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import * as process from 'node:process';
 
-// bot.gateway.ts
 @WebSocketGateway({
     cors: { origin: process.env.CLIENT_ORIGIN },
 })
@@ -32,7 +31,6 @@ export class BotGateway
         this.logger.log(`Client disconnected: ${client.id}`);
     }
 
-    // Комната для конкретного бота
     @SubscribeMessage('watchBot')
     async handleWatchBot(
         @ConnectedSocket() client: Socket,
@@ -41,7 +39,6 @@ export class BotGateway
         await client.join(`bot_${data.botId}`);
     }
 
-    // ТЕСТОВЫЙ МЕТОД: Комната для всех логов сразу
     @SubscribeMessage('watchAllBots')
     async handleWatchAll(@ConnectedSocket() client: Socket) {
         await client.join('all_bots_logs');

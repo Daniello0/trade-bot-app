@@ -6,7 +6,6 @@ const backendUrl = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_AP
 export const useSocket = () => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    // Состояние для хранения последнего сообщения (опционально)
     const [lastMessage, setLastMessage] = useState<any>(null);
 
     useEffect(() => {
@@ -25,7 +24,6 @@ export const useSocket = () => {
             console.log('Disconnected from server');
         });
 
-        // Универсальный слушатель для отладки или общих уведомлений
         socketInstance.on('botUpdate', (data: any) => {
             setLastMessage(data);
         });
@@ -37,20 +35,17 @@ export const useSocket = () => {
         };
     }, []);
 
-    // Функция для отправки данных (уже была)
     const sendMessage = useCallback((event: string, data: any) => {
         if (socket) {
             socket.emit(event, data);
         }
     }, [socket]);
 
-    // НОВАЯ ФУНКЦИЯ: Позволяет компоненту подписаться на любое событие
     const subscribe = useCallback((event: string, callback: (data: any) => void) => {
         if (!socket) return;
 
         socket.on(event, callback);
 
-        // Возвращаем функцию отписки
         return () => {
             socket.off(event, callback);
         };

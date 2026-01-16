@@ -1,5 +1,5 @@
 import { Bots } from '../entity/Bots';
-import { ReadBotDetailsDto } from '../dto/read-bot.dto';
+import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import { ReadSpotGridSettingsDto } from '../dto/read-spot-grid-settings.dto';
 import { ReadGridSettingsDto } from '../dto/read-grid-settings.dto';
 import { ReadLevelsSettingsDto } from '../dto/read-levels-settings.dto';
@@ -40,5 +40,20 @@ export const mapBotToReadBotDetailsDto = (
         botType: bot.botType,
         deposit: bot.deposit,
         spotGridSettings: spotGridSettingsDto,
+    };
+};
+
+export const mapBotToReadBotSummaryDto = (
+    bot: Bots | null
+): ReadBotSummaryDto | null => {
+    if (!bot) {
+        return null;
+    }
+
+    return {
+        id: bot.id,
+        name: bot.name,
+        botType: bot.botType,
+        status: bot.status,
     };
 };

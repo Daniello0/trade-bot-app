@@ -18,6 +18,7 @@ import { GridSettingsService } from '../database-service/grid-settings.service';
 import { LevelsSettingsService } from '../database-service/levels-settings.service';
 import { DatabaseService } from '../database-service/init-typeorm';
 import { BotGateway } from '../gateway/bot.gateway';
+import { BotManagerService } from '../service/bot-manager.service';
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { BotGateway } from '../gateway/bot.gateway';
         SpotGridSettingsService,
         GridSettingsService,
         LevelsSettingsService,
+        BotManagerService,
 
         BotGateway,
     ],

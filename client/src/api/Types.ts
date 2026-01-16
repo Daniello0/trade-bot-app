@@ -62,6 +62,7 @@ export interface ReadBotSummary {
     id: number;
     name: string;
     botType: string;
+    status: 'stopped' | 'running';
 }
 
 export interface ReadBotDetails {
@@ -70,6 +71,7 @@ export interface ReadBotDetails {
     name: string;
     deposit: number;
     botType: string;
+    status: 'stopped' | 'running';
     fullSpotSettings?: any;
     spotGridSettings?: ReadSpotGridSettings;
 }

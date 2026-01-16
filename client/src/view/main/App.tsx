@@ -7,6 +7,7 @@ import {UserKeys, ReadBotSummary} from "../../api/Types";
 import {createUserKeys, getUserKeys} from "../../service/UserService";
 import {ApiKeysModal} from "../bot_settings/ApiKeysModal";
 import {useSocket} from "../../hooks/useSocket";
+import {toggleBot} from "../../service/BotManagerService";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -16,8 +17,8 @@ function App() {
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
-    const { isConnected, sendMessage, subscribe, lastMessage } = useSocket();
-    const [logs, setLogs] = useState<any[]>([]);
+    const { socket } = useSocket();
+    const [globalLogs, setGlobalLogs] = useState<any[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -49,20 +50,23 @@ function App() {
     }, []);
 
     useEffect(() => {
-        // Подписываемся на событие 'botUpdate'
-        const unsubscribe = subscribe('botUpdate', (data) => {
-            setLogs((prev) => [...prev, data]);
+        if (!socket) return;
+
+        socket.emit('watchAllBots');
+
+        socket.on('globalLog', (data) => {
+            setGlobalLogs((prev) => [data, ...prev].slice(0, 20));
             console.log(data);
         });
 
-        // Важно: отписываемся при размонтировании
         return () => {
-            if (unsubscribe) unsubscribe();
+            socket.off('globalLog');
         };
-    }, [subscribe]);
+    }, [socket]);
 
-    const handleStartBotButtonClick = (botId: number) => {
-        sendMessage('startBot', { botId: botId });
+    const handleToggleBotButtonClick = async (botId: number) => {
+        await toggleBot(botId);
+        setData(await getAllBots());
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
@@ -118,7 +122,9 @@ function App() {
                                 <div className="column-name">{bot.name}</div>
                                 <div className="column-type">{bot.botType}</div>
                                 <div className="column-status">
-                                    <span className="status-badge status-stopped">disabled</span>
+                                    <span className={`status-badge ${bot.status === 'running' ? 'status-running' : 'status-stopped'}`}>
+                                        {bot.status}
+                                    </span>
                                 </div>
                                 <div className="column-actions">
                                     <button className="action-button">Консоль</button>
@@ -126,8 +132,12 @@ function App() {
                                     onClick={() => handleEditButtonClick(bot.id)} >Редактировать</button>
                                     <button className="action-button danger"
                                             onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
-                                    <button className="action-button success" onClick={() => handleStartBotButtonClick(bot.id)}>
-                                        {isConnected? "Пуск" : "Стоп"}</button>
+                                    <button
+                                        className={`action-button ${bot.status === 'running' ? 'danger' : 'success'}`}
+                                        onClick={() => handleToggleBotButtonClick(bot.id)}
+                                    >
+                                        {bot.status === 'stopped' ? "Пуск" : "Стоп"}
+                                    </button>
                                 </div>
                             </div>
                         ))}

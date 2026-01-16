@@ -4,6 +4,7 @@ export class ReadBotSummaryDto {
     id: number;
     name: string;
     botType: string;
+    status: 'stopped' | 'running';
 }
 
 export class ReadBotDetailsDto {
