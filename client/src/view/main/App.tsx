@@ -6,19 +6,16 @@ import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary} from "../../api/Types";
 import {createUserKeys, getUserKeys} from "../../service/UserService";
 import {ApiKeysModal} from "../bot_settings/ApiKeysModal";
-import {useSocket} from "../../hooks/useSocket";
 import {toggleBot} from "../../service/BotManagerService";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
     const [data, setData] = useState<any>(null);
+    const [sortedData, setSortedData] = useState<any>(null);
     const navigate: NavigateFunction = useNavigate();
 
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
-
-    const { socket } = useSocket();
-    const [globalLogs, setGlobalLogs] = useState<any[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -49,21 +46,6 @@ function App() {
         })()
     }, []);
 
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.emit('watchAllBots');
-
-        socket.on('globalLog', (data) => {
-            setGlobalLogs((prev) => [data, ...prev].slice(0, 20));
-            console.log(data);
-        });
-
-        return () => {
-            socket.off('globalLog');
-        };
-    }, [socket]);
-
     const handleToggleBotButtonClick = async (botId: number) => {
         await toggleBot(botId);
         setData(await getAllBots());
@@ -88,6 +70,10 @@ function App() {
         }
     };
 
+    const handleConsoleButtonClick = (botId: number, botName: string) => {
+        navigate(`/console/${botId}/${botName}`);
+    }
+
     const handleSaveKeys = async (keys: UserKeys) => {
         try {
             await createUserKeys(keys);
@@ -97,7 +83,13 @@ function App() {
         }
     };
 
-    if (status === 'connected' && data) {
+    useEffect(() => {
+        if (!data) return;
+
+        setSortedData(data.sort((a: { id: number; }, b: { id: number; }) => (a.id < b.id ? 1 : -1)))
+    }, [data]);
+
+    if (status === 'connected' && sortedData) {
         return (
             <div className="App">
                 <div className="header">
@@ -117,7 +109,7 @@ function App() {
                         <div className="header-column-actions">Действия</div>
                     </div>
                     <div className="table-data">
-                        {data.map((bot: ReadBotSummary) => (
+                        {sortedData.map((bot: ReadBotSummary) => (
                             <div className="table-row" key={bot.id}>
                                 <div className="column-name">{bot.name}</div>
                                 <div className="column-type">{bot.botType}</div>
@@ -127,9 +119,10 @@ function App() {
                                     </span>
                                 </div>
                                 <div className="column-actions">
-                                    <button className="action-button">Консоль</button>
+                                    <button className="action-button"
+                                            onClick={() => handleConsoleButtonClick(bot.id, bot.name)}>Консоль</button>
                                     <button className="action-button secondary"
-                                    onClick={() => handleEditButtonClick(bot.id)} >Редактировать</button>
+                                    onClick={() => handleEditButtonClick(bot.id)}>Редактировать</button>
                                     <button className="action-button danger"
                                             onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
                                     <button

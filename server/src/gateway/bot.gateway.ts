@@ -38,9 +38,4 @@ export class BotGateway
     ) {
         await client.join(`bot_${data.botId}`);
     }
-
-    @SubscribeMessage('watchAllBots')
-    async handleWatchAll(@ConnectedSocket() client: Socket) {
-        await client.join('all_bots_logs');
-    }
 }

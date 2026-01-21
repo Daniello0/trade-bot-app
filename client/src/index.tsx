@@ -5,6 +5,7 @@ import App from './view/main/App';
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter, Route, Routes} from "react-router";
 import BotSettings from "./view/bot_settings/BotSettings";
+import {BotConsole} from "./view/bot_settings/BotConsole";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -13,6 +14,7 @@ root.render(
   <React.StrictMode>
       <BrowserRouter>
           <Routes>
+              <Route path="/console/:botId/:botName" element={<BotConsole />} />
               <Route path="/" element={<App />} />
               <Route path="/add-bot" element={<BotSettings />} />
               <Route path={"/edit-bot/:botId"} element={<BotSettings />} />
