@@ -4,8 +4,8 @@ import './index.css';
 import App from './view/main/App';
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter, Route, Routes} from "react-router";
-import BotSettings from "./view/bot_settings/BotSettings";
-import {BotConsole} from "./view/bot_settings/BotConsole";
+import BotSettings from "./view/bot-settings/BotSettings";
+import {BotConsole} from "./view/bot-settings/BotConsole";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

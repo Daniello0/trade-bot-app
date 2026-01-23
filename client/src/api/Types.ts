@@ -1,51 +1,33 @@
 export interface CreateGridSettings {
-    // type: string;
-    // lowerBoundStatic?: number;
-    // upperBoundStatic?: number;
     lowerBoundDynamic: string;
     upperBoundDynamic: string;
 }
 
 export interface CreateLevelsSettings {
-    // type: string;
     countStatic: number;
     pricePerBetStatic: number;
-    // profitDynamic?: number;
 }
 
 export interface CreateSpotGridSettings {
-    // historyLength: number;
     candleLength: string;
     crypto: string;
-    // stopLossType: string;
-    // updateGridIntervalType: string;
-    // updateGridIntervalTime?: number;
     gridSettings: CreateGridSettings;
     levelsSettings: CreateLevelsSettings;
 }
 
 interface ReadLevelsSettings {
-    // type: string;
     countStatic: number;
     pricePerBetStatic: number;
-    // profitDynamic?: number;
 }
 
 interface ReadGridSettings {
-    // type: string;
-    // lowerBoundStatic?: number;
-    // upperBoundStatic?: number;
     lowerBoundDynamic: string;
     upperBoundDynamic: string;
 }
 
 interface ReadSpotGridSettings {
-    // historyLength: number;
     candleLength: number;
     crypto: string;
-    // stopLossType: string;
-    // updateGridIntervalType: string;
-    // updateGridIntervalTime?: number;
     gridSettings: ReadGridSettings;
     levelsSettings: ReadLevelsSettings;
 }

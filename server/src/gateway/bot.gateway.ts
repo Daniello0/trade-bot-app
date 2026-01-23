@@ -9,12 +9,13 @@ import {
     ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as process from 'node:process';
 
 @WebSocketGateway({
     cors: { origin: process.env.CLIENT_ORIGIN },
 })
+@Injectable()
 export class BotGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -24,9 +25,11 @@ export class BotGateway
     afterInit(/*server: Server*/) {
         this.logger.log('WebSocket Server Initialized');
     }
+
     handleConnection(client: Socket) {
         this.logger.log(`Client connected: ${client.id}`);
     }
+
     handleDisconnect(client: Socket) {
         this.logger.log(`Client disconnected: ${client.id}`);
     }

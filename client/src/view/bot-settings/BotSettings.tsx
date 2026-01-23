@@ -11,29 +11,21 @@ import {
     CreateSpotGridSettings,
     ReadBotDetails
 } from "../../api/Types";
-import {mapReadBotToCreateBot} from "../../service/BotTypeMapper";
+import {mapReadBotToCreateBot} from "../../mapper/BotTypeMapper";
 
 const gridSettings: CreateGridSettings = {
-    // type: 'static',
-    // lowerBoundStatic: 0,
-    // upperBoundStatic: 0,
     lowerBoundDynamic: 'q1',
     upperBoundDynamic: 'q3',
 };
 
 const levelsSettings: CreateLevelsSettings = {
-    // type: 'static',
     countStatic: 10,
     pricePerBetStatic: 100,
 };
 
 const spotGridSettingsData: CreateSpotGridSettings = {
-    // historyLength: 100,
     candleLength: '5m',
     crypto: 'BTC',
-    // stopLossType: 'hard',
-    // updateGridIntervalType: 'byCandle',
-    // updateGridIntervalTime: undefined,
     gridSettings: gridSettings,
     levelsSettings: levelsSettings,
 };

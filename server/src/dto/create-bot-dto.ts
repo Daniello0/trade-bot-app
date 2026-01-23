@@ -22,6 +22,4 @@ export class CreateBotDto {
     @ValidateNested()
     @Type(() => CreateSpotGridSettingsDto)
     spotGridSettingsData?: CreateSpotGridSettingsDto;
-
-    // fullSpotSettingsData?: CreateFullSpotSettingsDto;
 }

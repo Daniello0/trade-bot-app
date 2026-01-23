@@ -41,7 +41,6 @@ import { BotManagerService } from '../service/bot-manager.service';
         GridSettingsService,
         LevelsSettingsService,
         BotManagerService,
-
         BotGateway,
     ],
 })

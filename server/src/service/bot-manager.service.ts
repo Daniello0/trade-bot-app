@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { BotGateway } from '../gateway/bot.gateway';
 import { BotService } from './bot.service';
+import { ReadBotSummaryDto } from '../dto/read-bot.dto';
 
 @Injectable()
 export class BotManagerService implements OnModuleDestroy {
@@ -46,6 +47,21 @@ export class BotManagerService implements OnModuleDestroy {
         }
     }
 
+    async toggleBot(userId: string | undefined, botId: number) {
+        const bot: ReadBotSummaryDto | null =
+            await this.botService.findOneSummary(userId, botId);
+
+        if (!bot) {
+            throw new Error(`Bot with ID "${botId}" not found.`);
+        }
+
+        if (bot.status === 'running') {
+            return this.stopBot(String(botId), userId);
+        } else if (bot.status === 'stopped') {
+            return this.startBot(String(botId), userId);
+        }
+    }
+
     private async runBotLoop(
         botId: string,
         userId: string,
@@ -54,31 +70,7 @@ export class BotManagerService implements OnModuleDestroy {
         this.logger.log(`Loop started for bot ${botId}`);
 
         while (!signal.aborted) {
-            try {
-                const price = 60000 + Math.random() * 1000;
-
-                const payload = {
-                    userId,
-                    botId,
-                    price: price.toFixed(2),
-                    message: `Check grid status... OK`,
-                    timestamp: new Date().toISOString(),
-                };
-
-                this.botGateway.server
-                    .to(`bot_${botId}`)
-                    .emit('botLog', payload);
-
-                this.botGateway.server
-                    .to('all_bots_logs')
-                    .emit('globalLog', payload);
-
-                await this.sleep(1000, signal);
-            } catch (err) {
-                if (signal.aborted) break;
-                this.logger.error(`Error in bot ${botId} loop: ${err}`);
-                await this.sleep(10000, signal);
-            }
+            await this.testWork(userId, botId, signal);
         }
 
         this.logger.log(`Loop finished for bot ${botId}`);
@@ -97,6 +89,36 @@ export class BotManagerService implements OnModuleDestroy {
     async onModuleDestroy() {
         for (const [botId, session] of this.activeBots.entries()) {
             await this.stopBot(botId, session.userId);
+        }
+    }
+
+    private async testWork(
+        userId: string | undefined,
+        botId: string,
+        signal: AbortSignal
+    ) {
+        try {
+            const price = 60000 + Math.random() * 1000;
+
+            const payload = {
+                userId,
+                botId,
+                price: price.toFixed(2),
+                message: `Check grid status... OK`,
+                timestamp: new Date().toISOString(),
+            };
+
+            this.botGateway.server.to(`bot_${botId}`).emit('botLog', payload);
+
+            this.botGateway.server
+                .to('all_bots_logs')
+                .emit('globalLog', payload);
+
+            await this.sleep(1000, signal);
+        } catch (err) {
+            if (signal.aborted) return;
+            this.logger.error(`Error in bot ${botId} loop: ${err}`);
+            await this.sleep(10000, signal);
         }
     }
 }

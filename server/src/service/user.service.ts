@@ -30,11 +30,7 @@ export class UserService {
     ): Promise<{ apiKey: string; apiSecret: string }> {
         if (!userId) throw new Error('User id is not defined.');
 
-        const userRepository: Repository<Users> =
-            DatabaseService.getRepository(Users);
-        const user = await userRepository.findOneBy({ id: userId });
-
-        if (!user) throw new Error('User not found');
+        const user: Users | null = await this.getUser(userId);
 
         const apiKey: string = this.cryptoService.decrypt(user.apiKey);
         const apiSecret: string = this.cryptoService.decrypt(user.apiSecret);
@@ -48,5 +44,18 @@ export class UserService {
             apiKey: this.cryptoService.encrypt(''),
             apiSecret: this.cryptoService.encrypt(''),
         });
+    }
+
+    private async getUser(userId: string): Promise<Users> {
+        const userRepository: Repository<Users> =
+            DatabaseService.getRepository(Users);
+
+        const user: Users | null = await userRepository.findOneBy({
+            id: userId,
+        });
+
+        if (!user) throw new Error('User not found');
+
+        return user;
     }
 }

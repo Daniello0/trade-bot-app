@@ -83,12 +83,6 @@
     box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
 }
 
-.form-group.info p {
-    margin: 0;
-    padding: 12px 0;
-    color: var(--text-secondary);
-}
-
 .radio-group,
 .checkbox-group {
     display: flex;
@@ -117,13 +111,6 @@
     height: 16px;
 }
 
-.radio-description {
-    margin-left: 8px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
 .radio-group.nested,
 .checkbox-group.nested {
     padding-left: 20px;
@@ -136,12 +123,6 @@
     padding-left: 30px;
     margin-top: 10px;
     align-items: center;
-}
-
-.input-adornment {
-    color: var(--text-secondary);
-    font-size: 14px;
-    white-space: nowrap;
 }
 
 .form-hint {

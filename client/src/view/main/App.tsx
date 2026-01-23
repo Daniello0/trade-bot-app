@@ -5,8 +5,9 @@ import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary} from "../../api/Types";
 import {createUserKeys, getUserKeys} from "../../service/UserService";
-import {ApiKeysModal} from "../bot_settings/ApiKeysModal";
+import {ApiKeysModal} from "../bot-settings/ApiKeysModal";
 import {toggleBot} from "../../service/BotManagerService";
+import {requestApi} from "../../service/RequestApiService";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -17,31 +18,24 @@ function App() {
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
+    const checkConnection = async () => {
+        try {
+            const res: Response = await requestApi('/healthz', 'GET');
+
+            if (res.ok) {
+                setData(await getAllBots());
+                setStatus('connected');
+            } else {
+                setStatus('disconnected');
+            }
+        } catch (error) {
+            console.error("Connection failed:", error);
+            setStatus('disconnected');
+        }
+    };
+
     useEffect(() => {
         (async () => {
-            const backendHost = process.env.REACT_APP_BACKEND_HOST;
-            const backendPort = process.env.REACT_APP_BACKEND_PORT;
-            const backendUrl = `${backendHost}:${backendPort}`;
-            const checkConnection = async () => {
-                try {
-                    const response: Response = await fetch(`${backendUrl}/healthz`, {
-                        method: 'GET',
-                        credentials: 'include',
-                    });
-
-                    console.log(response);
-
-                    if (response.ok) {
-                        setData(await getAllBots());
-                        setStatus('connected');
-                    } else {
-                        setStatus('disconnected');
-                    }
-                } catch (error) {
-                    console.error("Connection failed:", error);
-                    setStatus('disconnected');
-                }
-            };
             await checkConnection();
         })()
     }, []);

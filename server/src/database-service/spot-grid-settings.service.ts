@@ -54,16 +54,12 @@ export class SpotGridSettingsService {
             ? manager.getRepository(SpotGridSettings)
             : this.spotGridRepository;
 
-        const settingsToUpdate = await repository.findOne({
-            where: { id: spotGridSettingsId, bot: { user: { id: userId } } },
-            relations: { gridSettings: true, levelsSettings: true },
-        });
-
-        if (!settingsToUpdate) {
-            throw new NotFoundException(
-                `SpotGridSettings with ID "${spotGridSettingsId}" not found or permission denied.`
+        const settingsToUpdate: SpotGridSettings | null =
+            await this.getSpotGridSettingsToUpdate(
+                repository,
+                spotGridSettingsId,
+                userId
             );
-        }
 
         const { gridSettings, levelsSettings, ...spotGridFields } = updateData;
 
@@ -79,5 +75,28 @@ export class SpotGridSettingsService {
         );
 
         await repository.update(spotGridSettingsId, spotGridFields);
+    }
+
+    private async getSpotGridSettingsToUpdate(
+        repository: Repository<SpotGridSettings>,
+        spotGridSettingsId: number,
+        userId: string
+    ) {
+        const settingsToUpdate: SpotGridSettings | null =
+            await repository.findOne({
+                where: {
+                    id: spotGridSettingsId,
+                    bot: { user: { id: userId } },
+                },
+                relations: { gridSettings: true, levelsSettings: true },
+            });
+
+        if (!settingsToUpdate) {
+            throw new NotFoundException(
+                `SpotGridSettings with ID "${spotGridSettingsId}" not found or permission denied.`
+            );
+        }
+
+        return settingsToUpdate;
     }
 }

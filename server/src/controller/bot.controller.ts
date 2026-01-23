@@ -80,17 +80,6 @@ export class BotController {
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<void> {
         const userId: string | undefined = req.userId;
-        const bot: ReadBotSummaryDto | null =
-            await this.botService.findOneSummary(userId, botId);
-
-        if (!bot) {
-            throw new Error(`Bot with ID "${botId}" not found.`);
-        }
-
-        if (bot.status === 'running') {
-            return this.botManager.stopBot(String(botId), userId);
-        } else if (bot.status === 'stopped') {
-            return this.botManager.startBot(String(botId), userId);
-        }
+        return this.botManager.toggleBot(userId, botId);
     }
 }
