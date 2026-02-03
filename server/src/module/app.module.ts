@@ -1,24 +1,26 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from '../controller/app.controller';
-import { AppService } from '../service/app.service';
+import { AppService } from '../service/app/app.service';
 import { AssignUserIdMiddleware } from '../middleware/user-id.middleware';
-import { BotService } from '../service/bot.service';
+import { BotSettingsService } from '../service/database/bot-settings.service';
 import { BotController } from '../controller/bot.controller';
-import { UserService } from '../service/user.service';
+import { UserService } from '../service/user/user.service';
 import { UserController } from '../controller/user.controller';
-import { CryptoService } from '../service/crypto.service';
+import { CryptoService } from '../service/cryptography/crypto.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bots } from '../entity/Bots';
 import { SpotGridSettings } from '../entity/SpotGridSettings';
 import { GridSettings } from '../entity/GridSettings';
 import { LevelsSettings } from '../entity/LevelsSettings';
 import { Users } from '../entity/Users';
-import { SpotGridSettingsService } from '../database-service/spot-grid-settings.service';
-import { GridSettingsService } from '../database-service/grid-settings.service';
-import { LevelsSettingsService } from '../database-service/levels-settings.service';
-import { DatabaseService } from '../database-service/init-typeorm';
+import { SpotGridSettingsService } from '../service/database/spot-grid-settings.service';
+import { GridSettingsService } from '../service/database/grid-settings.service';
+import { LevelsSettingsService } from '../service/database/levels-settings.service';
+import { DatabaseService } from '../service/database/init-typeorm';
 import { BotGateway } from '../gateway/bot.gateway';
-import { BotManagerService } from '../service/bot-manager.service';
+import { BotManagerService } from '../service/trading/bot-manager.service';
+import { TradeLoopService } from '../service/trading/trade-loop.service';
+import { BybitService } from '../service/trading/bybit.service';
 
 @Module({
     imports: [
@@ -34,13 +36,15 @@ import { BotManagerService } from '../service/bot-manager.service';
     controllers: [AppController, BotController, UserController],
     providers: [
         AppService,
-        BotService,
+        BotSettingsService,
         UserService,
         CryptoService,
         SpotGridSettingsService,
         GridSettingsService,
         LevelsSettingsService,
         BotManagerService,
+        TradeLoopService,
+        BybitService,
         BotGateway,
     ],
 })

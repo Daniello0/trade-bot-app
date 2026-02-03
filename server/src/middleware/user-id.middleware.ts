@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { UserService } from '../service/user.service';
+import { UserService } from '../service/user/user.service';
 
 export interface RequestWithUserId extends Request {
     userId?: string;

@@ -1,6 +1,6 @@
 import { EntityManager, Repository } from 'typeorm';
-import { LevelsSettings } from '../entity/LevelsSettings';
-import { CreateLevelsSettingsDto } from '../dto/create-levels-settings.dto';
+import { LevelsSettings } from '../../entity/LevelsSettings';
+import { CreateLevelsSettingsDto } from '../../dto/create-levels-settings.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 

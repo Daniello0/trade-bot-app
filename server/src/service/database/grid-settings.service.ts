@@ -1,6 +1,6 @@
-import { GridSettings } from '../entity/GridSettings';
+import { GridSettings } from '../../entity/GridSettings';
 import { EntityManager, Repository } from 'typeorm';
-import { CreateGridSettingsDto } from '../dto/create-grid-settings.dto';
+import { CreateGridSettingsDto } from '../../dto/create-grid-settings.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 

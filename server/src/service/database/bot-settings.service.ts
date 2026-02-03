@@ -1,18 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Bots } from '../entity/Bots';
-import { CreateBotDto } from '../dto/create-bot-dto';
-import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
-import { SpotGridSettingsService } from '../database-service/spot-grid-settings.service';
-import { SpotGridSettings } from '../entity/SpotGridSettings';
+import { Bots } from '../../entity/Bots';
+import { CreateBotDto } from '../../dto/create-bot-dto';
+import { ReadBotDetailsDto, ReadBotSummaryDto } from '../../dto/read-bot.dto';
+import { SpotGridSettingsService } from './spot-grid-settings.service';
+import { SpotGridSettings } from '../../entity/SpotGridSettings';
 import {
     mapBotToReadBotDetailsDto,
     mapBotToReadBotSummaryDto,
-} from '../mapper/bot.mapper';
+} from '../../mapper/bot.mapper';
 
 @Injectable()
-export class BotService {
+export class BotSettingsService {
     constructor(
         @InjectRepository(Bots)
         private readonly botRepository: Repository<Bots>,

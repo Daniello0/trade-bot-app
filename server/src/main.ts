@@ -3,7 +3,7 @@ import { AppModule } from './module/app.module';
 import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 import * as process from 'node:process';
-import { initTypeorm } from './database-service/init-typeorm';
+import { initTypeorm } from './service/database/init-typeorm';
 
 dotenv.config();
 

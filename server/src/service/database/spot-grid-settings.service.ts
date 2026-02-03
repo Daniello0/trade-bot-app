@@ -1,8 +1,8 @@
 import { EntityManager, Repository } from 'typeorm';
-import { SpotGridSettings } from '../entity/SpotGridSettings';
+import { SpotGridSettings } from '../../entity/SpotGridSettings';
 import { GridSettingsService } from './grid-settings.service';
 import { LevelsSettingsService } from './levels-settings.service';
-import { CreateSpotGridSettingsDto } from '../dto/create-spot-grid-settings.dto';
+import { CreateSpotGridSettingsDto } from '../../dto/create-spot-grid-settings.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 

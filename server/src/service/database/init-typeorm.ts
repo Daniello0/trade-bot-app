@@ -1,11 +1,11 @@
 import { DataSource } from 'typeorm';
 import * as process from 'node:process';
-import { Users } from '../entity/Users';
+import { Users } from '../../entity/Users';
 import * as console from 'node:console';
-import { Bots } from '../entity/Bots';
-import { SpotGridSettings } from '../entity/SpotGridSettings';
-import { LevelsSettings } from '../entity/LevelsSettings';
-import { GridSettings } from '../entity/GridSettings';
+import { Bots } from '../../entity/Bots';
+import { SpotGridSettings } from '../../entity/SpotGridSettings';
+import { LevelsSettings } from '../../entity/LevelsSettings';
+import { GridSettings } from '../../entity/GridSettings';
 
 export const DatabaseService = new DataSource({
     type: 'postgres',

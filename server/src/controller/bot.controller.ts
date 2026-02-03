@@ -11,17 +11,17 @@ import {
     Post,
     Req,
 } from '@nestjs/common';
-import { BotService } from '../service/bot.service';
+import { BotSettingsService } from '../service/database/bot-settings.service';
 import { CreateBotDto } from '../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
 import { Bots } from '../entity/Bots';
-import { BotManagerService } from '../service/bot-manager.service';
+import { BotManagerService } from '../service/trading/bot-manager.service';
 
 @Controller('/bots')
 export class BotController {
     constructor(
-        private readonly botService: BotService,
+        private readonly botService: BotSettingsService,
         private readonly botManager: BotManagerService
     ) {}
 

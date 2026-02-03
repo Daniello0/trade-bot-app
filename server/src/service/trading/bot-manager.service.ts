@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { BotGateway } from '../gateway/bot.gateway';
-import { BotService } from './bot.service';
-import { ReadBotSummaryDto } from '../dto/read-bot.dto';
+import { BotGateway } from '../../gateway/bot.gateway';
+import { BotSettingsService } from '../database/bot-settings.service';
+import { ReadBotSummaryDto } from '../../dto/read-bot.dto';
+import { TradeLoopService } from './trade-loop.service';
 
 @Injectable()
 export class BotManagerService implements OnModuleDestroy {
@@ -14,17 +15,20 @@ export class BotManagerService implements OnModuleDestroy {
 
     constructor(
         private readonly botGateway: BotGateway,
-        private readonly botService: BotService
+        private readonly botService: BotSettingsService,
+        private readonly tradeLoopService: TradeLoopService
     ) {}
 
-    async startBot(botId: string, userId: string | undefined) {
+    async startBot(botId: number, userId: string | undefined) {
+        const stringBotId: string = botId.toString();
+
         if (!userId) return;
-        if (this.activeBots.has(botId)) return;
+        if (this.activeBots.has(stringBotId)) return;
 
         await this.botService.switchBotStatus(Number(botId), userId);
 
         const controller = new AbortController();
-        this.activeBots.set(botId, { controller, userId });
+        this.activeBots.set(stringBotId, { controller, userId });
 
         this.runBotLoop(botId, userId, controller.signal).catch(async (err) => {
             this.logger.error(`Bot ${botId} crashed:`, err);
@@ -34,14 +38,15 @@ export class BotManagerService implements OnModuleDestroy {
         this.logger.log(`Bot ${botId} started for user ${userId}`);
     }
 
-    async stopBot(botId: string, userId: string | undefined) {
-        const session = this.activeBots.get(botId);
+    async stopBot(botId: number, userId: string | undefined) {
+        const stringBotId: string = botId.toString();
+        const session = this.activeBots.get(stringBotId);
 
         if (session) {
             session.controller.abort();
-            this.activeBots.delete(botId);
+            this.activeBots.delete(stringBotId);
 
-            await this.botService.switchBotStatus(Number(botId), userId);
+            await this.botService.switchBotStatus(botId, userId);
 
             this.logger.log(`Bot ${botId} stopped and status updated in DB`);
         }
@@ -56,22 +61,20 @@ export class BotManagerService implements OnModuleDestroy {
         }
 
         if (bot.status === 'running') {
-            return this.stopBot(String(botId), userId);
+            return this.stopBot(botId, userId);
         } else if (bot.status === 'stopped') {
-            return this.startBot(String(botId), userId);
+            return this.startBot(botId, userId);
         }
     }
 
     private async runBotLoop(
-        botId: string,
+        botId: number,
         userId: string,
         signal: AbortSignal
     ) {
         this.logger.log(`Loop started for bot ${botId}`);
 
-        while (!signal.aborted) {
-            await this.testWork(userId, botId, signal);
-        }
+        await this.tradeLoopService.start(userId, botId, signal);
 
         this.logger.log(`Loop finished for bot ${botId}`);
     }
@@ -88,7 +91,7 @@ export class BotManagerService implements OnModuleDestroy {
 
     async onModuleDestroy() {
         for (const [botId, session] of this.activeBots.entries()) {
-            await this.stopBot(botId, session.userId);
+            await this.stopBot(Number(botId), session.userId);
         }
     }
 
