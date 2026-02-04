@@ -1,7 +1,7 @@
 import { ReadBotDetailsDto } from '../../dto/read-bot.dto';
 import { Logger } from '@nestjs/common';
-import { BybitService } from './bybit.service';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
+import { Bybit } from './bybit';
 
 interface Order {
     price: number;
@@ -10,27 +10,34 @@ interface Order {
 
 export class Bot {
     private readonly logger: Logger = new Logger(Bot.name);
+
     private spotGridSettings: ReadSpotGridSettingsDto;
     public symbol: string;
     private maxDeposit: number;
     public candleLength: string;
     public numberOfGrids: number;
-    private gridInterval: number;
-    private gridLevels: number[];
-    private ordersToSell: Order[];
+    gridInterval: number;
+    public gridLevels: number[];
+    public ordersToSell: Order[] = [];
     private lastPrice: number;
-    private upperPriceBound: number;
-    private lowerPriceBound: number;
+    public upperPriceBound: number;
+    public lowerPriceBound: number;
     private amountPerOrderUsd: number;
+    private lowerQuantile: string;
+    private upperQuantile: string;
 
     constructor(
         private readonly botSettings: ReadBotDetailsDto,
-        private readonly bybitService: BybitService
+        private readonly bybit: Bybit,
+        private onLog?: (payload: any) => void
     ) {
         if (!botSettings.spotGridSettings) {
-            this.logger.error('No spot grid settings found!');
+            this.sendLog('No spot grid settings found!');
             return;
         }
+
+        this.amountPerOrderUsd =
+            botSettings.spotGridSettings.levelsSettings.pricePerBetStatic;
 
         this.spotGridSettings = botSettings.spotGridSettings;
         this.symbol = this.spotGridSettings.crypto || 'BTCUSDT';
@@ -38,21 +45,58 @@ export class Bot {
         this.candleLength = botSettings.spotGridSettings.candleLength;
         this.numberOfGrids = this.spotGridSettings.levelsSettings.countStatic;
 
-        const lower = this.spotGridSettings.gridSettings.lowerBoundDynamic;
-        const upper = this.spotGridSettings.gridSettings.upperBoundDynamic;
-
-        this.gridInterval = 0;
-
-        this.logger.log(
-            `Grid initialized: [${lower}–${upper}], grids=${this.numberOfGrids}, step=${this.gridInterval.toFixed(6)}`
-        );
+        this.lowerQuantile =
+            this.spotGridSettings.gridSettings.lowerBoundDynamic;
+        this.upperQuantile =
+            this.spotGridSettings.gridSettings.upperBoundDynamic;
     }
 
-    public static setupBot(
+    public static async setupBot(
         botSettings: ReadBotDetailsDto,
-        bybitService: BybitService
+        bybitService: Bybit,
+        onLog?: (payload: any) => void
     ) {
-        return new Bot(botSettings, bybitService);
+        const bot = new Bot(botSettings, bybitService, onLog);
+
+        const historicalData = await bybitService.getLastNOhlc(
+            bot.candleLength
+        );
+
+        const quantiles = bybitService.calculateQuartiles(
+            historicalData.closes
+        );
+
+        if (!quantiles) {
+            throw new Error('No historical data found!');
+        }
+
+        if (bot.upperQuantile == '90%') {
+            bot.upperPriceBound = quantiles.Q90;
+        } else {
+            bot.upperPriceBound = quantiles.max;
+        }
+
+        if (bot.lowerQuantile == '10%') {
+            bot.lowerPriceBound = quantiles.Q10;
+        } else {
+            bot.lowerPriceBound = quantiles.min;
+        }
+
+        bot.updateGridBounds(bot.lowerPriceBound, bot.upperPriceBound);
+
+        return bot;
+    }
+
+    private sendLog(message: string, price?: number) {
+        this.logger.log(message);
+        if (this.onLog) {
+            this.onLog({
+                botId: this.botSettings.id,
+                timestamp: new Date().toISOString(),
+                message,
+                price: price?.toFixed(4) || '---',
+            });
+        }
     }
 
     placeInitialGridOrders(seedPrice: number) {
@@ -67,24 +111,23 @@ export class Bot {
         }
         this.lastPrice = seedPrice;
 
-        this.logger.log(`Initial grid created. Seed price: ${seedPrice}`);
+        this.sendLog(`Initial grid created. Seed price: ${seedPrice}`);
     }
 
     async botMakeDecision({ currentPrice }: { currentPrice: number }) {
         const prev = this.lastPrice;
         this.lastPrice = currentPrice;
 
-        // 1. Пытаемся выставить SELL для исполненных BUY
         for (const order of [...this.ordersToSell]) {
             const sellPrice = +(order.price + this.gridInterval);
-            const sellRet = await this.bybitService.placeOrder(
+            const sellRet = await this.bybit.placeOrder(
                 'Sell',
                 order.qty,
                 sellPrice
             );
 
             if (sellRet === 0) {
-                this.logger.log(
+                this.sendLog(
                     `SELL выставлен: ${order.qty.toFixed(2)} @${sellPrice.toFixed(4)}`
                 );
                 this.ordersToSell = this.ordersToSell.filter(
@@ -95,18 +138,13 @@ export class Bot {
 
         if (prev === null) return;
 
-        // 2. Проверка стоп-лосса (подтягивание ордеров)
-        const openSellOrders = await this.bybitService.getOpenSellOrders();
+        const openSellOrders = await this.bybit.getOpenSellOrders();
         for (const order of openSellOrders) {
             if (Number(order.price) > this.upperPriceBound) {
-                await this.bybitService.stopLossSell(
-                    order,
-                    this.upperPriceBound
-                );
+                await this.bybit.stopLossSell(order, this.upperPriceBound);
             }
         }
 
-        // 3. Проверка выхода за границы
         if (
             currentPrice < this.lowerPriceBound ||
             currentPrice > this.upperPriceBound
@@ -114,7 +152,6 @@ export class Bot {
             return;
         }
 
-        // 4. Логика пересечения уровней
         for (const level of this.gridLevels) {
             const crossDown = prev >= level && currentPrice <= level;
             const crossUp = prev <= level && currentPrice >= level;
@@ -124,9 +161,7 @@ export class Bot {
             const qty = this.amountPerOrderUsd / currentPrice;
 
             try {
-                // Проверка дистанции до существующих ордеров
-                const allOpenOrders =
-                    await this.bybitService.getOpenSellOrders();
+                const allOpenOrders = await this.bybit.getOpenSellOrders();
                 const tooClose = allOpenOrders.some(
                     (o) =>
                         Math.abs(Number(o.price) - currentPrice) <
@@ -135,7 +170,7 @@ export class Bot {
 
                 if (tooClose) continue;
 
-                const buyRet = await this.bybitService.placeOrder(
+                const buyRet = await this.bybit.placeOrder(
                     'Buy',
                     qty,
                     currentPrice
@@ -144,7 +179,7 @@ export class Bot {
                     this.ordersToSell.push({ price: currentPrice, qty: qty });
                 }
             } catch (err) {
-                this.logger.error('Ошибка в цикле принятия решений:', err);
+                this.sendLog(`Ошибка в цикле принятия решений: ${err}`);
             }
         }
     }
@@ -159,22 +194,4 @@ export class Bot {
             this.gridLevels.push(this.lowerPriceBound + i * this.gridInterval);
         }
     }
-
-    /*updateUsdPerAndNumberOfGrids({
-        newLower,
-        newUpper,
-        commission = 0.001,
-        profit = 0.01,
-    }) {
-        const a = (newLower * profit) / this.maxDeposit;
-        const b = -newLower * ((1 - commission) ** 2 - 1);
-        const c = -((1 - commission) ** 2) * (newUpper - newLower);
-
-        const discriminant = b * b - 4 * a * c;
-        if (discriminant >= 0) {
-            const x = (-b + Math.sqrt(discriminant)) / (2 * a);
-            this.numberOfGrids = Math.max(1, Math.floor(x));
-            this.amountPerOrderUsd = this.maxDeposit / this.numberOfGrids;
-        }
-    }*/
 }

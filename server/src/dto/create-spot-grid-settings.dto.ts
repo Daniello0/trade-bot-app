@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 
 export class CreateSpotGridSettingsDto {
     @IsString()
-    candleLength: string;
+    candleLength: '1' | '5';
 
     @IsString()
     crypto: string;

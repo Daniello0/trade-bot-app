@@ -20,7 +20,6 @@ import { DatabaseService } from '../service/database/init-typeorm';
 import { BotGateway } from '../gateway/bot.gateway';
 import { BotManagerService } from '../service/trading/bot-manager.service';
 import { TradeLoopService } from '../service/trading/trade-loop.service';
-import { BybitService } from '../service/trading/bybit.service';
 
 @Module({
     imports: [
@@ -44,7 +43,6 @@ import { BybitService } from '../service/trading/bybit.service';
         LevelsSettingsService,
         BotManagerService,
         TradeLoopService,
-        BybitService,
         BotGateway,
     ],
 })

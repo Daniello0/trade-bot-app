@@ -15,7 +15,7 @@ export class SpotGridSettings {
     id: number;
 
     @Column('text', { nullable: false, name: 'candleLength' })
-    candleLength: string;
+    candleLength: '1' | '5';
 
     @Column('text', { nullable: false })
     crypto: string;

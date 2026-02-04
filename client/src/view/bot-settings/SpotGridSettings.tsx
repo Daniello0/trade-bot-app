@@ -36,8 +36,8 @@ export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsPr
             <div className="form-group">
                 <label>Длина свечей</label>
                 <select {...candleLengthField}>
-                    <option value="1m">1м</option>
-                    <option value="5m">5м</option>
+                    <option value="1">1m</option>
+                    <option value="5">5m</option>
                 </select>
             </div>
 
@@ -89,7 +89,7 @@ export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsPr
 
             {(
                 <div className="form-group full-width">
-                    <label>Обновление сетки исходя из длины свечи ({candleLengthField.value})</label>
+                    <label>Обновление сетки исходя из длины свечи ({candleLengthField.value}m)</label>
                 </div>
             )}
         </fieldset>

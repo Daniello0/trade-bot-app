@@ -1,16 +1,15 @@
 import {
+    AccountOrderV5,
     APIResponseV3,
     CategoryV5,
+    KlineIntervalV3,
     OHLCVKlineV5,
     OrderResultV5,
     OrderSideV5,
     RestClientV5,
-    AccountOrderV5,
-    KlineIntervalV3,
     SpotInstrumentInfoV5,
 } from 'bybit-api';
-import type { RestClientOptions } from 'bybit-api';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 
 export interface BotOrderDTO {
     orderId: string;
@@ -20,51 +19,88 @@ export interface BotOrderDTO {
     qty: string;
 }
 
-@Injectable()
-export class BybitService {
-    private client: RestClientV5;
-    private readonly symbol: string;
-    private priceMaxDigits: number;
-    private qtyMaxDigits: number;
-    private readonly category: CategoryV5 = 'spot';
-    private readonly logger: Logger = new Logger(BybitService.name);
+export class Bybit {
+    private readonly logger: Logger = new Logger(Bybit.name);
 
-    public setupBybit(
-        restClientOptions: RestClientOptions,
-        maxPriceDigits: number,
-        maxQtyDigits: number
+    private client: RestClientV5;
+    private readonly category: CategoryV5 = 'spot';
+    public priceScale: number;
+    public qtyScale: number;
+
+    constructor(
+        private readonly symbol: string,
+        apiKey: string,
+        apiSecret: string,
+        demoTrading: boolean = true,
+        private onLog?: (payload: any) => void
     ) {
-        this.client = new RestClientV5(restClientOptions);
-        this.priceMaxDigits = maxPriceDigits;
-        this.qtyMaxDigits = maxQtyDigits;
+        this.client = new RestClientV5({
+            key: apiKey,
+            secret: apiSecret,
+            demoTrading: demoTrading,
+        });
     }
 
-    constructor() {}
+    private sendLog(message: string, price?: string) {
+        this.logger.log(message);
+        if (this.onLog) {
+            this.onLog({
+                timestamp: new Date().toISOString(),
+                message,
+                price: price || '0.00',
+            });
+        }
+    }
+
+    async init() {
+        const response = await this.client.getInstrumentsInfo({
+            category: this.category,
+            symbol: this.symbol,
+        });
+        const instrument = response.result?.list?.[0];
+        if (instrument) {
+            const cryptoScale = await this.getCryptoScale();
+
+            if (!cryptoScale) {
+                throw new Error(`Error in cryptoScale: ${this.symbol}`);
+            }
+
+            this.priceScale = cryptoScale.priceScale;
+            this.qtyScale = cryptoScale.qtyScale;
+        }
+    }
 
     async getLatestPrice(): Promise<number> {
         const response = await this.client.getTickers({
             category: 'spot',
-            symbol: this.symbol,
+            symbol: `${this.symbol}USDT`,
         });
         return parseFloat(response.result.list[0].lastPrice);
     }
 
     async getLastNOhlc(candleLength: string | undefined) {
-        const response = await this.client.getKline({
-            category: 'spot',
-            symbol: this.symbol,
-            interval: candleLength ? (candleLength as KlineIntervalV3) : '5',
-            limit: 1000,
-        });
+        try {
+            const response = await this.client.getKline({
+                category: 'spot',
+                symbol: `${this.symbol}USDT`,
+                interval: candleLength
+                    ? (candleLength as KlineIntervalV3)
+                    : '1',
+                limit: 1000,
+            });
 
-        const candles = response.result.list.reverse();
+            const candles: OHLCVKlineV5[] = response.result.list.reverse();
 
-        return {
-            opens: candles.map((c: OHLCVKlineV5) => parseFloat(c[1])),
-            highs: candles.map((c: OHLCVKlineV5) => parseFloat(c[2])),
-            lows: candles.map((c: OHLCVKlineV5) => parseFloat(c[3])),
-            closes: candles.map((c: OHLCVKlineV5) => parseFloat(c[4])),
-        };
+            return {
+                opens: candles.map((c: OHLCVKlineV5) => parseFloat(c[1])),
+                highs: candles.map((c: OHLCVKlineV5) => parseFloat(c[2])),
+                lows: candles.map((c: OHLCVKlineV5) => parseFloat(c[3])),
+                closes: candles.map((c: OHLCVKlineV5) => parseFloat(c[4])),
+            };
+        } catch (err) {
+            this.sendLog(`getLastNOhlc exception: ${err}`);
+            throw err;
+        }
     }
 
     calcGridBounds(prices: number[], k: number) {
@@ -97,18 +133,21 @@ export class BybitService {
             const res: APIResponseV3<OrderResultV5> =
                 await this.client.submitOrder({
                     category: this.category,
-                    symbol: this.symbol,
+                    symbol: `${this.symbol}USDT`,
                     side: side,
                     orderType: 'Limit',
-                    qty: qty.toFixed(this.qtyMaxDigits),
-                    price: price.toFixed(this.priceMaxDigits),
+                    qty: qty.toFixed(this.qtyScale),
+                    price: price.toFixed(this.priceScale),
                     timeInForce: 'GTC',
                 });
 
-            this.logger.log(`submitOrder ${side} response: ${res.retMsg}`);
+            this.sendLog(
+                `submitOrder ${side} response: ${res.retMsg}`,
+                price.toString()
+            );
             return res.retCode;
         } catch (err) {
-            this.logger.error('placeOrder exception:', err);
+            this.sendLog(`placeOrder exception: ${err}`);
             return -1;
         }
     }
@@ -117,13 +156,13 @@ export class BybitService {
         try {
             const res = await this.client.getActiveOrders({
                 category: this.category,
-                symbol: this.symbol,
+                symbol: `${this.symbol}USDT`,
                 limit: 50,
             });
             const list = res.result?.list ?? [];
             return list.filter((p) => p.side === 'Sell');
         } catch (err) {
-            this.logger.error('getOpenSellOrders exception:', err);
+            this.sendLog(`getOpenSellOrders exception: ${err}`);
             return [];
         }
     }
@@ -147,26 +186,26 @@ export class BybitService {
             await this.client.cancelOrder({
                 category: this.category,
                 orderId: order.orderId,
-                symbol: this.symbol,
+                symbol: `${this.symbol}USDT`,
             });
 
             await this.client.submitOrder({
                 category: this.category,
-                symbol: this.symbol,
+                symbol: `${this.symbol}USDT`,
                 side: 'Sell',
                 orderType: 'Limit',
                 qty: order.qty,
-                price: stopPrice.toFixed(this.priceMaxDigits),
+                price: stopPrice.toFixed(this.priceScale),
             });
         } catch (err) {
-            this.logger.error(`Failed to SL order ${order.orderId}:`, err);
+            this.sendLog(`Failed to SL order ${order.orderId}: ${err}`);
         }
     }
 
     async cancelOrder(order: AccountOrderV5 | BotOrderDTO): Promise<void> {
         await this.client.cancelOrder({
             category: this.category,
-            symbol: this.symbol,
+            symbol: `${this.symbol}USDT`,
             orderId: order.orderId,
         });
     }
@@ -175,13 +214,13 @@ export class BybitService {
         try {
             const res = await this.client.getActiveOrders({
                 category: this.category,
-                symbol: this.symbol,
+                symbol: `${this.symbol}USDT`,
                 limit: 50,
             });
             const list = res.result?.list ?? [];
             return list.filter((p) => p.side === 'Buy');
         } catch (err) {
-            this.logger.error('getOpenBuyOrders exception:', err);
+            this.sendLog(`getOpenBuyOrders exception: ${err}`);
             return [];
         }
     }
@@ -220,16 +259,16 @@ export class BybitService {
             const equity = res.result?.list[0]?.totalEquity ?? '0';
             return parseFloat(equity).toFixed(2);
         } catch (err) {
-            this.logger.error('Error getting balance:', err);
+            this.sendLog(`getBalance exception: ${err}`);
             return '0.00';
         }
     }
 
-    private async getCryptoScale(crypto: string) {
+    private async getCryptoScale() {
         try {
             const response = await this.client.getInstrumentsInfo({
                 category: 'spot',
-                symbol: crypto,
+                symbol: `${this.symbol}USDT`,
             });
 
             if (
@@ -251,7 +290,7 @@ export class BybitService {
 
             return null;
         } catch (error) {
-            console.error('Error fetching instrument info:', error);
+            this.logger.error('Error fetching instrument info:', error);
             return null;
         }
     }

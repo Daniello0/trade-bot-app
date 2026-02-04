@@ -24,7 +24,7 @@ const levelsSettings: CreateLevelsSettings = {
 };
 
 const spotGridSettingsData: CreateSpotGridSettings = {
-    candleLength: '5m',
+    candleLength: '1',
     crypto: 'BTC',
     gridSettings: gridSettings,
     levelsSettings: levelsSettings,
