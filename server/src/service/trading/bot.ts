@@ -2,6 +2,7 @@ import { ReadBotDetailsDto } from '../../dto/read-bot.dto';
 import { Logger } from '@nestjs/common';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
 import { Bybit } from './bybit';
+import { AccountOrderV5 } from 'bybit-api';
 
 interface Order {
     price: number;
@@ -19,7 +20,7 @@ export class Bot {
     gridInterval: number;
     public gridLevels: number[];
     public ordersToSell: Order[] = [];
-    private lastPrice: number;
+    public lastPrice: number;
     public upperPriceBound: number;
     public lowerPriceBound: number;
     private readonly amountPerOrderUsd: number;
@@ -134,14 +135,22 @@ export class Bot {
                 this.ordersToSell = this.ordersToSell.filter(
                     (o) => o !== order
                 );
+            } else {
+                this.sendLog(`$Sell order не принят. Код: ${sellRet}`);
             }
         }
 
-        if (prev === null) return;
+        if (prev === null) {
+            this.sendLog('Первый тик — сетка создана, ожидаю следующего тика.');
+            return;
+        }
 
         const openSellOrders = await this.bybit.getOpenSellOrders();
         for (const order of openSellOrders) {
             if (Number(order.price) > this.upperPriceBound) {
+                this.sendLog(
+                    'Производится стоп-лосс: ордера перемещаются к сетке'
+                );
                 await this.bybit.stopLossSell(order, this.upperPriceBound);
             }
         }
@@ -150,35 +159,85 @@ export class Bot {
             currentPrice < this.lowerPriceBound ||
             currentPrice > this.upperPriceBound
         ) {
+            this.sendLog(
+                `Price ${currentPrice.toFixed(6)}
+                 вне грида [${this.lowerPriceBound.toFixed(6)},
+                  ${this.upperPriceBound.toFixed(6)}]. Пропускаю.`
+            );
             return;
         }
 
         for (const level of this.gridLevels) {
-            const crossDown = prev >= level && currentPrice <= level;
-            const crossUp = prev <= level && currentPrice >= level;
+            const crossDown: boolean = prev >= level && currentPrice <= level;
+            const crossUp: boolean = prev <= level && currentPrice >= level;
 
             if (!crossDown && !crossUp) continue;
 
-            const qty = this.amountPerOrderUsd / currentPrice;
+            const qty: number = this.amountPerOrderUsd / currentPrice;
 
             try {
-                const allOpenOrders = await this.bybit.getOpenSellOrders();
-                const tooClose = allOpenOrders.some(
+                this.sendLog(
+                    `CrossDown на уровне ${level.toFixed(6)} — пытаюсь поставить BUY ${qty.toFixed(6)} @${currentPrice.toFixed(6)}`
+                );
+
+                const openSellOrders: AccountOrderV5[] =
+                    await this.bybit.getOpenSellOrders();
+
+                for (const order of openSellOrders) {
+                    if (
+                        Math.abs(+order.price - currentPrice) <
+                        this.gridInterval * 1.9
+                    ) {
+                        this.sendLog(
+                            `Слишком маленькое расстояние между уровнями: ${this.gridInterval} > ${Math.abs(+order.price - currentPrice)}`
+                        );
+                        return;
+                    }
+                }
+
+                for (const order of this.ordersToSell) {
+                    if (
+                        Math.abs(order.price - currentPrice) <
+                        this.gridInterval * 1.9
+                    ) {
+                        this.sendLog(
+                            `Слишком маленькое расстояние между уровнями: ${this.gridInterval} > ${Math.abs(order.price - currentPrice)}`
+                        );
+                        return;
+                    }
+                }
+
+                /*const tooClose: boolean = openSellOrders.some(
                     (o) =>
                         Math.abs(Number(o.price) - currentPrice) <
                         this.gridInterval * 0.8
                 );
 
-                if (tooClose) continue;
+                if (tooClose) {
+                    this.sendLog(`Слишком маленькое расстояние между уровнями`);
+                    continue;
+                }*/
 
-                const buyRet = await this.bybit.placeOrder(
+                const buyRet: number = await this.bybit.placeOrder(
                     'Buy',
                     qty,
                     currentPrice
                 );
-                if (buyRet === 0) {
-                    this.ordersToSell.push({ price: currentPrice, qty: qty });
+                if (buyRet !== 0) {
+                    this.sendLog(`Buy order не принят. Код ответа: ${buyRet}`);
+                    return;
                 }
+
+                this.ordersToSell.push({
+                    price: currentPrice,
+                    qty: qty,
+                });
+
+                this.sendLog(
+                    `ORDERS placed: BUY ${qty.toFixed(2)}
+                    @${currentPrice.toFixed(4)} -> SELL
+                    @${currentPrice.toFixed(6)}`
+                );
             } catch (err) {
                 this.sendLog(`Ошибка в цикле принятия решений: ${err}`);
             }
@@ -194,5 +253,12 @@ export class Bot {
         for (let i = 0; i < this.numberOfGrids; i++) {
             this.gridLevels.push(this.lowerPriceBound + i * this.gridInterval);
         }
+
+        // todo: fix ESLint
+        this.sendLog(
+            `Grid updated: ${this.gridLevels.map(
+                (order) => ' ' + order.toFixed(4)
+            )}, step=${this.gridInterval.toFixed(6)}`
+        );
     }
 }

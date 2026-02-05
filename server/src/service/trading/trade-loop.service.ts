@@ -61,7 +61,7 @@ export class TradeLoopService {
                     botId: botId,
                     timestamp: new Date().toISOString(),
                     message: String(payload),
-                    price: price || undefined,
+                    price: bot.lastPrice,
                     symbol: cleanSymbol,
                 };
             }
@@ -109,9 +109,6 @@ export class TradeLoopService {
                     const historicalData = OHLC.closes;
 
                     emitLog('\n');
-                    emitLog(bot.symbol);
-                    emitLog(new Date().toLocaleString());
-                    emitLog(`Last price: ${lastPrice}`);
                     emitLog(`Open sell orders: ${openSellOrders.length}`);
                     emitLog(`Open buy orders: ${openBuyOrders.length}`);
                     emitLog(

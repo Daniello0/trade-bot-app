@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useSocket } from '../../hooks/useSocket';
 import './BotConsole.css';
@@ -10,6 +10,20 @@ export const BotConsole: React.FC = () => {
     const navigate = useNavigate();
     const { socket } = useSocket();
     const [logs, setLogs] = useState<Log[]>([]);
+
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const [autoScroll, setAutoScroll] = useState<boolean>(true);
+
+    useEffect(() => {
+        if (autoScroll) {
+            scrollToBottom();
+        }
+    }, [autoScroll, logs]);
 
     useEffect(() => {
         if (!socket || !botId) return;
@@ -24,6 +38,14 @@ export const BotConsole: React.FC = () => {
             socket.off('botLog');
         };
     }, [socket, botId]);
+
+    function toggleAutoScroll() {
+        if (autoScroll) {
+            setAutoScroll(false);
+        } else {
+            setAutoScroll(true);
+        }
+    }
 
     return (
         <div className="App">
@@ -55,12 +77,19 @@ export const BotConsole: React.FC = () => {
                                 </span>
                             </div>
                         ))}
+                        <div ref={messagesEndRef} />
                     </div>
                 </div>
 
-                <button className="action-button danger clear-btn" onClick={() => setLogs([])}>
-                    Очистить консоль
-                </button>
+                <div className="button-container">
+                    <button className="action-button danger clear-btn" onClick={() => setLogs([])}>
+                        Очистить консоль
+                    </button>
+
+                    <button className={`action-button ${autoScroll? 'success' : 'danger'} auto-scroll`} onClick={() => toggleAutoScroll()}>
+                        Авто-скроллинг
+                    </button>
+                </div>
             </div>
         </div>
     );

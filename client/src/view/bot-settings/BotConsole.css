@@ -86,3 +86,9 @@
     background: #3a3a3c;
     border-radius: 4px;
 }
+
+.button-container {
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+}
