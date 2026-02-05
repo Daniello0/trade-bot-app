@@ -5,6 +5,7 @@ import { BotSettingsService } from '../database/bot-settings.service';
 import { Bot } from './bot';
 import { Bybit } from './bybit';
 import { BotGateway } from '../../gateway/bot.gateway';
+import { LogDto } from '../../dto/log.dto';
 
 @Injectable()
 export class TradeLoopService {
@@ -22,10 +23,6 @@ export class TradeLoopService {
         botId: number,
         signal: AbortSignal
     ) {
-        const emitLog = (payload: any) => {
-            this.botGateway.server.to(`bot_${botId}`).emit('botLog', payload);
-        };
-
         const user = await this.userService.getApiKeys(userId);
 
         const ws = new WebsocketClient({
@@ -45,6 +42,32 @@ export class TradeLoopService {
 
         const symbol: string =
             botSettings.spotGridSettings?.crypto || 'BTCUSDT';
+
+        const emitLog = (payload: LogDto | string, price?: number) => {
+            let logObject: LogDto;
+
+            const cleanSymbol = symbol.replace('USDT', '');
+
+            if (typeof payload === 'object' && payload !== null) {
+                logObject = {
+                    botId: botId,
+                    timestamp: payload.timestamp || new Date().toISOString(),
+                    message: payload.message || '',
+                    price: payload.price ? Number(payload.price) : price,
+                    symbol: cleanSymbol,
+                };
+            } else {
+                logObject = {
+                    botId: botId,
+                    timestamp: new Date().toISOString(),
+                    message: String(payload),
+                    price: price || undefined,
+                    symbol: cleanSymbol,
+                };
+            }
+
+            this.botGateway.server.to(`bot_${botId}`).emit('botLog', logObject);
+        };
 
         const bybit = new Bybit(
             symbol,

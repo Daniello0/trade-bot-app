@@ -62,3 +62,11 @@ export interface UserKeys {
     apiKey: string;
     apiSecret: string;
 }
+
+export interface Log {
+    botId?: number;
+    timestamp: string;
+    message: string;
+    price?: number;
+    symbol: string;
+}

@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useSocket } from '../../hooks/useSocket';
 import './BotConsole.css';
+import {Log} from "../../api/Types";
 
 export const BotConsole: React.FC = () => {
     const { botId, botName } = useParams<{ botId: string, botName: string }>();
 
     const navigate = useNavigate();
     const { socket } = useSocket();
-    const [logs, setLogs] = useState<any[]>([]);
+    const [logs, setLogs] = useState<Log[]>([]);
 
     useEffect(() => {
         if (!socket || !botId) return;
@@ -43,9 +44,15 @@ export const BotConsole: React.FC = () => {
                         )}
                         {logs.map((log, index) => (
                             <div key={index} className="log-line">
-                                <span className="log-time">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                                <span className="log-price">{log.price} USDT</span>
-                                <span className="log-message">{log.message}</span>
+                                <span className="log-time">
+                                    [{log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '---'}]
+                                </span>
+                                <span className="log-price">
+                                    {log.price ? Number(log.price).toFixed(4) : '---'} {log.symbol}
+                                </span>
+                                <span className="log-message">
+                                    {log.message}
+                                </span>
                             </div>
                         ))}
                     </div>

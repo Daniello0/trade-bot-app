@@ -22,7 +22,7 @@ export class Bot {
     private lastPrice: number;
     public upperPriceBound: number;
     public lowerPriceBound: number;
-    private amountPerOrderUsd: number;
+    private readonly amountPerOrderUsd: number;
     private lowerQuantile: string;
     private upperQuantile: string;
 
@@ -87,14 +87,15 @@ export class Bot {
         return bot;
     }
 
-    private sendLog(message: string, price?: number) {
+    private sendLog(message: string) {
         this.logger.log(message);
         if (this.onLog) {
             this.onLog({
                 botId: this.botSettings.id,
                 timestamp: new Date().toISOString(),
-                message,
-                price: price?.toFixed(4) || '---',
+                message: message,
+                price: this.lastPrice,
+                symbol: this.symbol,
             });
         }
     }

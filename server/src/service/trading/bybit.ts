@@ -46,8 +46,9 @@ export class Bybit {
         if (this.onLog) {
             this.onLog({
                 timestamp: new Date().toISOString(),
-                message,
-                price: price || '0.00',
+                message: message,
+                price: price,
+                symbol: this.symbol,
             });
         }
     }
