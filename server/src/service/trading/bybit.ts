@@ -7,7 +7,6 @@ import {
     OrderResultV5,
     OrderSideV5,
     RestClientV5,
-    SpotInstrumentInfoV5,
 } from 'bybit-api';
 import { Logger } from '@nestjs/common';
 
@@ -19,6 +18,15 @@ export interface BotOrderDTO {
     qty: string;
 }
 
+export interface CalculatedQuantiles {
+    min: number;
+    max: number;
+    Q1: number;
+    Q3: number;
+    Q90: number;
+    Q10: number;
+}
+
 export class Bybit {
     private readonly logger: Logger = new Logger(Bybit.name);
 
@@ -28,7 +36,7 @@ export class Bybit {
     public qtyScale: number;
 
     constructor(
-        private readonly symbol: string,
+        readonly symbol: string,
         apiKey: string,
         apiSecret: string,
         demoTrading: boolean = true,
@@ -54,21 +62,14 @@ export class Bybit {
     }
 
     async init() {
-        const response = await this.client.getInstrumentsInfo({
-            category: this.category,
-            symbol: this.symbol,
-        });
-        const instrument = response.result?.list?.[0];
-        if (instrument) {
-            const cryptoScale = await this.getCryptoScale();
+        const cryptoScale = await this.getCryptoScale();
 
-            if (!cryptoScale) {
-                throw new Error(`Error in cryptoScale: ${this.symbol}`);
-            }
-
-            this.priceScale = cryptoScale.priceScale;
-            this.qtyScale = cryptoScale.qtyScale;
+        if (!cryptoScale) {
+            throw new Error(`Error in cryptoScale: ${this.symbol}`);
         }
+
+        this.priceScale = cryptoScale.priceScale;
+        this.qtyScale = cryptoScale.qtyScale;
     }
 
     async getLatestPrice(): Promise<number> {
@@ -248,7 +249,7 @@ export class Bybit {
             Q3: percentile(sorted, 0.75),
             Q90: percentile(sorted, 0.9),
             Q10: percentile(sorted, 0.1),
-        };
+        } as CalculatedQuantiles;
     }
 
     async getBalance(): Promise<string> {
@@ -265,7 +266,7 @@ export class Bybit {
         }
     }
 
-    private async getCryptoScale() {
+    public async getCryptoScale() {
         try {
             const response = await this.client.getInstrumentsInfo({
                 category: 'spot',
@@ -277,8 +278,7 @@ export class Bybit {
                 response.result.list &&
                 response.result.list.length > 0
             ) {
-                const instrument: SpotInstrumentInfoV5 =
-                    response.result.list[0];
+                const instrument = response.result.list[0];
                 return {
                     priceScale: this.getDecimalsCount(
                         instrument.priceFilter.tickSize
@@ -291,13 +291,13 @@ export class Bybit {
 
             return null;
         } catch (error) {
-            this.logger.error('Error fetching instrument info:', error);
+            console.error('Error fetching instrument info:', error);
             return null;
         }
     }
 
     private getDecimalsCount(value: string | number) {
-        const valueStr = value.toString();
+        const valueStr: string = value.toString();
         if (!valueStr.includes('.')) return 0;
         return valueStr.split('.')[1].length;
     }

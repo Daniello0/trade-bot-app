@@ -78,7 +78,17 @@ export class TradeLoopService {
         );
         await bybit.init();
 
-        const bot: Bot = await Bot.setupBot(botSettings, bybit, emitLog);
+        /*const scales = await bybit.getCryptoScale();
+
+        if (!scales?.priceScale || !scales.qtyScale) {
+            throw new Error('qtyScale or priceScale is not defined');
+        }
+
+        bybit.priceScale = scales?.priceScale;
+        bybit.qtyScale = scales?.qtyScale;*/
+
+        const bot = new Bot(botSettings, bybit, emitLog);
+        await bot.init(bybit);
 
         signal.addEventListener('abort', () => {
             this.logger.log(
@@ -175,12 +185,11 @@ export class TradeLoopService {
         bybitService: Bybit,
         historicalData: number[]
     ) {
-        const quartiles = bybitService.calculateQuartiles(historicalData);
-        if (!quartiles) return;
+        const quantiles = bybitService.calculateQuartiles(historicalData);
+        if (!quantiles) return;
 
-        const lower = quartiles.Q10;
-        const upper = quartiles.Q90;
+        bot.applyQuantiles(quantiles);
 
-        bot.updateGridBounds(lower, upper);
+        bot.updateGridBounds(bot.lowerPriceBound, bot.upperPriceBound);
     }
 }

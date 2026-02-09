@@ -1,8 +1,9 @@
 import { ReadBotDetailsDto } from '../../dto/read-bot.dto';
 import { Logger } from '@nestjs/common';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
-import { Bybit } from './bybit';
+import { Bybit, CalculatedQuantiles } from './bybit';
 import { AccountOrderV5 } from 'bybit-api';
+import * as console from 'node:console';
 
 interface Order {
     price: number;
@@ -52,15 +53,9 @@ export class Bot {
             this.spotGridSettings.gridSettings.upperBoundDynamic;
     }
 
-    public static async setupBot(
-        botSettings: ReadBotDetailsDto,
-        bybitService: Bybit,
-        onLog?: (payload: any) => void
-    ) {
-        const bot = new Bot(botSettings, bybitService, onLog);
-
+    public async init(bybitService: Bybit) {
         const historicalData = await bybitService.getLastNOhlc(
-            bot.candleLength
+            this.candleLength
         );
 
         const quantiles = bybitService.calculateQuartiles(
@@ -71,21 +66,9 @@ export class Bot {
             throw new Error('No historical data found!');
         }
 
-        if (bot.upperQuantile == '90%') {
-            bot.upperPriceBound = quantiles.Q90;
-        } else {
-            bot.upperPriceBound = quantiles.max;
-        }
+        this.applyQuantiles(quantiles);
 
-        if (bot.lowerQuantile == '10%') {
-            bot.lowerPriceBound = quantiles.Q10;
-        } else {
-            bot.lowerPriceBound = quantiles.min;
-        }
-
-        bot.updateGridBounds(bot.lowerPriceBound, bot.upperPriceBound);
-
-        return bot;
+        this.updateGridBounds(this.lowerPriceBound, this.upperPriceBound);
     }
 
     private sendLog(message: string) {
@@ -114,6 +97,10 @@ export class Bot {
         this.lastPrice = seedPrice;
 
         this.sendLog(`Initial grid created. Seed price: ${seedPrice}`);
+        this.sendLog(
+            `Deposit = ${this.maxDeposit}, 
+            amount per order = ${this.amountPerOrderUsd}`
+        );
     }
 
     async botMakeDecision({ currentPrice }: { currentPrice: number }) {
@@ -260,5 +247,23 @@ export class Bot {
                 (order) => ' ' + order.toFixed(4)
             )}, step=${this.gridInterval.toFixed(6)}`
         );
+    }
+
+    applyQuantiles(calculatedQuantiles: CalculatedQuantiles) {
+        if (this.upperQuantile == 'q3') {
+            this.upperPriceBound = calculatedQuantiles.Q3;
+        } else if (this.upperQuantile == '90%') {
+            this.upperPriceBound = calculatedQuantiles.Q90;
+        } else {
+            this.upperPriceBound = calculatedQuantiles.max;
+        }
+
+        if (this.lowerQuantile == 'min') {
+            this.lowerPriceBound = calculatedQuantiles.min;
+        } else if (this.lowerQuantile == '10%') {
+            this.lowerPriceBound = calculatedQuantiles.Q10;
+        } else {
+            this.lowerPriceBound = calculatedQuantiles.Q1;
+        }
     }
 }

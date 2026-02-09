@@ -56,6 +56,7 @@ export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsPr
                         <div className="sub-group grid-bounds">
                             <div>
                                 <p>Нижняя граница:</p>
+                                <label><input type="radio" {...autoGridLowerField} value="min" checked={autoGridLowerField.value === 'min'} /> min</label>
                                 <label><input type="radio" {...autoGridLowerField} value="10%" checked={autoGridLowerField.value === '10%'} /> 10%</label>
                                 <label><input type="radio" {...autoGridLowerField} value="q1" checked={autoGridLowerField.value === 'q1'} /> Q1</label>
                             </div>
@@ -64,6 +65,7 @@ export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsPr
                                 <p>Верхняя граница:</p>
                                 <label><input type="radio" {...autoGridUpperField} value="q3" checked={autoGridUpperField.value === 'q3'} /> Q3</label>
                                 <label><input type="radio" {...autoGridUpperField} value="90%" checked={autoGridUpperField.value === '90%'} /> 90%</label>
+                                <label><input type="radio" {...autoGridUpperField} value="max" checked={autoGridUpperField.value === 'max'} /> max</label>
                             </div>
                         </div>
                     )}
