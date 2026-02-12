@@ -190,3 +190,15 @@ body {
 .add-bot-button:hover {
   transform: scale(104%);
 }
+
+.error-text {
+  color: var(--color-danger);
+  padding-top: 10px;
+  font-size: 17px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.error-text.short {
+  max-width: 200px;
+}

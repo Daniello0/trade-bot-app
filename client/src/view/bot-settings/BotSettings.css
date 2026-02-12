@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 .bot-settings-page {
     display: flex;
     justify-content: center;
@@ -11,7 +15,7 @@
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     padding: 30px 40px;
-    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .bot-settings-form h1 {
@@ -25,6 +29,8 @@
     border: none;
     padding: 0;
     margin: 0 0 35px 0;
+    max-width: 100%; /* Вместо 800px, чтобы не вылезать за паддинги формы */
+    width: 100%;
 }
 
 .form-section legend {
@@ -122,14 +128,15 @@
     gap: 15px;
     padding-left: 30px;
     margin-top: 10px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .form-hint {
-    margin: 0 0 0 10px;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-secondary);
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-all;
+    max-width: 180px;
 }
 
 .form-actions {
@@ -144,4 +151,8 @@
 .form-actions .action-button,
 .form-actions .add-bot-button {
     margin-top: 0;
+}
+
+.form-group input {
+    width: 100%;
 }

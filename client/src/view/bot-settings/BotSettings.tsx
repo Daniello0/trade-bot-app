@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {NavigateFunction, useNavigate, useParams} from "react-router";
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { SpotGridSettings } from './SpotGridSettings';
 import './BotSettings.css';
 import {createBot, getBot, updateBot} from "../../service/BotService";
@@ -12,6 +13,7 @@ import {
     ReadBotDetails
 } from "../../api/Types";
 import {mapReadBotToCreateBot} from "../../mapper/BotTypeMapper";
+import {createBotSchema} from "../../schema/Schemas";
 
 const gridSettings: CreateGridSettings = {
     lowerBoundDynamic: 'q1',
@@ -41,8 +43,18 @@ const values: CreateBot = {
 function BotSettings() {
     const navigate: NavigateFunction = useNavigate();
 
-    const { register, control, handleSubmit, watch, setValue, reset } = useForm<CreateBot>({
+    const {
+        register,
+        control,
+        handleSubmit,
+        watch,
+        setValue,
+        reset,
+        formState: { errors }
+    } = useForm<CreateBot>({
         defaultValues: values,
+        resolver: yupResolver(createBotSchema) as any,
+        mode: "onChange"
     });
 
     const botType = watch('botType');
@@ -105,11 +117,13 @@ function BotSettings() {
                     <legend>Общие</legend>
                     <div className="form-group">
                         <label htmlFor="name">Имя</label>
-                        <input type="text" {...register('name', { required: "Имя обязательно" })} />
+                        <input type="text" {...register('name')} />
+                        {errors.name && <span className="error-text">{errors.name.message}</span>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="deposit">Депозит, $</label>
-                        <input type="number" {...register('deposit', { required: "Депозит обязателен", valueAsNumber: true })} min="0" />
+                        <input type="number" {...register('deposit')} />
+                        {errors.deposit && <span className="error-text">{errors.deposit.message}</span>}
                     </div>
                 </fieldset>
 
@@ -123,7 +137,7 @@ function BotSettings() {
                     </fieldset>
                 )}
 
-                {botType === 'spotGrid' && <SpotGridSettings control={control} watch={watch} setValue={setValue} deposit={deposit} />}
+                {botType === 'spotGrid' && <SpotGridSettings control={control} watch={watch} setValue={setValue} deposit={deposit} errors={errors} />}
                 {botType === 'fullSpot' && <h2>Временно недоступен</h2>}
 
                 <div className="form-actions">

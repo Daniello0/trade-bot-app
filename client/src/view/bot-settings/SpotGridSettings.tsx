@@ -1,5 +1,5 @@
 import React from 'react';
-import { Control, UseFormSetValue, UseFormWatch, useController } from 'react-hook-form';
+import {Control, UseFormSetValue, UseFormWatch, useController, FieldErrors} from 'react-hook-form';
 import './SpotGridSettings.css';
 import { CreateBot } from "../../api/Types";
 
@@ -12,9 +12,10 @@ interface SpotGridSettingsProps {
     watch: WatchType;
     setValue: SetValueType;
     deposit: number;
+    errors: FieldErrors<CreateBot>;
 }
 
-export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsProps) {
+export function SpotGridSettings({ control, watch, deposit, errors }: SpotGridSettingsProps) {
     const { field: candleLengthField } = useController({ name: 'spotGridSettingsData.candleLength', control });
     const { field: cryptoField } = useController({ name: 'spotGridSettingsData.crypto', control });
 
@@ -76,9 +77,17 @@ export function SpotGridSettings({ control, watch, deposit }: SpotGridSettingsPr
                 <label>Кол-во уровней и цена за ставку</label>
                 <div className="radio-group vertical nested">
                     {(
-                        <div className="sub-group">
-                            <input type="number" placeholder="Кол-во уровней (5, 10...)" {...staticLevelsCountField} />
-                            <input type="number" placeholder="Цена за ставку ($)" {...staticLevelsPriceField} />
+                        <div className="sub-group levels">
+                            <div className="form-group">
+                                <input type="number" placeholder="Кол-во уровней (5, 10...)" {...staticLevelsCountField} />
+                                {errors.spotGridSettingsData?.levelsSettings?.countStatic &&
+                                    <span className="error-text short">{errors.spotGridSettingsData.levelsSettings.countStatic.message}</span>}
+                            </div>
+                            <div className="form-group">
+                                <input type="number" placeholder="Цена за ставку ($)" {...staticLevelsPriceField} />
+                                {errors.spotGridSettingsData?.levelsSettings?.pricePerBetStatic &&
+                                    <span className="error-text short">{errors.spotGridSettingsData.levelsSettings.pricePerBetStatic.message}</span>}
+                            </div>
                             <p className="form-hint">Цена за ставку ≤ {(deposit / staticLevelsCount).toFixed(2)}$</p>
                         </div>
                     )}

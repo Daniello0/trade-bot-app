@@ -3,7 +3,6 @@ import { Logger } from '@nestjs/common';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
 import { Bybit, CalculatedQuantiles } from './bybit';
 import { AccountOrderV5 } from 'bybit-api';
-import * as console from 'node:console';
 
 interface Order {
     price: number;
