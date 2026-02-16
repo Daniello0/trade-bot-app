@@ -4,7 +4,7 @@ import {requestApi} from "./RequestApiService";
 export const createUserKeys = async (keys: UserKeys):
     Promise<Error | undefined> => {
     try {
-        const res = await requestApi('/user/keys', 'POST', keys);
+        const res: Response = await requestApi('/user/keys', 'POST', keys);
         if (!res.ok) {
             return new Error('Не удалось сохранить ключи');
         }

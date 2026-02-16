@@ -4,10 +4,11 @@ import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary} from "../../api/Types";
-import {createUserKeys, getUserKeys} from "../../service/UserService";
-import {ApiKeysModal} from "../bot-settings/ApiKeysModal";
+import {createUserKeys, getUserKeys} from "../../service/UserKeysService";
+import {ApiKeysModal} from "./ApiKeysModal";
 import {toggleBot} from "../../service/BotManagerService";
 import {requestApi} from "../../service/RequestApiService";
+import {AuthModal} from "./AuthModal";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
@@ -17,6 +18,9 @@ function App() {
 
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
+
+    const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+    const [authError, setAuthError] = useState('');
 
     const checkConnection = async () => {
         try {
@@ -77,6 +81,10 @@ function App() {
         }
     };
 
+    const handleAuthButtonClick = () => {
+        setAuthModalOpen(true);
+    }
+
     useEffect(() => {
         if (!data) return;
 
@@ -91,9 +99,8 @@ function App() {
                     <div className="singup" onClick={() => {
                         alert('Зарегистрироваться')
                     }}>Sing up</div>
-                    <div className="login" onClick={() => {
-                        alert('Войти')
-                    }}>Log in</div>
+                    <div className="login" onClick={() => handleAuthButtonClick()
+                    }>Log in</div>
                 </div>
                 <div className="table">
                     <div className="table-header">
@@ -136,6 +143,12 @@ function App() {
                     onClose={() => setKeysModalOpen(false)}
                     onSave={handleSaveKeys}
                     initialData={existingKeys}
+                />
+                <AuthModal
+                    isOpen={isAuthModalOpen}
+                    onClose={() => setAuthModalOpen(false)}
+                    // onSave={}
+                    // initialData={}
                 />
             </div>
         )
