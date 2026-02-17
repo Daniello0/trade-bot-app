@@ -5,7 +5,7 @@ import { Users } from '../../entity/Users';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class UserService {
+export class UserKeysService {
     constructor(private readonly cryptoService: CryptoService) {}
 
     async saveApiKeys(

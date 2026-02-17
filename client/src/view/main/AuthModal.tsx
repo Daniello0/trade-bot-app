@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../service/Firebase";
 import "./AuthModal.css";
+import {loginUser} from "../../service/UserAuthService";
 
 Modal.setAppElement('#root');
 
@@ -23,7 +24,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
             setIdToken(token);
 
-            // await api.post("/auth/firebase-login", { idToken: token });
+            const res = await loginUser(token);
+            console.log(res);
 
             console.log("Вход выполнен успешно");
             onClose();

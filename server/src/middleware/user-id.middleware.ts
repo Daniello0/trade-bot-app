@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { UserService } from '../service/user/user.service';
+import { UserKeysService } from '../service/user/user-keys.service';
 
 export interface RequestWithUserId extends Request {
     userId?: string;
@@ -11,7 +11,7 @@ export interface RequestWithUserId extends Request {
 
 @Injectable()
 export class AssignUserIdMiddleware implements NestMiddleware {
-    constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserKeysService) {}
 
     async use(req: RequestWithUserId, res: Response, next: NextFunction) {
         const { v4: uuidv4 } = await import('uuid');

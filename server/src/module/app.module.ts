@@ -4,7 +4,7 @@ import { AppService } from '../service/app/app.service';
 import { AssignUserIdMiddleware } from '../middleware/user-id.middleware';
 import { BotSettingsService } from '../service/database/bot-settings.service';
 import { BotController } from '../controller/bot.controller';
-import { UserService } from '../service/user/user.service';
+import { UserKeysService } from '../service/user/user-keys.service';
 import { UserController } from '../controller/user.controller';
 import { CryptoService } from '../service/cryptography/crypto.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -36,7 +36,7 @@ import { TradeLoopService } from '../service/trading/trade-loop.service';
     providers: [
         AppService,
         BotSettingsService,
-        UserService,
+        UserKeysService,
         CryptoService,
         SpotGridSettingsService,
         GridSettingsService,

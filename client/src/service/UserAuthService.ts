@@ -13,7 +13,7 @@ export const loginUser = async (idToken: string) => {
 
 export const logoutUser = async () => {
     try {
-        const res: Response = await requestApi(`/user/logout`, 'GET');
+        const res: Response = await requestApi(`/user/logout`, 'POST');
         if (res.ok) {
             return res.json();
         }

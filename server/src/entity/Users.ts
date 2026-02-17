@@ -7,6 +7,9 @@ export class Users {
     @PrimaryColumn('uuid', { nullable: false })
     id: string;
 
+    @Column('text', { nullable: false })
+    email: string;
+
     @Column('timestamp without time zone', {
         nullable: false,
         default: () => 'CURRENT_TIMESTAMP',

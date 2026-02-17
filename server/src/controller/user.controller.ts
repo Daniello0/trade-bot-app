@@ -7,13 +7,13 @@ import {
     Post,
     Req,
 } from '@nestjs/common';
-import { UserService } from '../service/user/user.service';
+import { UserKeysService } from '../service/user/user-keys.service';
 import * as user_idMiddleware from '../middleware/user-id.middleware';
 import { CreateUserKeysDto } from '../dto/create-user-keys.dto';
 
 @Controller('/user')
 export class UserController {
-    constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserKeysService) {}
 
     @Post('/keys')
     @HttpCode(HttpStatus.OK)
