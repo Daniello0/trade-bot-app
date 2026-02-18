@@ -7,8 +7,11 @@ export class Users {
     @PrimaryColumn('uuid', { nullable: false })
     id: string;
 
-    @Column('text', { nullable: false })
+    @Column('text', { nullable: false, default: '' })
     email: string;
+
+    @Column('text', { nullable: false, default: '' })
+    name: string;
 
     @Column('timestamp without time zone', {
         nullable: false,

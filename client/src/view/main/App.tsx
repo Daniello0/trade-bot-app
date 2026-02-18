@@ -12,7 +12,7 @@ import {AuthModal} from "./AuthModal";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<ReadBotSummary[] | []>([]);
     const [sortedData, setSortedData] = useState<any>(null);
     const navigate: NavigateFunction = useNavigate();
 
@@ -27,8 +27,11 @@ function App() {
             const res: Response = await requestApi('/healthz', 'GET');
 
             if (res.ok) {
-                setData(await getAllBots());
                 setStatus('connected');
+                const allBots: ReadBotSummary[] | undefined = await getAllBots();
+                console.log(allBots);
+                if (!allBots) setData([])
+                else setData(allBots);
             } else {
                 setStatus('disconnected');
             }
@@ -46,12 +49,14 @@ function App() {
 
     const handleToggleBotButtonClick = async (botId: number) => {
         await toggleBot(botId);
-        setData(await getAllBots());
+        const bots = await getAllBots();
+        if (bots) setData(bots);
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
         await deleteBot(botId);
-        setData(await getAllBots());
+        const bots = await getAllBots();
+        if (bots) setData(bots);
     }
 
     const handleEditButtonClick = (botId: number) => {
@@ -91,7 +96,7 @@ function App() {
         setSortedData(data.sort((a: { id: number; }, b: { id: number; }) => (a.id < b.id ? 1 : -1)))
     }, [data]);
 
-    if (status === 'connected' && sortedData) {
+    if (status === 'connected') {
         return (
             <div className="App">
                 <div className="header">

@@ -33,18 +33,26 @@ export class UserCrudService {
         }
     }
 
-    async create(email: string | undefined, newUserId: string) {
+    async create(
+        email: string | undefined,
+        name: string | undefined,
+        newUserId: string
+    ) {
         const newUser: Users = this.usersRepository.create({
             id: newUserId,
             email: email,
+            name: name,
         });
         await this.usersRepository.save(newUser);
     }
 
     async update(email: string | undefined, data: { id: string }) {
         if (!email) throw new Error('Email не определен');
-        await this.usersRepository.update(email, {
-            id: data.id,
-        });
+        await this.usersRepository.update(
+            { email: email },
+            {
+                id: data.id,
+            }
+        );
     }
 }

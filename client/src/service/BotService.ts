@@ -1,4 +1,4 @@
-import {CreateBot} from "../api/Types";
+import {CreateBot, ReadBotSummary} from "../api/Types";
 import {requestApi} from "./RequestApiService";
 
 export const createBot = async (botParams: CreateBot): Promise<Error | undefined> => {
@@ -12,9 +12,10 @@ export const createBot = async (botParams: CreateBot): Promise<Error | undefined
     }
 }
 
-export const getAllBots = async () => {
+export const getAllBots = async ():
+    Promise<ReadBotSummary[] | undefined> => {
     try {
-        const res = await requestApi('/bots/all', 'GET');
+        const res: Response = await requestApi('/bots/all', 'GET');
         if (res.ok) {
             return await res.json();
         }

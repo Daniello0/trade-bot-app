@@ -1,32 +1,39 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { DecodedIdToken } from 'firebase-admin/auth';
-import * as admin from 'firebase-admin';
+import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { UserCrudService } from './user-crud.service';
 import { ReadUserDto } from '../../dto/read-user.dto';
 import { Users } from '../../entity/Users';
+import { FirebaseService } from '../../auth/firebase-init.auth';
 
 @Injectable()
 export class UserAuthService {
-    constructor(private readonly userCrudService: UserCrudService) {}
+    constructor(
+        private readonly firebaseService: FirebaseService,
+        private readonly userCrudService: UserCrudService
+    ) {}
 
     async loginUser(idToken: string) {
         try {
-            const decodedToken: DecodedIdToken = await admin
-                .auth()
+            const decodedToken: DecodedIdToken = await this.firebaseService
+                .getAuth()
                 .verifyIdToken(idToken);
+            const decodedUser: UserRecord = await this.firebaseService
+                .getAuth()
+                .getUser(decodedToken.uid);
 
             if (!decodedToken) return;
+
+            const { v4: uuidv4 } = await import('uuid');
+            const newUserId: string = uuidv4();
 
             const user: Users | undefined = await this.userCrudService.select({
                 email: decodedToken.email,
             });
 
-            const { v4: uuidv4 } = await import('uuid');
-            const newUserId: string = uuidv4();
-
             if (!user) {
                 await this.userCrudService.create(
                     decodedToken.email,
+                    decodedUser.displayName,
                     newUserId
                 );
             } else {

@@ -1,7 +1,6 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from '../controller/app.controller';
 import { AppService } from '../service/app/app.service';
-import { AssignUserIdMiddleware } from '../middleware/user-id.middleware';
 import { BotSettingsService } from '../service/database/bot-settings.service';
 import { BotController } from '../controller/bot.controller';
 import { UserKeysService } from '../service/user/user-keys.service';
@@ -20,6 +19,10 @@ import { DatabaseService } from '../service/database/init-typeorm';
 import { BotGateway } from '../gateway/bot.gateway';
 import { BotManagerService } from '../service/trading/bot-manager.service';
 import { TradeLoopService } from '../service/trading/trade-loop.service';
+import { UserAuthController } from '../controller/user-auth.controller';
+import { UserCrudService } from '../service/user/user-crud.service';
+import { UserAuthService } from '../service/user/user-auth.service';
+import { FirebaseService } from '../auth/firebase-init.auth';
 
 @Module({
     imports: [
@@ -32,7 +35,12 @@ import { TradeLoopService } from '../service/trading/trade-loop.service';
             Users,
         ]),
     ],
-    controllers: [AppController, BotController, UserController],
+    controllers: [
+        AppController,
+        BotController,
+        UserController,
+        UserAuthController,
+    ],
     providers: [
         AppService,
         BotSettingsService,
@@ -44,10 +52,9 @@ import { TradeLoopService } from '../service/trading/trade-loop.service';
         BotManagerService,
         TradeLoopService,
         BotGateway,
+        UserCrudService,
+        UserAuthService,
+        FirebaseService,
     ],
 })
-export class AppModule implements NestModule {
-    configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AssignUserIdMiddleware).forRoutes('*');
-    }
-}
+export class AppModule {}

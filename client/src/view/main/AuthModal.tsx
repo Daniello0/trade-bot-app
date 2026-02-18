@@ -3,7 +3,7 @@ import Modal from "react-modal";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../service/Firebase";
 import "./AuthModal.css";
-import {loginUser} from "../../service/UserAuthService";
+import {loginUser, logoutUser} from "../../service/UserAuthService";
 
 Modal.setAppElement('#root');
 
@@ -24,7 +24,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
             setIdToken(token);
 
-            const res = await loginUser(token);
+            const res: number | undefined = await loginUser(token);
             console.log(res);
 
             console.log("Вход выполнен успешно");
@@ -38,7 +38,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         try {
             await auth.signOut();
             setIdToken(null);
-            // await api.post("/auth/logout");
+            await logoutUser();
         } catch (error) {
             console.error("Ошибка при выходе:", error);
         }
