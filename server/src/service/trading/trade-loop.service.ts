@@ -150,7 +150,7 @@ export class TradeLoopService {
                         emitLog(`Lower = ${bot.lowerPriceBound}`);
                         emitLog(`Upper = ${bot.upperPriceBound}`);
                         emitLog(`Number of grids = ${bot.numberOfGrids}`);
-                        // todo: fix ESLint
+                        // hack: fix ESLint
                         emitLog(
                             `Grid state: ${bot.gridLevels.map((order) => ' ' + order.toFixed(4))}, step=${bot.gridInterval.toFixed(6)}`
                         );

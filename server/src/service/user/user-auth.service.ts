@@ -60,6 +60,7 @@ export class UserAuthService {
                 return {
                     id: user.id,
                     email: user.email,
+                    name: user.name,
                 } as ReadUserDto;
             } else return;
         } catch (error) {

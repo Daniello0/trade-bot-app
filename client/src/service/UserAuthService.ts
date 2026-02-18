@@ -11,23 +11,9 @@ export const loginUser = async (idToken: string) => {
     }
 }
 
-export const logoutUser = async () => {
+export const logoutUser = async (): Promise<void> => {
     try {
-        const res: Response = await requestApi(`/user/auth/logout`, 'POST');
-        if (res.ok) {
-            return res.json();
-        }
-    } catch (error) {
-        throw error;
-    }
-}
-
-export const auth = async () => {
-    try {
-        const res: Response = await requestApi(`/user/auth`, 'GET');
-        if (res.ok) {
-            return res.json();
-        }
+        await requestApi(`/user/auth/logout`, 'POST');
     } catch (error) {
         throw error;
     }

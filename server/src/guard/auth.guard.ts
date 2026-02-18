@@ -12,6 +12,7 @@ export interface RequestWithUserId extends Request {
     };
 }
 
+// info: is @UseGuard() implemented in the correct places?
 @Injectable()
 export class AuthGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {

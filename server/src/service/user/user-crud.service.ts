@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Users } from '../../entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CryptoService } from '../cryptography/crypto.service';
 
 @Injectable()
 export class UserCrudService {
     constructor(
         @InjectRepository(Users)
-        private readonly usersRepository: Repository<Users>
+        private readonly usersRepository: Repository<Users>,
+
+        private readonly cryptoService: CryptoService
     ) {}
 
     async select(data: {
@@ -42,6 +45,8 @@ export class UserCrudService {
             id: newUserId,
             email: email,
             name: name,
+            apiKey: this.cryptoService.encrypt(''),
+            apiSecret: this.cryptoService.encrypt(''),
         });
         await this.usersRepository.save(newUser);
     }

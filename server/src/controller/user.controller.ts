@@ -6,16 +6,19 @@ import {
     HttpStatus,
     Post,
     Req,
+    UseGuards,
 } from '@nestjs/common';
 import { UserKeysService } from '../service/user/user-keys.service';
 import * as user_idGuard from '../guard/auth.guard';
 import { CreateUserKeysDto } from '../dto/create-user-keys.dto';
+import { AuthGuard } from '../guard/auth.guard';
 
 @Controller('/user')
 export class UserController {
     constructor(private readonly userService: UserKeysService) {}
 
     @Post('/keys')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async addKeys(
         @Req() req: user_idGuard.RequestWithUserId,
@@ -26,6 +29,7 @@ export class UserController {
     }
 
     @Get('/keys')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async getKeys(
         @Req() req: user_idGuard.RequestWithUserId

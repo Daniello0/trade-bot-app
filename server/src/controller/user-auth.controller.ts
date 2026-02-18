@@ -7,12 +7,15 @@ import {
     Post,
     Req,
     Res,
+    UnauthorizedException,
+    UseGuards,
 } from '@nestjs/common';
 import * as user_idGuard from '../guard/auth.guard';
 import { UserAuthService } from '../service/user/user-auth.service';
 import { ReadUserDto } from '../dto/read-user.dto';
 import { LoginDto } from '../dto/login.dto';
 import express, { Response } from 'express';
+import { AuthGuard } from '../guard/auth.guard';
 
 @Controller('/user/auth')
 export class UserAuthController {
@@ -34,6 +37,7 @@ export class UserAuthController {
     }
 
     @Get('/')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async auth(
         @Req() req: user_idGuard.RequestWithUserId
@@ -42,13 +46,13 @@ export class UserAuthController {
         const authUser: ReadUserDto | undefined =
             await this.userAuthService.auth(userId);
         if (authUser) return authUser;
-        else throw new Error('Ошибка при авторизации');
+        else throw new UnauthorizedException('Ошибка при авторизации');
     }
 
     @Post('logout')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     logout(@Res() res: express.Response): void {
-        // clear cookie
         this.clearCookie(res);
         res.sendStatus(HttpStatus.OK).send();
     }

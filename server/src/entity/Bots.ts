@@ -35,6 +35,7 @@ export class Bots {
     })
     spotGridSettings: SpotGridSettings;
 
+    // fixme: change linking by userId to linking by email
     @ManyToOne(() => Users, (user: Users) => user.bots, {
         onDelete: 'CASCADE',
     })

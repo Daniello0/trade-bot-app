@@ -70,3 +70,9 @@ export interface Log {
     price?: number;
     symbol: string;
 }
+
+export interface ReadUser {
+    id: string;
+    email: string;
+    name: string;
+}

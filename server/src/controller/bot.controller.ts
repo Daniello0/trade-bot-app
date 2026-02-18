@@ -28,6 +28,7 @@ export class BotController {
     ) {}
 
     @Post('/create')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.CREATED)
     async createBot(
         @Req() req: user_idGuard.RequestWithUserId,
@@ -47,6 +48,7 @@ export class BotController {
     }
 
     @Get(':botId/details')
+    @UseGuards(AuthGuard)
     async getBotDetails(
         @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number
@@ -57,6 +59,7 @@ export class BotController {
     }
 
     @Delete(':botId')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteBot(
         @Req() req: user_idGuard.RequestWithUserId,
@@ -67,6 +70,8 @@ export class BotController {
     }
 
     @Patch(':botId')
+    @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.OK)
     async updateBot(
         @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number,
@@ -77,6 +82,7 @@ export class BotController {
     }
 
     @Post(':botId/toggle')
+    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async toggleBot(
         @Req() req: user_idGuard.RequestWithUserId,
