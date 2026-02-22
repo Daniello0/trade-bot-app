@@ -240,7 +240,7 @@ export class Bot {
             this.gridLevels.push(this.lowerPriceBound + i * this.gridInterval);
         }
 
-        // hack: fix ESLint
+        // refactor: fix ESLint
         this.sendLog(
             `Grid updated: ${this.gridLevels.map(
                 (order) => ' ' + order.toFixed(4)

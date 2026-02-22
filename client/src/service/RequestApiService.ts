@@ -1,29 +1,21 @@
-const backendUrl = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
+const BASE_URL = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
 
-export const requestApi = async (endpoint: string, method: string, body?: any) => {
-    if (method === 'POST' || method === 'PATCH') {
-        return await fetch(backendUrl + `${endpoint}`, {
-            method: method,
-            credentials: 'include',
-            body: JSON.stringify(body),
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-    } else if (method === 'GET') {
-        return await fetch(backendUrl + `${endpoint}`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-    } else if (method === 'DELETE') {
-        return await fetch(backendUrl + `${endpoint}`, {
-            method: 'DELETE',
-            credentials: 'include',
-        });
-    } else {
-        throw new Error('Не удалось выполнить запрос');
+export const requestApi = async (
+    endpoint: string,
+    method: string,
+    body?: any
+): Promise<Response> => {
+    const config: RequestInit = {
+        method,
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    if (body && method !== 'GET') {
+        config.body = JSON.stringify(body);
     }
-}
+
+    return await fetch(`${BASE_URL}${endpoint}`, config);
+};

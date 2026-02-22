@@ -3,7 +3,7 @@ import {requestApi} from "./RequestApiService";
 
 export const createBot = async (botParams: CreateBot): Promise<Error | undefined> => {
     try {
-        const res = await requestApi('/bots/create', 'POST', botParams);
+        const res: Response = await requestApi('/bots/create', 'POST', botParams);
         if (res.status === 500) {
             return new Error('Ошибка при создании бота');
         }
@@ -27,7 +27,7 @@ export const getAllBots = async ():
 
 export const getBot = async (botId: number) => {
     try {
-        const res = await requestApi(`/bots/${botId}/details`, 'GET');
+        const res: Response = await requestApi(`/bots/${botId}/details`, 'GET');
         if (res.ok) {
             return await res.json();
         }
@@ -54,5 +54,13 @@ export const updateBot = async (
         await requestApi(`/bots/${botId}`, 'PATCH', updateBotData);
     } catch (error) {
         return new Error('Ошибка при обновлении бота');
+    }
+}
+
+export const toggleBot = async (botId: number) => {
+    try {
+        await requestApi(`/bots/${botId}/toggle`, 'POST');
+    } catch (error) {
+        console.error(error);
     }
 }

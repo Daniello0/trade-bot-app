@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
-import { useNavigate, useParams } from 'react-router';
+import React, {RefObject, useEffect, useRef, useState} from 'react';
+import {NavigateFunction, useNavigate, useParams} from 'react-router';
 import { useSocket } from '../../hooks/useSocket';
 import './BotConsole.css';
 import {Log} from "../../api/Types";
@@ -7,11 +7,11 @@ import {Log} from "../../api/Types";
 export const BotConsole: React.FC = () => {
     const { botId, botName } = useParams<{ botId: string, botName: string }>();
 
-    const navigate = useNavigate();
-    const { socket } = useSocket();
+    const navigate: NavigateFunction = useNavigate();
+    const socket = useSocket();
     const [logs, setLogs] = useState<Log[]>([]);
 
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const messagesEndRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,22 +30,14 @@ export const BotConsole: React.FC = () => {
 
         socket.emit('watchBot', { botId });
 
-        socket.on('botLog', (newLog) => {
-            setLogs((prev) => [...prev, newLog]);
+        socket.on('botLog', (newLog: Log) => {
+            setLogs((prev: Log[]) => [...prev, newLog]);
         });
 
         return () => {
             socket.off('botLog');
         };
     }, [socket, botId]);
-
-    function toggleAutoScroll() {
-        if (autoScroll) {
-            setAutoScroll(false);
-        } else {
-            setAutoScroll(true);
-        }
-    }
 
     return (
         <div className="App">
@@ -86,7 +78,8 @@ export const BotConsole: React.FC = () => {
                         Очистить консоль
                     </button>
 
-                    <button className={`action-button ${autoScroll? 'success' : 'danger'} auto-scroll`} onClick={() => toggleAutoScroll()}>
+                    <button className={`action-button ${autoScroll? 'success' : 'danger'} auto-scroll`}
+                            onClick={() => {setAutoScroll(!autoScroll)}}>
                         Авто-скроллинг
                     </button>
                 </div>

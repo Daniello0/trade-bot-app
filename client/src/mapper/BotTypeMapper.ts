@@ -1,28 +1,28 @@
 import { CreateBot, CreateSpotGridSettings, ReadBotDetails } from "../api/Types";
 
 export const mapReadBotToCreateBot = (bot: ReadBotDetails): CreateBot => {
-    let spotGridSettingsData: CreateSpotGridSettings | undefined = undefined;
+    const { spotGridSettings, fullSpotSettings, name, deposit, botType } = bot;
 
-    if (bot.spotGridSettings) {
-        spotGridSettingsData = {
-            candleLength: String(bot.spotGridSettings.candleLength),
-            crypto: bot.spotGridSettings.crypto,
+    const spotGridSettingsData: CreateSpotGridSettings | undefined = spotGridSettings
+        ? {
+            candleLength: String(spotGridSettings.candleLength),
+            crypto: spotGridSettings.crypto,
             gridSettings: {
-                lowerBoundDynamic: bot.spotGridSettings.gridSettings.lowerBoundDynamic,
-                upperBoundDynamic: bot.spotGridSettings.gridSettings.upperBoundDynamic,
+                lowerBoundDynamic: spotGridSettings.gridSettings.lowerBoundDynamic,
+                upperBoundDynamic: spotGridSettings.gridSettings.upperBoundDynamic,
             },
             levelsSettings: {
-                countStatic: bot.spotGridSettings.levelsSettings.countStatic,
-                pricePerBetStatic: bot.spotGridSettings.levelsSettings.pricePerBetStatic,
+                countStatic: spotGridSettings.levelsSettings.countStatic,
+                pricePerBetStatic: spotGridSettings.levelsSettings.pricePerBetStatic,
             },
-        };
-    }
+        }
+        : undefined;
 
     return {
-        name: bot.name,
-        deposit: bot.deposit,
-        botType: bot.botType,
+        name,
+        deposit,
+        botType,
         spotGridSettingsData,
-        fullSpotSettingsData: bot.fullSpotSettings,
+        fullSpotSettingsData: fullSpotSettings,
     };
 };

@@ -15,6 +15,7 @@ import {
 import {mapReadBotToCreateBot} from "../../mapper/BotTypeMapper";
 import {createBotSchema} from "../../schema/Schemas";
 
+// refactor: many default constants?
 const gridSettings: CreateGridSettings = {
     lowerBoundDynamic: 'q1',
     upperBoundDynamic: 'q3',
@@ -57,8 +58,8 @@ function BotSettings() {
         mode: "onChange"
     });
 
-    const botType = watch('botType');
-    const deposit = watch('deposit');
+    const botType: string = watch('botType');
+    const deposit: number = watch('deposit');
 
     const [isEditing, setIsEditing] = useState(false);
     const { botId } = useParams<{botId: string}>();

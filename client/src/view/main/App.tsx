@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
@@ -6,66 +6,47 @@ import {deleteBot, getAllBots} from "../../service/BotService";
 import {UserKeys, ReadBotSummary, ReadUser} from "../../api/Types";
 import {createUserKeys, getUserKeys} from "../../service/UserKeysService";
 import {ApiKeysModal} from "./ApiKeysModal";
-import {toggleBot} from "../../service/BotManagerService";
-import {requestApi} from "../../service/RequestApiService";
+import {toggleBot} from "../../service/BotService";
 import {AuthModal} from "./AuthModal";
+import {getHealthStatus} from "../../service/HealthzService";
+import {getUser} from "../../service/UserAuthService";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
-    const [data, setData] = useState<ReadBotSummary[] | []>([]);
-    const [sortedData, setSortedData] = useState<any>(null);
+    const [bots, setBots] = useState<ReadBotSummary[] | []>([]);
     const navigate: NavigateFunction = useNavigate();
 
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
-    const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
-
     const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
-    const [authorisedUser, setAuthorisedUser] = useState<ReadUser | undefined>(undefined)
+    const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
-    const checkConnection = async () => {
-        try {
-            const healthz: Response = await requestApi('/healthz', 'GET');
+    const [authUser, setAuthUser] = useState<ReadUser | undefined>(undefined)
 
-            if (healthz.ok) {
-                setStatus('connected');
+    const refreshAppData = async () => {
+        const [isConnected, user] = await Promise.all([
+            getHealthStatus(),
+            getUser()
+        ]);
+
+        if (isConnected) {
+            setStatus('connected');
+            if (user) {
                 const allBots: ReadBotSummary[] | undefined = await getAllBots();
-                if (!allBots) setData([])
-                else setData(allBots);
-            } else {
-                setStatus('disconnected');
+                setBots(allBots || []);
             }
-        } catch (error) {
-            console.error("Connection failed:", error);
+        } else {
             setStatus('disconnected');
         }
-    };
 
-    const checkAuth = async () => {
-        try {
-            const user: Response = await requestApi('/user/auth', 'GET');
-            if (user.ok) {
-                const userObj: ReadUser | undefined = await user.json();
-                console.log(userObj);
-                setAuthorisedUser(userObj);
-            } else {
-                setAuthorisedUser(undefined);
-                setData([]);
-            }
-        } catch (error) {
-            console.error("Connection failed:", error);
+        if (user) {
+            setAuthUser(user)
+        } else {
+            setAuthUser(undefined);
+            // hack: removes bots after logout
+            setBots([]);
         }
     };
-
-    const refreshAppData = async (): Promise<void> => {
-        await checkConnection();
-        await checkAuth();
-    }
-
-    const unauthorisedRedirect = () => {
-        const confirmed: boolean = window.confirm('Необходима авторизация. Желаете продолжить?');
-        if (confirmed) setAuthModalOpen(true);
-    }
 
     useEffect(() => {
         (async () => {
@@ -73,24 +54,25 @@ function App() {
         })()
     }, []);
 
+    const unauthorisedRedirect = () => {
+        const confirmed: boolean = window.confirm('Необходима авторизация. Желаете продолжить?');
+        if (confirmed) setAuthModalOpen(true);
+    }
+
     const handleToggleBotButtonClick = async (botId: number) => {
         await toggleBot(botId);
         const bots = await getAllBots();
-        if (bots) setData(bots);
+        if (bots) setBots(bots);
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
         await deleteBot(botId);
         const bots = await getAllBots();
-        if (bots) setData(bots);
-    }
-
-    const handleEditButtonClick = (botId: number) => {
-        navigate(`/edit-bot/${botId}`);
+        if (bots) setBots(bots);
     }
 
     const handleSettingsButtonClick = async () => {
-        if (!authorisedUser) {
+        if (!authUser) {
             unauthorisedRedirect();
             return;
         }
@@ -103,10 +85,6 @@ function App() {
         }
     };
 
-    const handleConsoleButtonClick = (botId: number, botName: string) => {
-        navigate(`/console/${botId}/${botName}`);
-    }
-
     const handleSaveKeys = async (keys: UserKeys) => {
         try {
             await createUserKeys(keys);
@@ -116,31 +94,25 @@ function App() {
         }
     };
 
-    const handleAuthButtonClick = () => {
-        setAuthModalOpen(true);
-    }
-
     const handleAddBotButtonClick = () => {
-        if (!authorisedUser) {
+        if (!authUser) {
             unauthorisedRedirect();
             return;
         }
         navigate('/add-bot');
     }
 
-    useEffect(() => {
-        if (!data) return;
-
-        setSortedData(data.sort((a: { id: number; }, b: { id: number; }) => (a.id < b.id ? 1 : -1)))
-    }, [data]);
+    const sortedBots = useMemo(() => {
+        return [...bots].sort((a, b) => b.id - a.id);
+    }, [bots]);
 
     if (status === 'connected') {
         return (
             <div className="App">
                 <div className="header">
                     <div className="settings" onClick={() => handleSettingsButtonClick()}>Settings</div>
-                    <div className="singup" onClick={() => handleAuthButtonClick()}>
-                        {authorisedUser? authorisedUser.name : 'Sing up'}
+                    <div className="singup" onClick={() => {setAuthModalOpen(true)}}>
+                        {authUser? authUser.name : 'Sing up'}
                     </div>
                 </div>
                 <div className="table">
@@ -151,30 +123,15 @@ function App() {
                         <div className="header-column-actions">Действия</div>
                     </div>
                     <div className="table-data">
-                        {sortedData.map((bot: ReadBotSummary) => (
-                            <div className="table-row" key={bot.id}>
-                                <div className="column-name">{bot.name}</div>
-                                <div className="column-type">{bot.botType}</div>
-                                <div className="column-status">
-                                    <span className={`status-badge ${bot.status === 'running' ? 'status-running' : 'status-stopped'}`}>
-                                        {bot.status}
-                                    </span>
-                                </div>
-                                <div className="column-actions">
-                                    <button className="action-button"
-                                            onClick={() => handleConsoleButtonClick(bot.id, bot.name)}>Консоль</button>
-                                    <button className="action-button secondary"
-                                    onClick={() => handleEditButtonClick(bot.id)}>Редактировать</button>
-                                    <button className="action-button danger"
-                                            onClick={() => handleDeleteButtonClick(bot.id)}>Удалить</button>
-                                    <button
-                                        className={`action-button ${bot.status === 'running' ? 'danger' : 'success'}`}
-                                        onClick={() => handleToggleBotButtonClick(bot.id)}
-                                    >
-                                        {bot.status === 'stopped' ? "Пуск" : "Стоп"}
-                                    </button>
-                                </div>
-                            </div>
+                        {sortedBots.map((bot: ReadBotSummary) => (
+                            <BotRow
+                                key={bot.id}
+                                bot={bot}
+                                onDelete={() => handleDeleteButtonClick(bot.id)}
+                                onToggle={() => handleToggleBotButtonClick(bot.id)}
+                                onEdit={() => navigate(`/edit-bot/${bot.id}`)}
+                                onConsole={() => navigate(`/console/${bot.id}/${bot.name}`)}
+                            />
                         ))}
                     </div>
                 </div>
@@ -188,10 +145,8 @@ function App() {
                 <AuthModal
                     isOpen={isAuthModalOpen}
                     onClose={() => setAuthModalOpen(false)}
-                    user={authorisedUser}
+                    user={authUser}
                     onAuthUpdate={refreshAppData}
-                    // onSave={}
-                    // initialData={}
                 />
             </div>
         )
@@ -199,5 +154,28 @@ function App() {
 
     return <h1>Disconnected</h1>;
 }
+
+const BotRow = ({ bot, onDelete, onToggle, onEdit, onConsole }: any) => (
+    <div className="table-row">
+        <div className="column-name">{bot.name}</div>
+        <div className="column-type">{bot.botType}</div>
+        <div className="column-status">
+            <span className={`status-badge ${bot.status === 'running' ? 'status-running' : 'status-stopped'}`}>
+                {bot.status}
+            </span>
+        </div>
+        <div className="column-actions">
+            <button className="action-button" onClick={onConsole}>Консоль</button>
+            <button className="action-button secondary" onClick={onEdit}>Редактировать</button>
+            <button className="action-button danger" onClick={onDelete}>Удалить</button>
+            <button
+                className={`action-button ${bot.status === 'running' ? 'danger' : 'success'}`}
+                onClick={onToggle}
+            >
+                {bot.status === 'stopped' ? "Пуск" : "Стоп"}
+            </button>
+        </div>
+    </div>
+);
 
 export default App;

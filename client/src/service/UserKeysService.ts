@@ -16,7 +16,7 @@ export const createUserKeys = async (keys: UserKeys):
 export const getUserKeys = async ():
     Promise<UserKeys | undefined> => {
     try {
-        const res = await requestApi('/user/keys', 'GET');
+        const res: Response = await requestApi('/user/keys', 'GET');
         if (res.ok) {
             return await res.json() as UserKeys;
         } else {

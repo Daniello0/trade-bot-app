@@ -1,7 +1,7 @@
 import React from "react";
 import Modal from "react-modal";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../../service/Firebase";
+import { auth, googleProvider } from "../../firebase/Firebase";
 import "./AuthModal.css";
 import {loginUser, logoutUser} from "../../service/UserAuthService";
 import {ReadUser} from "../../api/Types";
@@ -16,6 +16,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onAuthUpdate }) => {
+    // refactor: quiet big functions?
     const loginWithGoogle = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
@@ -30,6 +31,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onA
             onClose();
         } catch (error) {
             console.error("Ошибка при входе через Google:", error);
+            throw error;
         }
     };
 
@@ -44,6 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onA
             onClose();
         } catch (error) {
             console.error(`Ошибка при выходе:`, error);
+            throw error;
         }
     };
 

@@ -16,6 +16,7 @@ interface SpotGridSettingsProps {
 }
 
 export function SpotGridSettings({ control, watch, deposit, errors }: SpotGridSettingsProps) {
+    // refactor: too many useController's?
     const { field: candleLengthField } = useController({ name: 'spotGridSettingsData.candleLength', control });
     const { field: cryptoField } = useController({ name: 'spotGridSettingsData.crypto', control });
 
