@@ -49,8 +49,7 @@ export class UserAuthController {
         else throw new UnauthorizedException('Ошибка при авторизации');
     }
 
-    @Post('logout')
-    @UseGuards(AuthGuard)
+    @Post('/logout')
     @HttpCode(HttpStatus.NO_CONTENT)
     logout(@Res() res: express.Response): void {
         this.clearCookie(res);

@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CryptoService } from '../cryptography/crypto.service';
 import { DatabaseService } from '../database/init-typeorm';
 import { Users } from '../../entity/Users';
-import { Repository } from 'typeorm';
+import { UserCrudService } from './user-crud.service';
 
 @Injectable()
 export class UserKeysService {
-    constructor(private readonly cryptoService: CryptoService) {}
+    constructor(
+        private readonly cryptoService: CryptoService,
+        private readonly userCrudService: UserCrudService
+    ) {}
 
     async saveApiKeys(
         userId: string | undefined,
@@ -30,32 +33,17 @@ export class UserKeysService {
     ): Promise<{ apiKey: string; apiSecret: string }> {
         if (!userId) throw new Error('User id is not defined.');
 
-        const user: Users | null = await this.getUser(userId);
+        const user: Users | undefined = await this.userCrudService.select({
+            userId: userId,
+        });
+
+        if (!user) {
+            throw new Error(`User with id "${userId}" not found.`);
+        }
 
         const apiKey: string = this.cryptoService.decrypt(user.apiKey);
         const apiSecret: string = this.cryptoService.decrypt(user.apiSecret);
 
         return { apiKey, apiSecret };
-    }
-
-    async createUser(userId: string) {
-        await DatabaseService.manager.save(Users, {
-            id: userId,
-            apiKey: this.cryptoService.encrypt(''),
-            apiSecret: this.cryptoService.encrypt(''),
-        });
-    }
-
-    private async getUser(userId: string): Promise<Users> {
-        const userRepository: Repository<Users> =
-            DatabaseService.getRepository(Users);
-
-        const user: Users | null = await userRepository.findOneBy({
-            id: userId,
-        });
-
-        if (!user) throw new Error('User not found');
-
-        return user;
     }
 }
