@@ -7,7 +7,7 @@ export class Users {
     @PrimaryColumn('uuid', { nullable: false })
     id: string;
 
-    @Column('text', { nullable: false, default: '' })
+    @Column('text', { nullable: false, default: '', unique: true })
     email: string;
 
     @Column('text', { nullable: false, default: '' })

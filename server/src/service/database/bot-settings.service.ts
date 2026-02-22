@@ -22,35 +22,41 @@ export class BotSettingsService {
 
     async create(
         createDto: CreateBotDto,
-        userId: string | undefined
+        userEmail: string | undefined
     ): Promise<Bots> {
-        if (!userId) {
+        if (!userEmail) {
             throw new NotFoundException('User not found.');
         }
 
-        return this.botRepository.manager.transaction(
-            async (transactionalEntityManager) => {
-                let settingsEntity: SpotGridSettings | undefined = undefined;
+        try {
+            return this.botRepository.manager.transaction(
+                async (transactionalEntityManager) => {
+                    let settingsEntity: SpotGridSettings | undefined =
+                        undefined;
 
-                if (
-                    createDto.botType === 'spotGrid' &&
-                    createDto.spotGridSettingsData
-                ) {
-                    settingsEntity = await this.spotGridSettingsService.create(
-                        createDto.spotGridSettingsData,
-                        transactionalEntityManager
-                    );
+                    if (
+                        createDto.botType === 'spotGrid' &&
+                        createDto.spotGridSettingsData
+                    ) {
+                        settingsEntity =
+                            await this.spotGridSettingsService.create(
+                                createDto.spotGridSettingsData,
+                                transactionalEntityManager
+                            );
+                    }
+
+                    const newBot = this.botRepository.create({
+                        ...createDto,
+                        user: { email: userEmail },
+                        spotGridSettings: settingsEntity,
+                    });
+
+                    return await transactionalEntityManager.save(newBot);
                 }
-
-                const newBot = this.botRepository.create({
-                    ...createDto,
-                    user: { id: userId },
-                    spotGridSettings: settingsEntity,
-                });
-
-                return await transactionalEntityManager.save(newBot);
-            }
-        );
+            );
+        } catch (error) {
+            throw new Error(`Ошибка при создании бота: ${error}`);
+        }
     }
 
     async findAllSummaries(

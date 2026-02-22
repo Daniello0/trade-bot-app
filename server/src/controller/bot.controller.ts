@@ -34,8 +34,8 @@ export class BotController {
         @Req() req: user_idGuard.RequestWithUserId,
         @Body() createBotDto: CreateBotDto
     ): Promise<Bots> {
-        const userId: string | undefined = req.userId;
-        return this.botService.create(createBotDto, userId);
+        const userEmail: string | undefined = req.userEmail;
+        return this.botService.create(createBotDto, userEmail);
     }
 
     @Get('/all')
