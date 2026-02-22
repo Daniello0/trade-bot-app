@@ -12,10 +12,10 @@ interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
     user: ReadUser | undefined;
+    onAuthUpdate: () => Promise<void>
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user }) => {
-    // optimize: add updating auth status after execution
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onAuthUpdate }) => {
     const loginWithGoogle = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
@@ -24,6 +24,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user }) =
             const res: number | undefined = await loginUser(token);
             console.log(res);
 
+            await onAuthUpdate();
+
             console.log("Вход выполнен успешно");
             onClose();
         } catch (error) {
@@ -31,11 +33,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user }) =
         }
     };
 
-    // optimize: same: add updating auth status after execution
     const logout = async () => {
         try {
             await auth.signOut();
             await logoutUser();
+
+            await onAuthUpdate()
 
             console.log(`Выход выполнен успешно`);
             onClose();

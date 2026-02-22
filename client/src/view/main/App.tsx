@@ -48,11 +48,19 @@ function App() {
                 const userObj: ReadUser | undefined = await user.json();
                 console.log(userObj);
                 setAuthorisedUser(userObj);
+            } else {
+                setAuthorisedUser(undefined);
+                setData([]);
             }
         } catch (error) {
             console.error("Connection failed:", error);
         }
     };
+
+    const refreshAppData = async (): Promise<void> => {
+        await checkConnection();
+        await checkAuth();
+    }
 
     const unauthorisedRedirect = () => {
         const confirmed: boolean = window.confirm('Необходима авторизация. Желаете продолжить?');
@@ -61,8 +69,7 @@ function App() {
 
     useEffect(() => {
         (async () => {
-            await checkConnection();
-            await checkAuth();
+            await refreshAppData();
         })()
     }, []);
 
@@ -182,6 +189,7 @@ function App() {
                     isOpen={isAuthModalOpen}
                     onClose={() => setAuthModalOpen(false)}
                     user={authorisedUser}
+                    onAuthUpdate={refreshAppData}
                     // onSave={}
                     // initialData={}
                 />
