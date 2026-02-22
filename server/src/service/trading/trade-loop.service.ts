@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WebsocketClient, WsTopicRequest } from 'bybit-api';
-import { UserService } from '../user/user.service';
+import { UserKeysService } from '../user/user-keys.service';
 import { BotSettingsService } from '../database/bot-settings.service';
 import { Bot } from './bot';
 import { Bybit } from './bybit';
@@ -13,7 +13,7 @@ export class TradeLoopService {
     private lastCalledPeriod: number | null = null;
 
     constructor(
-        private readonly userService: UserService,
+        private readonly userService: UserKeysService,
         private readonly botSettingsService: BotSettingsService,
         private readonly botGateway: BotGateway
     ) {}
@@ -150,7 +150,7 @@ export class TradeLoopService {
                         emitLog(`Lower = ${bot.lowerPriceBound}`);
                         emitLog(`Upper = ${bot.upperPriceBound}`);
                         emitLog(`Number of grids = ${bot.numberOfGrids}`);
-                        // todo: fix ESLint
+                        // hack: fix ESLint
                         emitLog(
                             `Grid state: ${bot.gridLevels.map((order) => ' ' + order.toFixed(4))}, step=${bot.gridInterval.toFixed(6)}`
                         );

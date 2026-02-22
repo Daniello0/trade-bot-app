@@ -38,6 +38,9 @@ export class Bots {
     @ManyToOne(() => Users, (user: Users) => user.bots, {
         onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({
+        name: 'userEmail',
+        referencedColumnName: 'email',
+    })
     user: Users;
 }

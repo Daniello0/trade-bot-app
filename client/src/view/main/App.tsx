@@ -3,28 +3,35 @@ import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
-import {UserKeys, ReadBotSummary} from "../../api/Types";
-import {createUserKeys, getUserKeys} from "../../service/UserService";
-import {ApiKeysModal} from "../bot-settings/ApiKeysModal";
+import {UserKeys, ReadBotSummary, ReadUser} from "../../api/Types";
+import {createUserKeys, getUserKeys} from "../../service/UserKeysService";
+import {ApiKeysModal} from "./ApiKeysModal";
 import {toggleBot} from "../../service/BotManagerService";
 import {requestApi} from "../../service/RequestApiService";
+import {AuthModal} from "./AuthModal";
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<ReadBotSummary[] | []>([]);
     const [sortedData, setSortedData] = useState<any>(null);
     const navigate: NavigateFunction = useNavigate();
 
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
+    const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+
+    const [authorisedUser, setAuthorisedUser] = useState<ReadUser | undefined>(undefined)
+
     const checkConnection = async () => {
         try {
-            const res: Response = await requestApi('/healthz', 'GET');
+            const healthz: Response = await requestApi('/healthz', 'GET');
 
-            if (res.ok) {
-                setData(await getAllBots());
+            if (healthz.ok) {
                 setStatus('connected');
+                const allBots: ReadBotSummary[] | undefined = await getAllBots();
+                if (!allBots) setData([])
+                else setData(allBots);
             } else {
                 setStatus('disconnected');
             }
@@ -34,20 +41,48 @@ function App() {
         }
     };
 
+    const checkAuth = async () => {
+        try {
+            const user: Response = await requestApi('/user/auth', 'GET');
+            if (user.ok) {
+                const userObj: ReadUser | undefined = await user.json();
+                console.log(userObj);
+                setAuthorisedUser(userObj);
+            } else {
+                setAuthorisedUser(undefined);
+                setData([]);
+            }
+        } catch (error) {
+            console.error("Connection failed:", error);
+        }
+    };
+
+    const refreshAppData = async (): Promise<void> => {
+        await checkConnection();
+        await checkAuth();
+    }
+
+    const unauthorisedRedirect = () => {
+        const confirmed: boolean = window.confirm('Необходима авторизация. Желаете продолжить?');
+        if (confirmed) setAuthModalOpen(true);
+    }
+
     useEffect(() => {
         (async () => {
-            await checkConnection();
+            await refreshAppData();
         })()
     }, []);
 
     const handleToggleBotButtonClick = async (botId: number) => {
         await toggleBot(botId);
-        setData(await getAllBots());
+        const bots = await getAllBots();
+        if (bots) setData(bots);
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
         await deleteBot(botId);
-        setData(await getAllBots());
+        const bots = await getAllBots();
+        if (bots) setData(bots);
     }
 
     const handleEditButtonClick = (botId: number) => {
@@ -55,6 +90,10 @@ function App() {
     }
 
     const handleSettingsButtonClick = async () => {
+        if (!authorisedUser) {
+            unauthorisedRedirect();
+            return;
+        }
         try {
             const keys = await getUserKeys();
             setExistingKeys(keys);
@@ -77,23 +116,32 @@ function App() {
         }
     };
 
+    const handleAuthButtonClick = () => {
+        setAuthModalOpen(true);
+    }
+
+    const handleAddBotButtonClick = () => {
+        if (!authorisedUser) {
+            unauthorisedRedirect();
+            return;
+        }
+        navigate('/add-bot');
+    }
+
     useEffect(() => {
         if (!data) return;
 
         setSortedData(data.sort((a: { id: number; }, b: { id: number; }) => (a.id < b.id ? 1 : -1)))
     }, [data]);
 
-    if (status === 'connected' && sortedData) {
+    if (status === 'connected') {
         return (
             <div className="App">
                 <div className="header">
                     <div className="settings" onClick={() => handleSettingsButtonClick()}>Settings</div>
-                    <div className="singup" onClick={() => {
-                        alert('Зарегистрироваться')
-                    }}>Sing up</div>
-                    <div className="login" onClick={() => {
-                        alert('Войти')
-                    }}>Log in</div>
+                    <div className="singup" onClick={() => handleAuthButtonClick()}>
+                        {authorisedUser? authorisedUser.name : 'Sing up'}
+                    </div>
                 </div>
                 <div className="table">
                     <div className="table-header">
@@ -130,12 +178,20 @@ function App() {
                         ))}
                     </div>
                 </div>
-                <div className="add-bot-button" onClick={() => {navigate('/add-bot')}}>Добавить бота</div>
+                <div className="add-bot-button" onClick={() => handleAddBotButtonClick()}>Добавить бота</div>
                 <ApiKeysModal
                     isOpen={isKeysModalOpen}
                     onClose={() => setKeysModalOpen(false)}
                     onSave={handleSaveKeys}
                     initialData={existingKeys}
+                />
+                <AuthModal
+                    isOpen={isAuthModalOpen}
+                    onClose={() => setAuthModalOpen(false)}
+                    user={authorisedUser}
+                    onAuthUpdate={refreshAppData}
+                    // onSave={}
+                    // initialData={}
                 />
             </div>
         )

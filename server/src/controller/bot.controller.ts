@@ -10,14 +10,17 @@ import {
     Patch,
     Post,
     Req,
+    UseGuards,
 } from '@nestjs/common';
 import { BotSettingsService } from '../service/database/bot-settings.service';
 import { CreateBotDto } from '../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../dto/read-bot.dto';
-import * as user_idMiddleware from '../middleware/user-id.middleware';
+import * as user_idGuard from '../guard/auth.guard';
 import { Bots } from '../entity/Bots';
 import { BotManagerService } from '../service/trading/bot-manager.service';
+import { AuthGuard } from '../guard/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('/bots')
 export class BotController {
     constructor(
@@ -28,16 +31,16 @@ export class BotController {
     @Post('/create')
     @HttpCode(HttpStatus.CREATED)
     async createBot(
-        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Req() req: user_idGuard.RequestWithUserId,
         @Body() createBotDto: CreateBotDto
     ): Promise<Bots> {
-        const userId: string | undefined = req.userId;
-        return this.botService.create(createBotDto, userId);
+        const userEmail: string | undefined = req.userEmail;
+        return this.botService.create(createBotDto, userEmail);
     }
 
     @Get('/all')
     async getAllBotsSummary(
-        @Req() req: user_idMiddleware.RequestWithUserId
+        @Req() req: user_idGuard.RequestWithUserId
     ): Promise<ReadBotSummaryDto[] | undefined> {
         const userId: string | undefined = req.userId;
         return this.botService.findAllSummaries(userId);
@@ -45,7 +48,7 @@ export class BotController {
 
     @Get(':botId/details')
     async getBotDetails(
-        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<ReadBotDetailsDto | null> {
         const userId: string | undefined = req.userId;
@@ -56,7 +59,7 @@ export class BotController {
     @Delete(':botId')
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteBot(
-        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<void> {
         const userId: string | undefined = req.userId;
@@ -64,8 +67,9 @@ export class BotController {
     }
 
     @Patch(':botId')
+    @HttpCode(HttpStatus.OK)
     async updateBot(
-        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number,
         @Body() updateBotData: CreateBotDto
     ): Promise<void> {
@@ -76,7 +80,7 @@ export class BotController {
     @Post(':botId/toggle')
     @HttpCode(HttpStatus.OK)
     async toggleBot(
-        @Req() req: user_idMiddleware.RequestWithUserId,
+        @Req() req: user_idGuard.RequestWithUserId,
         @Param('botId', ParseIntPipe) botId: number
     ): Promise<void> {
         const userId: string | undefined = req.userId;
