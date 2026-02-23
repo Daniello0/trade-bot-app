@@ -5,6 +5,7 @@ import { ReadUserDto } from '../../dto/read-user.dto';
 import { Users } from '../../entity/Users';
 import { FirebaseService } from '../../auth/firebase-init.auth';
 
+// refactor: more decomposition
 @Injectable()
 export class UserAuthService {
     constructor(
@@ -52,7 +53,6 @@ export class UserAuthService {
         try {
             if (!userId) return;
 
-            // if userId -> select by user.session-cookie
             const user: Users | undefined = await this.userCrudService.select({
                 userId: userId,
             });

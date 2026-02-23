@@ -24,6 +24,7 @@ import { UserCrudService } from '../service/user/user-crud.service';
 import { UserAuthService } from '../service/user/user-auth.service';
 import { FirebaseService } from '../auth/firebase-init.auth';
 
+// refactor: split into many modules
 @Module({
     imports: [
         TypeOrmModule.forRoot(DatabaseService.options),

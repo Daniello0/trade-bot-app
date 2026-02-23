@@ -16,18 +16,12 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onAuthUpdate }) => {
-    // refactor: quiet big functions?
-    const loginWithGoogle = async () => {
+    const loginWithGoogle = async (): Promise<void> => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const token: string = await result.user.getIdToken();
-
-            const res: number | undefined = await loginUser(token);
-            console.log(res);
-
+            await loginUser(token);
             await onAuthUpdate();
-
-            console.log("Вход выполнен успешно");
             onClose();
         } catch (error) {
             console.error("Ошибка при входе через Google:", error);
@@ -39,10 +33,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onA
         try {
             await auth.signOut();
             await logoutUser();
-
             await onAuthUpdate()
-
-            console.log(`Выход выполнен успешно`);
             onClose();
         } catch (error) {
             console.error(`Ошибка при выходе:`, error);

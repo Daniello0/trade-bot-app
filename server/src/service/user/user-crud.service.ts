@@ -13,6 +13,7 @@ export class UserCrudService {
         private readonly cryptoService: CryptoService
     ) {}
 
+    // refactor: more decomposition
     async select(data: {
         email?: string;
         userId?: string;

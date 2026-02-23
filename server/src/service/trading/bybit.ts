@@ -27,6 +27,7 @@ export interface CalculatedQuantiles {
     Q10: number;
 }
 
+// refactor: make functions smaller (split)
 export class Bybit {
     private readonly logger: Logger = new Logger(Bybit.name);
 
@@ -103,27 +104,6 @@ export class Bybit {
             this.sendLog(`getLastNOhlc exception: ${err}`);
             throw err;
         }
-    }
-
-    calcGridBounds(prices: number[], k: number) {
-        const N = prices.length;
-        const sum = prices.reduce((s, p) => s + p, 0);
-        const mu = sum / N;
-
-        const sorted = [...prices].sort((a, b) => a - b);
-        const median =
-            N % 2 === 1
-                ? sorted[(N - 1) / 2]
-                : (sorted[N / 2 - 1] + sorted[N / 2]) / 2;
-
-        const variance =
-            prices.map((p) => (p - mu) ** 2).reduce((s, d) => s + d, 0) / N;
-        const sigma = Math.sqrt(variance);
-
-        const lower = mu - k * sigma;
-        const upper = mu + k * sigma;
-
-        return { mu, median, sigma, lower, upper };
     }
 
     async placeOrder(
@@ -250,20 +230,6 @@ export class Bybit {
             Q90: percentile(sorted, 0.9),
             Q10: percentile(sorted, 0.1),
         } as CalculatedQuantiles;
-    }
-
-    async getBalance(): Promise<string> {
-        try {
-            const res = await this.client.getWalletBalance({
-                accountType: 'UNIFIED',
-            });
-
-            const equity = res.result?.list[0]?.totalEquity ?? '0';
-            return parseFloat(equity).toFixed(2);
-        } catch (err) {
-            this.sendLog(`getBalance exception: ${err}`);
-            return '0.00';
-        }
     }
 
     public async getCryptoScale() {

@@ -16,6 +16,7 @@ export class SpotGridSettingsService {
         private readonly levelsSettingsService: LevelsSettingsService
     ) {}
 
+    // refactor: too big?
     async create(
         spotGridSettingsData: CreateSpotGridSettingsDto,
         manager?: EntityManager
@@ -44,6 +45,7 @@ export class SpotGridSettingsService {
         return await spotGridRepository.save(newSettings);
     }
 
+    // refactor: also too big?
     async update(
         spotGridSettingsId: number,
         userId: string,

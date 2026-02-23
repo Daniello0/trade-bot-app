@@ -30,9 +30,7 @@ export class UserAuthController {
     ): Promise<void> {
         const newUserId: string | undefined =
             await this.userAuthService.loginUser(loginDto.idToken);
-
         this.addCookie(newUserId, res, req);
-
         res.sendStatus(HttpStatus.OK).send();
     }
 

@@ -78,15 +78,6 @@ export class TradeLoopService {
         );
         await bybit.init();
 
-        /*const scales = await bybit.getCryptoScale();
-
-        if (!scales?.priceScale || !scales.qtyScale) {
-            throw new Error('qtyScale or priceScale is not defined');
-        }
-
-        bybit.priceScale = scales?.priceScale;
-        bybit.qtyScale = scales?.qtyScale;*/
-
         const bot = new Bot(botSettings, bybit, emitLog);
         await bot.init(bybit);
 
@@ -106,6 +97,7 @@ export class TradeLoopService {
         const OHLC = await bybit.getLastNOhlc(bot.candleLength);
         this.updateGridBounds(bot, bybit, OHLC.closes);
 
+        // refactor: too big?
         ws.on('update', (data: WsTopicRequest) => {
             void (async () => {
                 if (signal.aborted) return;

@@ -20,6 +20,7 @@ export class BotSettingsService {
         private readonly spotGridSettingsService: SpotGridSettingsService
     ) {}
 
+    // refactor: too big?
     async create(
         createDto: CreateBotDto,
         userEmail: string | undefined

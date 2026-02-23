@@ -155,6 +155,7 @@ function App() {
     return <h1>Disconnected</h1>;
 }
 
+// hack: any type
 const BotRow = ({ bot, onDelete, onToggle, onEdit, onConsole }: any) => (
     <div className="table-row">
         <div className="column-name">{bot.name}</div>

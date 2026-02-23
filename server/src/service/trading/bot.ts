@@ -102,6 +102,7 @@ export class Bot {
         );
     }
 
+    // refactor: split into small functions
     async botMakeDecision({ currentPrice }: { currentPrice: number }) {
         const prev = this.lastPrice;
         this.lastPrice = currentPrice;
@@ -192,17 +193,6 @@ export class Bot {
                         return;
                     }
                 }
-
-                /*const tooClose: boolean = openSellOrders.some(
-                    (o) =>
-                        Math.abs(Number(o.price) - currentPrice) <
-                        this.gridInterval * 0.8
-                );
-
-                if (tooClose) {
-                    this.sendLog(`Слишком маленькое расстояние между уровнями`);
-                    continue;
-                }*/
 
                 const buyRet: number = await this.bybit.placeOrder(
                     'Buy',
