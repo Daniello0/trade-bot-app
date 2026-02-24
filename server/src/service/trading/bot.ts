@@ -18,7 +18,7 @@ export class Bot {
 
     private spotGridSettings: ReadSpotGridSettingsDto;
     public symbol: string;
-    private maxDeposit: number;
+    private readonly maxDeposit: number;
     public candleLength: string;
     public numberOfGrids: number;
     gridInterval: number;
@@ -28,8 +28,8 @@ export class Bot {
     public upperPriceBound: number;
     public lowerPriceBound: number;
     private readonly amountPerOrderUsd: number;
-    private lowerQuantile: string;
-    private upperQuantile: string;
+    private readonly lowerQuantile: string;
+    private readonly upperQuantile: string;
 
     constructor(
         private readonly botSettings: ReadBotDetailsDto,
@@ -41,13 +41,12 @@ export class Bot {
             return;
         }
 
-        this.amountPerOrderUsd =
-            botSettings.spotGridSettings.levelsSettings.pricePerBetStatic;
-
         this.spotGridSettings = botSettings.spotGridSettings;
+        this.amountPerOrderUsd =
+            this.spotGridSettings.levelsSettings.pricePerBetStatic;
         this.symbol = this.spotGridSettings.crypto || 'BTCUSDT';
         this.maxDeposit = botSettings.deposit;
-        this.candleLength = botSettings.spotGridSettings.candleLength;
+        this.candleLength = this.spotGridSettings.candleLength;
         this.numberOfGrids = this.spotGridSettings.levelsSettings.countStatic;
 
         this.lowerQuantile =
@@ -60,66 +59,49 @@ export class Bot {
         const historicalData = await bybitService.getLastNOhlc(
             this.candleLength
         );
-
         const quantiles: CalculatedQuantiles | null = calculateQuartiles(
             historicalData.closes
         );
 
-        if (!quantiles) {
-            throw new Error('No historical data found!');
-        }
+        if (!quantiles) throw new Error('No historical data found!');
 
         this.applyQuantiles(quantiles);
-
         this.updateGridBounds(this.lowerPriceBound, this.upperPriceBound);
     }
 
-    private sendLog(message: string) {
-        this.logger.log(message);
-        if (this.onLog) {
-            this.onLog({
-                botId: this.botSettings.id,
-                timestamp: new Date().toISOString(),
-                message: message,
-                price: this.lastPrice,
-                symbol: this.symbol,
-            });
-        }
-    }
-
-    placeInitialGridOrders(seedPrice: number) {
-        this.gridLevels = [];
-        const lower: number = Number(
-            this.spotGridSettings.gridSettings.lowerBoundDynamic
-        );
-
-        for (let i = 0; i < this.numberOfGrids; i++) {
-            const level = lower + i * this.gridInterval;
-            this.gridLevels.push(level);
-        }
-        this.lastPrice = seedPrice;
-
-        this.sendLog(`Initial grid created. Seed price: ${seedPrice}`);
-        this.sendLog(
-            `Deposit = ${this.maxDeposit}, 
-            amount per order = ${this.amountPerOrderUsd}`
-        );
-    }
-
-    // refactor: split into small functions
     async botMakeDecision({ currentPrice }: { currentPrice: number }) {
-        const prev = this.lastPrice;
+        const prevPrice = this.lastPrice;
         this.lastPrice = currentPrice;
 
+        await this.processPendingSells();
+
+        if (prevPrice === null) {
+            this.sendLog('Первый тик — ожидаю следующего.');
+            return;
+        }
+
+        const openSellOrders = await this.bybit.getOpenOrders('Sell');
+        await this.handleStopLoss(openSellOrders);
+
+        if (this.isPriceOutOfBounds(currentPrice)) return;
+
+        await this.checkAndExecuteTrade(
+            prevPrice,
+            currentPrice,
+            openSellOrders
+        );
+    }
+
+    private async processPendingSells() {
         for (const order of [...this.ordersToSell]) {
-            const sellPrice = +(order.price + this.gridInterval);
-            const sellRet = await this.bybit.placeOrder(
+            const sellPrice: number = +(order.price + this.gridInterval);
+            const res: number = await this.bybit.placeOrder(
                 'Sell',
                 order.qty,
                 sellPrice
             );
 
-            if (sellRet === 0) {
+            if (res === 0) {
                 this.sendLog(
                     `SELL выставлен: ${order.qty.toFixed(2)} @${sellPrice.toFixed(4)}`
                 );
@@ -127,136 +109,136 @@ export class Bot {
                     (o) => o !== order
                 );
             } else {
-                this.sendLog(`$Sell order не принят. Код: ${sellRet}`);
-            }
-        }
-
-        if (prev === null) {
-            this.sendLog('Первый тик — сетка создана, ожидаю следующего тика.');
-            return;
-        }
-
-        const openSellOrders = await this.bybit.getOpenOrders('Sell');
-        for (const order of openSellOrders) {
-            if (Number(order.price) > this.upperPriceBound) {
-                this.sendLog(
-                    'Производится стоп-лосс: ордера перемещаются к сетке'
-                );
-                await this.bybit.stopLossSell(order, this.upperPriceBound);
-            }
-        }
-
-        if (
-            currentPrice < this.lowerPriceBound ||
-            currentPrice > this.upperPriceBound
-        ) {
-            this.sendLog(
-                `Price ${currentPrice.toFixed(6)}
-                 вне грида [${this.lowerPriceBound.toFixed(6)},
-                  ${this.upperPriceBound.toFixed(6)}]. Пропускаю.`
-            );
-            return;
-        }
-
-        for (const level of this.gridLevels) {
-            const crossDown: boolean = prev >= level && currentPrice <= level;
-            const crossUp: boolean = prev <= level && currentPrice >= level;
-
-            if (!crossDown && !crossUp) continue;
-
-            const qty: number = this.amountPerOrderUsd / currentPrice;
-
-            try {
-                this.sendLog(
-                    `CrossDown на уровне ${level.toFixed(6)} — пытаюсь поставить BUY ${qty.toFixed(6)} @${currentPrice.toFixed(6)}`
-                );
-
-                const openSellOrders: AccountOrderV5[] =
-                    await this.bybit.getOpenOrders('Sell');
-
-                for (const order of openSellOrders) {
-                    if (
-                        Math.abs(+order.price - currentPrice) <
-                        this.gridInterval * 1.9
-                    ) {
-                        this.sendLog(
-                            `Слишком маленькое расстояние между уровнями: ${this.gridInterval} > ${Math.abs(+order.price - currentPrice)}`
-                        );
-                        return;
-                    }
-                }
-
-                for (const order of this.ordersToSell) {
-                    if (
-                        Math.abs(order.price - currentPrice) <
-                        this.gridInterval * 1.9
-                    ) {
-                        this.sendLog(
-                            `Слишком маленькое расстояние между уровнями: ${this.gridInterval} > ${Math.abs(order.price - currentPrice)}`
-                        );
-                        return;
-                    }
-                }
-
-                const buyRet: number = await this.bybit.placeOrder(
-                    'Buy',
-                    qty,
-                    currentPrice
-                );
-                if (buyRet !== 0) {
-                    this.sendLog(`Buy order не принят. Код ответа: ${buyRet}`);
-                    return;
-                }
-
-                this.ordersToSell.push({
-                    price: currentPrice,
-                    qty: qty,
-                });
-
-                this.sendLog(
-                    `ORDERS placed: BUY ${qty.toFixed(2)}
-                    @${currentPrice.toFixed(4)} -> SELL
-                    @${currentPrice.toFixed(6)}`
-                );
-            } catch (err) {
-                this.sendLog(`Ошибка в цикле принятия решений: ${err}`);
+                this.sendLog(`Sell order не принят. Код: ${res}`);
             }
         }
     }
 
-    updateGridBounds(newLower: number, newUpper: number) {
+    private async handleStopLoss(openSellOrders: AccountOrderV5[]) {
+        for (const order of openSellOrders) {
+            if (Number(order.price) > this.upperPriceBound) {
+                this.sendLog('Стоп-лосс: перемещение ордера к границе сетки');
+                await this.bybit.stopLossSell(order, this.upperPriceBound);
+            }
+        }
+    }
+
+    private async checkAndExecuteTrade(
+        prev: number,
+        current: number,
+        openSells: AccountOrderV5[]
+    ) {
+        for (const level of this.gridLevels) {
+            const isCrossed: boolean =
+                (prev >= level && current <= level) ||
+                (prev <= level && current >= level);
+            if (!isCrossed) continue;
+
+            if (this.isDistanceInsufficient(current, openSells)) continue;
+
+            await this.executeBuyOrder(current);
+        }
+    }
+
+    private isDistanceInsufficient(
+        currentPrice: number,
+        openSells: AccountOrderV5[]
+    ): boolean {
+        const minDistance = this.gridInterval * 1.9;
+
+        const tooCloseToExchangeOrder = openSells.some(
+            (o: AccountOrderV5) =>
+                Math.abs(Number(o.price) - currentPrice) < minDistance
+        );
+
+        const tooCloseToLocalOrder = this.ordersToSell.some(
+            (order: Order) => Math.abs(order.price - currentPrice) < minDistance
+        );
+
+        if (tooCloseToExchangeOrder || tooCloseToLocalOrder) {
+            this.sendLog(`Слишком близко к существующим уровням (step * 1.9)`);
+            return true;
+        }
+
+        return false;
+    }
+
+    private async executeBuyOrder(price: number) {
+        const qty = this.amountPerOrderUsd / price;
+        this.sendLog(
+            `Cross на уровне: BUY ${qty.toFixed(6)} @${price.toFixed(6)}`
+        );
+
+        try {
+            const res = await this.bybit.placeOrder('Buy', qty, price);
+            if (res === 0) {
+                this.ordersToSell.push({ price, qty });
+                this.sendLog(
+                    `ORDERS placed: BUY @${price.toFixed(4)} -> SELL queue added`
+                );
+            } else {
+                this.sendLog(`Buy order не принят. Код: ${res}`);
+            }
+        } catch (err) {
+            this.sendLog(`Ошибка при выставлении BUY: ${err}`);
+        }
+    }
+
+    private isPriceOutOfBounds(price: number): boolean {
+        if (price < this.lowerPriceBound || price > this.upperPriceBound) {
+            this.sendLog(`Цена ${price.toFixed(6)} вне грида. Пропускаю.`);
+            return true;
+        }
+        return false;
+    }
+
+    public updateGridBounds(newLower: number, newUpper: number) {
         this.lowerPriceBound = newLower;
         this.upperPriceBound = newUpper;
         this.gridInterval = (newUpper - newLower) / this.numberOfGrids;
 
-        this.gridLevels = [];
-        for (let i = 0; i < this.numberOfGrids; i++) {
-            this.gridLevels.push(this.lowerPriceBound + i * this.gridInterval);
-        }
+        this.gridLevels = Array.from(
+            { length: this.numberOfGrids },
+            (_, i) => this.lowerPriceBound + i * this.gridInterval
+        );
 
-        // refactor: fix ESLint
         this.sendLog(
-            `Grid updated: ${this.gridLevels.map(
-                (order) => ' ' + order.toFixed(4)
-            )}, step=${this.gridInterval.toFixed(6)}`
+            `Grid updated. Range: [${newLower.toFixed(4)} - ${newUpper.toFixed(4)}], Step: ${this.gridInterval.toFixed(6)}`
         );
     }
 
-    applyQuantiles(calculatedQuantiles: CalculatedQuantiles) {
-        if (this.upperQuantile == 'q3') {
-            this.upperPriceBound = calculatedQuantiles.Q3;
-        } else if (this.upperQuantile == '90%') {
-            this.upperPriceBound = calculatedQuantiles.Q90;
-        } else {
-            this.upperPriceBound = calculatedQuantiles.max;
-        }
+    public applyQuantiles(q: CalculatedQuantiles) {
+        const lowerMap: Record<string, number> = { min: q.min, '10%': q.Q10 };
+        const upperMap: Record<string, number> = { q3: q.Q3, '90%': q.Q90 };
 
-        if (this.lowerQuantile == 'min') {
-            this.lowerPriceBound = calculatedQuantiles.min;
-        } else if (this.lowerQuantile == '10%') {
-            this.lowerPriceBound = calculatedQuantiles.Q10;
-        } else {
-            this.lowerPriceBound = calculatedQuantiles.Q1;
-        }
+        this.lowerPriceBound = lowerMap[this.lowerQuantile] ?? q.Q1;
+        this.upperPriceBound = upperMap[this.upperQuantile] ?? q.max;
+    }
+
+    private sendLog(message: string) {
+        this.logger.log(message);
+        this.onLog?.({
+            botId: this.botSettings.id,
+            timestamp: new Date().toISOString(),
+            message,
+            price: this.lastPrice,
+            symbol: this.symbol,
+        });
+    }
+
+    public placeInitialGridOrders(seedPrice: number) {
+        const lower: number =
+            Number(this.spotGridSettings.gridSettings.lowerBoundDynamic) ||
+            seedPrice * 0.9;
+
+        this.gridLevels = Array.from(
+            { length: this.numberOfGrids },
+            (_, i) => lower + i * (this.gridInterval || 0)
+        );
+
+        this.lastPrice = seedPrice;
+        this.sendLog(
+            `Initial grid. Seed: ${seedPrice}, Deposit: ${this.maxDeposit}`
+        );
     }
 }

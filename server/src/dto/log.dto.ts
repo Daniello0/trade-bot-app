@@ -1,5 +1,4 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
-import { Optional } from '@nestjs/common';
 
 export class LogDto {
     @IsOptional()
@@ -12,7 +11,7 @@ export class LogDto {
     @IsString()
     message: string;
 
-    @Optional()
+    @IsOptional()
     @IsNumber()
     price?: number;
 

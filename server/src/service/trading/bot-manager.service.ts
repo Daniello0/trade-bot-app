@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { BotGateway } from '../../gateway/bot.gateway';
 import { BotSettingsService } from '../database/bot-settings.service';
 import { ReadBotSummaryDto } from '../../dto/read-bot.dto';
 import { TradeLoopService } from './trade-loop.service';
@@ -14,7 +13,6 @@ export class BotManagerService implements OnModuleDestroy {
     >();
 
     constructor(
-        private readonly botGateway: BotGateway,
         private readonly botService: BotSettingsService,
         private readonly tradeLoopService: TradeLoopService
     ) {}
@@ -79,49 +77,9 @@ export class BotManagerService implements OnModuleDestroy {
         this.logger.log(`Loop finished for bot ${botId}`);
     }
 
-    private sleep(ms: number, signal: AbortSignal) {
-        return new Promise((resolve) => {
-            const timeout = setTimeout(resolve, ms);
-            signal.addEventListener('abort', () => {
-                clearTimeout(timeout);
-                resolve(null);
-            });
-        });
-    }
-
     async onModuleDestroy() {
         for (const [botId, session] of this.activeBots.entries()) {
             await this.stopBot(Number(botId), session.userId);
-        }
-    }
-
-    private async testWork(
-        userId: string | undefined,
-        botId: string,
-        signal: AbortSignal
-    ) {
-        try {
-            const price = 60000 + Math.random() * 1000;
-
-            const payload = {
-                userId,
-                botId,
-                price: price.toFixed(2),
-                message: `Check grid status... OK`,
-                timestamp: new Date().toISOString(),
-            };
-
-            this.botGateway.server.to(`bot_${botId}`).emit('botLog', payload);
-
-            this.botGateway.server
-                .to('all_bots_logs')
-                .emit('globalLog', payload);
-
-            await this.sleep(1000, signal);
-        } catch (err) {
-            if (signal.aborted) return;
-            this.logger.error(`Error in bot ${botId} loop: ${err}`);
-            await this.sleep(10000, signal);
         }
     }
 }

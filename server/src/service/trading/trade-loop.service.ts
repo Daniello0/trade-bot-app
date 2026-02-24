@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WebsocketClient, WsTopicRequest } from 'bybit-api';
+import { AccountOrderV5, WebsocketClient, WsTopicRequest } from 'bybit-api';
 import { UserKeysService } from '../user/user-keys.service';
 import { BotSettingsService } from '../database/bot-settings.service';
 import { Bot } from './bot';
@@ -10,6 +10,8 @@ import {
     CalculatedQuantiles,
     calculateQuartiles,
 } from '../../utils/math.utils';
+
+type EmitLogFn = (payload: any, price?: number) => void;
 
 @Injectable()
 export class TradeLoopService {
@@ -28,50 +30,18 @@ export class TradeLoopService {
         signal: AbortSignal
     ) {
         const user = await this.userService.getApiKeys(userId);
-
-        const ws = new WebsocketClient({
-            key: user.apiKey,
-            secret: user.apiSecret,
-            demoTrading: true,
-        });
-
         const botSettings = await this.botSettingsService.findOneDetails({
-            userId: userId,
-            botId: botId,
+            userId,
+            botId,
         });
-
-        if (!botSettings) {
-            throw new Error(`Bot with ID "${botId}" not found.`);
-        }
+        if (!botSettings) throw new Error(`Bot with ID "${botId}" not found.`);
 
         const symbol: string =
             botSettings.spotGridSettings?.crypto || 'BTCUSDT';
 
-        const emitLog = (payload: LogDto | string, price?: number) => {
-            let logObject: LogDto;
-
-            const cleanSymbol = symbol.replace('USDT', '');
-
-            if (typeof payload === 'object' && payload !== null) {
-                logObject = {
-                    botId: botId,
-                    timestamp: payload.timestamp || new Date().toISOString(),
-                    message: payload.message || '',
-                    price: payload.price ? Number(payload.price) : price,
-                    symbol: cleanSymbol,
-                };
-            } else {
-                logObject = {
-                    botId: botId,
-                    timestamp: new Date().toISOString(),
-                    message: String(payload),
-                    price: bot.lastPrice,
-                    symbol: cleanSymbol,
-                };
-            }
-
-            this.botGateway.server.to(`bot_${botId}`).emit('botLog', logObject);
-        };
+        const botRef = { lastPrice: 0 };
+        const emitLog = (payload: LogDto, price?: number) =>
+            this.sendBotLog(botId, symbol, payload, price || botRef.lastPrice);
 
         const bybit = new Bybit(
             symbol,
@@ -85,102 +55,96 @@ export class TradeLoopService {
         const bot = new Bot(botSettings, bybit, emitLog);
         await bot.init(bybit);
 
-        signal.addEventListener('abort', () => {
-            this.logger.log(
-                `Closing WebSocket for bot ${symbol} due to abort signal`
-            );
-            ws.closeAll();
+        botRef.lastPrice = bot.lastPrice;
+
+        const ws = new WebsocketClient({
+            key: user.apiKey,
+            secret: user.apiSecret,
+            demoTrading: true,
         });
+        this.setupWsCleanup(ws, signal, symbol);
 
-        void ws.subscribeV5(`kline.1.${symbol}USDT`, 'spot');
+        await this.initialSync(bot, bybit);
 
-        const seedPrice: number = await bybit.getLatestPrice();
-        this.logger.log(`Placing initial grid using seed price: ${seedPrice}`);
-        bot.placeInitialGridOrders(seedPrice);
-
-        const OHLC = await bybit.getLastNOhlc(bot.candleLength);
-        this.updateGridBounds(bot, bybit, OHLC.closes);
-
-        // refactor: too big?
         ws.on('update', (data: WsTopicRequest) => {
-            void (async () => {
-                if (signal.aborted) return;
-
-                try {
-                    if (!data.topic?.startsWith('kline')) return;
-                    const lastPrice = await bybit.getLatestPrice();
-                    const openSellOrders = await bybit.getOpenOrders('Sell');
-                    const openBuyOrders = await bybit.getOpenOrders('Buy');
-                    const OHLC = await bybit.getLastNOhlc(bot.candleLength);
-                    const historicalData = OHLC.closes;
-
-                    emitLog('\n');
-                    emitLog(`Open sell orders: ${openSellOrders.length}`);
-                    emitLog(`Open buy orders: ${openBuyOrders.length}`);
-                    emitLog(
-                        `Orders in memory to sell: ${bot.ordersToSell.length}`
-                    );
-
-                    const now = new Date();
-                    const currentPeriod = Math.floor(
-                        now.getMinutes() / Number(bot.candleLength)
-                    );
-                    if (
-                        currentPeriod !== this.lastCalledPeriod &&
-                        now.getSeconds() < 3
-                    ) {
-                        this.lastCalledPeriod = currentPeriod;
-
-                        emitLog('ЗАКРЫТИЕ СВЕЧИ...');
-
-                        this.updateGridBounds(bot, bybit, historicalData);
-
-                        if (openBuyOrders.length > 0) {
-                            emitLog('Закрываю застрявшие buy-ордеры');
-                            for (const order of openBuyOrders) {
-                                await bybit.cancelOrder(order.orderId);
-                                bot.ordersToSell = [];
-                            }
-                        }
-                    } else {
-                        emitLog(`Lower = ${bot.lowerPriceBound}`);
-                        emitLog(`Upper = ${bot.upperPriceBound}`);
-                        emitLog(`Number of grids = ${bot.numberOfGrids}`);
-                        // refactor: fix ESLint
-                        emitLog(
-                            `Grid state: ${bot.gridLevels.map((order) => ' ' + order.toFixed(4))}, step=${bot.gridInterval.toFixed(6)}`
-                        );
-                    }
-
-                    if (openSellOrders.length >= bot.numberOfGrids) {
-                        emitLog(
-                            `Максимум sell-ордеров (${bot.numberOfGrids}) достигнут — покупка невозможна`
-                        );
-                        return;
-                    }
-
-                    await bot.botMakeDecision({ currentPrice: lastPrice });
-                } catch (err) {
-                    this.logger.error('WS update handler error:', err);
-                }
-            })();
+            void this.handleWsUpdate(data, bot, bybit, signal, emitLog);
         });
 
         ws.on('exception', (err) => this.logger.error('WS Exception', err));
+        void ws.subscribeV5(`kline.1.${symbol}USDT`, 'spot');
 
         await new Promise((resolve) => {
-            signal.addEventListener('abort', () => {
-                ws.closeAll();
-                resolve(null);
-            });
+            signal.addEventListener('abort', () => resolve(null));
         });
     }
 
-    private updateGridBounds(
+    private async handleWsUpdate(
+        data: WsTopicRequest,
         bot: Bot,
-        bybitService: Bybit,
-        historicalData: number[]
+        bybit: Bybit,
+        signal: AbortSignal,
+        emitLog: EmitLogFn
     ) {
+        if (signal.aborted || !data.topic?.startsWith('kline')) return;
+
+        try {
+            const lastPrice = await bybit.getLatestPrice();
+            const openSellOrders = await bybit.getOpenOrders('Sell');
+            const openBuyOrders = await bybit.getOpenOrders('Buy');
+            const OHLC = await bybit.getLastNOhlc(bot.candleLength);
+
+            this.logTickStatus(
+                emitLog,
+                bot,
+                openSellOrders.length,
+                openBuyOrders.length
+            );
+
+            await this.processCandleChange(
+                bot,
+                bybit,
+                OHLC.closes,
+                openBuyOrders,
+                emitLog
+            );
+
+            if (openSellOrders.length < bot.numberOfGrids) {
+                await bot.botMakeDecision({ currentPrice: lastPrice });
+            } else {
+                emitLog(`Максимум sell-ордеров достигнут`);
+            }
+        } catch (err) {
+            this.logger.error('WS update handler error:', err);
+        }
+    }
+
+    private async processCandleChange(
+        bot: Bot,
+        bybit: Bybit,
+        historicalData: number[],
+        openBuyOrders: AccountOrderV5[],
+        emitLog: EmitLogFn
+    ) {
+        const now = new Date();
+        const currentPeriod = Math.floor(
+            now.getMinutes() / Number(bot.candleLength)
+        );
+
+        if (currentPeriod !== this.lastCalledPeriod && now.getSeconds() < 3) {
+            this.lastCalledPeriod = currentPeriod;
+            emitLog('ЗАКРЫТИЕ СВЕЧИ...');
+            this.updateGridBounds(bot, historicalData);
+
+            if (openBuyOrders.length > 0) {
+                emitLog('Очистка застрявших BUY ордеров');
+                for (const order of openBuyOrders)
+                    await bybit.cancelOrder(order.orderId);
+                bot.ordersToSell = [];
+            }
+        }
+    }
+
+    private updateGridBounds(bot: Bot, historicalData: number[]) {
         const quantiles: CalculatedQuantiles | null =
             calculateQuartiles(historicalData);
         if (!quantiles) return;
@@ -188,5 +152,55 @@ export class TradeLoopService {
         bot.applyQuantiles(quantiles);
 
         bot.updateGridBounds(bot.lowerPriceBound, bot.upperPriceBound);
+    }
+
+    private sendBotLog(
+        botId: number,
+        symbol: string,
+        payload: LogDto,
+        currentPrice?: number
+    ) {
+        const isObj = typeof payload === 'object' && payload !== null;
+
+        const logObject: LogDto = {
+            botId: botId,
+            timestamp: isObj
+                ? payload.timestamp || new Date().toISOString()
+                : new Date().toISOString(),
+            message: isObj ? payload.message || '' : String(payload),
+            price: isObj ? Number(payload.price) || currentPrice : currentPrice,
+            symbol: symbol.replace('USDT', ''),
+        };
+
+        this.botGateway.server.to(`bot_${botId}`).emit('botLog', logObject);
+    }
+
+    private async initialSync(bot: Bot, bybit: Bybit) {
+        const seedPrice = await bybit.getLatestPrice();
+        bot.placeInitialGridOrders(seedPrice);
+        const OHLC = await bybit.getLastNOhlc(bot.candleLength);
+        this.updateGridBounds(bot, OHLC.closes);
+    }
+
+    private setupWsCleanup(
+        ws: WebsocketClient,
+        signal: AbortSignal,
+        symbol: string
+    ) {
+        signal.addEventListener('abort', () => {
+            this.logger.log(`Closing WS for ${symbol}`);
+            ws.closeAll();
+        });
+    }
+
+    private logTickStatus(
+        emitLog: EmitLogFn,
+        bot: Bot,
+        sells: number,
+        buys: number
+    ) {
+        emitLog(
+            `--- TICK | Sells: ${sells} | Buys: ${buys} | Queue: ${bot.ordersToSell.length} ---`
+        );
     }
 }
