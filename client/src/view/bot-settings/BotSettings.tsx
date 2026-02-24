@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {NavigateFunction, useNavigate, useParams} from "react-router";
-import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
+import {useForm, SubmitHandler, FormProvider, Resolver} from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { SpotGridSettings } from './SpotGridSettings';
 import './BotSettings.css';
@@ -19,10 +19,9 @@ function BotSettings() {
 
     const methods = useForm<CreateBot>({
         defaultValues: INITIAL_BOT_FORM,
-        // hack (any type)
-        resolver: yupResolver(createBotSchema) as any,
+        resolver: yupResolver(createBotSchema) as Resolver<CreateBot>,
         mode: 'onChange'
-    })
+    });
 
     const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = methods;
 

@@ -1,11 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
+import {
+    Injectable,
+    InternalServerErrorException,
+    UnauthorizedException,
+} from '@nestjs/common';
+import { Auth, DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { UserCrudService } from './user-crud.service';
 import { ReadUserDto } from '../../dto/read-user.dto';
 import { Users } from '../../entity/Users';
 import { FirebaseService } from '../../auth/firebase-init.auth';
 
-// refactor: more decomposition
 @Injectable()
 export class UserAuthService {
     constructor(
@@ -13,60 +16,75 @@ export class UserAuthService {
         private readonly userCrudService: UserCrudService
     ) {}
 
-    async loginUser(idToken: string) {
+    async loginUser(idToken: string): Promise<string> {
         try {
-            const decodedToken: DecodedIdToken = await this.firebaseService
-                .getAuth()
-                .verifyIdToken(idToken);
-            const decodedUser: UserRecord = await this.firebaseService
-                .getAuth()
-                .getUser(decodedToken.uid);
-
-            if (!decodedToken) return;
+            const { email, displayName } =
+                await this.verifyFirebaseUser(idToken);
 
             const { v4: uuidv4 } = await import('uuid');
-            const newUserId: string = uuidv4();
+            const newId: string = uuidv4();
 
-            const user: Users | undefined = await this.userCrudService.select({
-                email: decodedToken.email,
-            });
+            await this.syncUserInDatabase(email, displayName, newId);
 
-            if (!user) {
-                await this.userCrudService.create(
-                    decodedToken.email,
-                    decodedUser.displayName,
-                    newUserId
-                );
-            } else {
-                await this.userCrudService.update(decodedToken.email, {
-                    id: newUserId,
-                });
-            }
-
-            return newUserId;
+            return newId;
         } catch (error) {
-            throw new Error(`Ошибка при попытке залогиниться: ${error}`);
+            if (error instanceof UnauthorizedException) throw error;
+
+            throw new InternalServerErrorException(`Login failed: ${error}`);
         }
     }
 
     async auth(userId: string | undefined): Promise<ReadUserDto | undefined> {
-        try {
-            if (!userId) return;
+        if (!userId) return undefined;
 
-            const user: Users | undefined = await this.userCrudService.select({
-                userId: userId,
-            });
-            if (user) {
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                } as ReadUserDto;
-            } else return;
-        } catch (error) {
-            throw new UnauthorizedException(
-                `Пользователь не авторизован: ${error}`
+        const user: Users | undefined = await this.userCrudService.select({
+            userId,
+        });
+        if (!user) {
+            throw new UnauthorizedException('User session not found');
+        }
+
+        return this.mapToReadDto(user);
+    }
+
+    private mapToReadDto(user: Users): ReadUserDto {
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+        };
+    }
+
+    private async syncUserInDatabase(
+        email: string | undefined,
+        name: string,
+        newId: string
+    ): Promise<void> {
+        const existingUser: Users | undefined =
+            await this.userCrudService.select({ email });
+
+        if (!existingUser) {
+            await this.userCrudService.create(email, name, newId);
+        } else {
+            await this.userCrudService.update(email, { id: newId });
+        }
+    }
+
+    private async verifyFirebaseUser(idToken: string) {
+        try {
+            const auth: Auth = this.firebaseService.getAuth();
+            const decodedToken: DecodedIdToken =
+                await auth.verifyIdToken(idToken);
+            const firebaseUser: UserRecord = await auth.getUser(
+                decodedToken.uid
             );
+
+            return {
+                email: decodedToken.email,
+                displayName: firebaseUser.displayName || 'Anonymous',
+            };
+        } catch (error) {
+            throw new UnauthorizedException(`Invalid Firebase token: ${error}`);
         }
     }
 }

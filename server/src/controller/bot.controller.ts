@@ -41,7 +41,7 @@ export class BotController {
     @Get('/all')
     async getAllBotsSummary(
         @Req() req: user_idGuard.RequestWithUserId
-    ): Promise<ReadBotSummaryDto[] | undefined> {
+    ): Promise<(ReadBotSummaryDto | null)[] | undefined> {
         const userId: string | undefined = req.userId;
         return this.botService.findAllSummaries(userId);
     }

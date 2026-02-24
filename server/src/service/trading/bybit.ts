@@ -1,6 +1,6 @@
 import {
     AccountOrderV5,
-    APIResponseV3,
+    APIResponseV3WithTime,
     CategoryV5,
     KlineIntervalV3,
     OHLCVKlineV5,
@@ -9,99 +9,77 @@ import {
     RestClientV5,
 } from 'bybit-api';
 import { Logger } from '@nestjs/common';
+import { getDecimalsCount } from '../../utils/math.utils';
 
-export interface BotOrderDTO {
-    orderId: string;
-    symbol: string;
-    side: OrderSideV5;
-    price: string;
-    qty: string;
-}
-
-export interface CalculatedQuantiles {
-    min: number;
-    max: number;
-    Q1: number;
-    Q3: number;
-    Q90: number;
-    Q10: number;
-}
-
-// refactor: make functions smaller (split)
 export class Bybit {
-    private readonly logger: Logger = new Logger(Bybit.name);
-
+    private readonly logger = new Logger(Bybit.name);
     private client: RestClientV5;
     private readonly category: CategoryV5 = 'spot';
-    public priceScale: number;
-    public qtyScale: number;
+    private readonly fullSymbol: string;
+
+    public priceScale = 2;
+    public qtyScale = 2;
 
     constructor(
         readonly symbol: string,
         apiKey: string,
         apiSecret: string,
-        demoTrading: boolean = true,
+        demoTrading = true,
         private onLog?: (payload: any) => void
     ) {
+        this.fullSymbol = `${symbol}USDT`;
         this.client = new RestClientV5({
             key: apiKey,
             secret: apiSecret,
-            demoTrading: demoTrading,
+            demoTrading,
         });
     }
 
     private sendLog(message: string, price?: string) {
         this.logger.log(message);
-        if (this.onLog) {
-            this.onLog({
-                timestamp: new Date().toISOString(),
-                message: message,
-                price: price,
-                symbol: this.symbol,
-            });
-        }
+        this.onLog?.({
+            timestamp: new Date().toISOString(),
+            message,
+            price,
+            symbol: this.symbol,
+        });
     }
 
     async init() {
-        const cryptoScale = await this.getCryptoScale();
+        const scale = await this.getCryptoScale();
+        if (!scale)
+            throw new Error(`Failed to init scales for ${this.fullSymbol}`);
 
-        if (!cryptoScale) {
-            throw new Error(`Error in cryptoScale: ${this.symbol}`);
-        }
-
-        this.priceScale = cryptoScale.priceScale;
-        this.qtyScale = cryptoScale.qtyScale;
+        this.priceScale = scale.priceScale;
+        this.qtyScale = scale.qtyScale;
     }
 
     async getLatestPrice(): Promise<number> {
-        const response = await this.client.getTickers({
+        const { result } = await this.client.getTickers({
             category: 'spot',
-            symbol: `${this.symbol}USDT`,
+            symbol: this.fullSymbol,
         });
-        return parseFloat(response.result.list[0].lastPrice);
+        return parseFloat(result.list[0].lastPrice);
     }
 
-    async getLastNOhlc(candleLength: string | undefined) {
+    async getLastNOhlc(interval: string = '1') {
         try {
-            const response = await this.client.getKline({
+            const { result } = await this.client.getKline({
                 category: 'spot',
-                symbol: `${this.symbol}USDT`,
-                interval: candleLength
-                    ? (candleLength as KlineIntervalV3)
-                    : '1',
+                symbol: this.fullSymbol,
+                interval: interval as KlineIntervalV3,
                 limit: 1000,
             });
 
-            const candles: OHLCVKlineV5[] = response.result.list.reverse();
-
+            const candles: OHLCVKlineV5[] = result.list.reverse();
             return {
-                opens: candles.map((c: OHLCVKlineV5) => parseFloat(c[1])),
-                highs: candles.map((c: OHLCVKlineV5) => parseFloat(c[2])),
-                lows: candles.map((c: OHLCVKlineV5) => parseFloat(c[3])),
-                closes: candles.map((c: OHLCVKlineV5) => parseFloat(c[4])),
+                opens: candles.map((c) => parseFloat(c[1])),
+                highs: candles.map((c) => parseFloat(c[2])),
+                lows: candles.map((c) => parseFloat(c[3])),
+                closes: candles.map((c) => parseFloat(c[4])),
             };
         } catch (err) {
-            this.sendLog(`getLastNOhlc exception: ${err}`);
+            this.handleError('getLastNOhlc', err);
             throw err;
         }
     }
@@ -112,11 +90,11 @@ export class Bybit {
         price: number
     ): Promise<number> {
         try {
-            const res: APIResponseV3<OrderResultV5> =
+            const res: APIResponseV3WithTime<OrderResultV5> =
                 await this.client.submitOrder({
                     category: this.category,
-                    symbol: `${this.symbol}USDT`,
-                    side: side,
+                    symbol: this.fullSymbol,
+                    side,
                     orderType: 'Limit',
                     qty: qty.toFixed(this.qtyScale),
                     price: price.toFixed(this.priceScale),
@@ -124,39 +102,30 @@ export class Bybit {
                 });
 
             this.sendLog(
-                `submitOrder ${side} response: ${res.retMsg}`,
+                `Order ${side} placed: ${res.retMsg}`,
                 price.toString()
             );
             return res.retCode;
         } catch (err) {
-            this.sendLog(`placeOrder exception: ${err}`);
+            this.handleError(`placeOrder ${side}`, err);
             return -1;
         }
     }
 
-    async getOpenSellOrders(): Promise<AccountOrderV5[]> {
+    async getOpenOrders(side?: OrderSideV5): Promise<AccountOrderV5[]> {
         try {
-            const res = await this.client.getActiveOrders({
+            const { result } = await this.client.getActiveOrders({
                 category: this.category,
-                symbol: `${this.symbol}USDT`,
+                symbol: this.fullSymbol,
                 limit: 50,
             });
-            const list = res.result?.list ?? [];
-            return list.filter((p) => p.side === 'Sell');
+            const orders: AccountOrderV5[] = result?.list ?? [];
+            return side
+                ? orders.filter((o: AccountOrderV5) => o.side === side)
+                : orders;
         } catch (err) {
-            this.sendLog(`getOpenSellOrders exception: ${err}`);
+            this.handleError('getOpenOrders', err);
             return [];
-        }
-    }
-
-    async stopLossSellAll(
-        openOrders: AccountOrderV5[],
-        stopPrice: number
-    ): Promise<void> {
-        for (const order of openOrders) {
-            if (order.side === 'Sell') {
-                await this.stopLossSell(order, stopPrice);
-            }
         }
     }
 
@@ -165,71 +134,19 @@ export class Bybit {
         stopPrice: number
     ): Promise<void> {
         try {
-            await this.client.cancelOrder({
-                category: this.category,
-                orderId: order.orderId,
-                symbol: `${this.symbol}USDT`,
-            });
-
-            await this.client.submitOrder({
-                category: this.category,
-                symbol: `${this.symbol}USDT`,
-                side: 'Sell',
-                orderType: 'Limit',
-                qty: order.qty,
-                price: stopPrice.toFixed(this.priceScale),
-            });
+            await this.cancelOrder(order.orderId);
+            await this.placeOrder('Sell', parseFloat(order.qty), stopPrice);
         } catch (err) {
-            this.sendLog(`Failed to SL order ${order.orderId}: ${err}`);
+            this.sendLog(`SL failed for ${order.orderId}: ${err}`);
         }
     }
 
-    async cancelOrder(order: AccountOrderV5 | BotOrderDTO): Promise<void> {
+    async cancelOrder(orderId: string | undefined): Promise<void> {
         await this.client.cancelOrder({
             category: this.category,
-            symbol: `${this.symbol}USDT`,
-            orderId: order.orderId,
+            symbol: this.fullSymbol,
+            orderId,
         });
-    }
-
-    async getOpenBuyOrders(): Promise<AccountOrderV5[]> {
-        try {
-            const res = await this.client.getActiveOrders({
-                category: this.category,
-                symbol: `${this.symbol}USDT`,
-                limit: 50,
-            });
-            const list = res.result?.list ?? [];
-            return list.filter((p) => p.side === 'Buy');
-        } catch (err) {
-            this.sendLog(`getOpenBuyOrders exception: ${err}`);
-            return [];
-        }
-    }
-
-    calculateQuartiles(historicalData: number[]) {
-        if (!historicalData || historicalData.length === 0) return null;
-
-        const sorted = [...historicalData].sort((a, b) => a - b);
-        const min = sorted[0];
-        const max = sorted[sorted.length - 1];
-
-        const percentile = (arr: number[], p: number) => {
-            const index = (arr.length - 1) * p;
-            const lower = Math.floor(index);
-            const upper = Math.ceil(index);
-            if (lower === upper) return arr[lower];
-            return arr[lower] + (arr[upper] - arr[lower]) * (index - lower);
-        };
-
-        return {
-            min,
-            max,
-            Q1: percentile(sorted, 0.25),
-            Q3: percentile(sorted, 0.75),
-            Q90: percentile(sorted, 0.9),
-            Q10: percentile(sorted, 0.1),
-        } as CalculatedQuantiles;
     }
 
     public async getCryptoScale() {
@@ -246,10 +163,10 @@ export class Bybit {
             ) {
                 const instrument = response.result.list[0];
                 return {
-                    priceScale: this.getDecimalsCount(
+                    priceScale: getDecimalsCount(
                         instrument.priceFilter.tickSize
                     ),
-                    qtyScale: this.getDecimalsCount(
+                    qtyScale: getDecimalsCount(
                         instrument.lotSizeFilter.basePrecision
                     ),
                 };
@@ -262,9 +179,7 @@ export class Bybit {
         }
     }
 
-    private getDecimalsCount(value: string | number) {
-        const valueStr: string = value.toString();
-        if (!valueStr.includes('.')) return 0;
-        return valueStr.split('.')[1].length;
+    private handleError(context: string, err: any) {
+        this.sendLog(`${context} exception: ${err}`);
     }
 }

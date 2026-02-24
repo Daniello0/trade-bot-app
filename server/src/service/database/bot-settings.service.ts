@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Bots } from '../../entity/Bots';
 import { CreateBotDto } from '../../dto/create-bot-dto';
 import { ReadBotDetailsDto, ReadBotSummaryDto } from '../../dto/read-bot.dto';
@@ -20,71 +20,41 @@ export class BotSettingsService {
         private readonly spotGridSettingsService: SpotGridSettingsService
     ) {}
 
-    // refactor: too big?
+    // fixme: add "if bot with this name exists - throw CreateError('Bot with this name exists')"
     async create(
         createDto: CreateBotDto,
         userEmail: string | undefined
     ): Promise<Bots> {
-        if (!userEmail) {
-            throw new NotFoundException('User not found.');
-        }
+        const email: string = this.getValidUserId(userEmail);
 
-        try {
-            return this.botRepository.manager.transaction(
-                async (transactionalEntityManager) => {
-                    let settingsEntity: SpotGridSettings | undefined =
-                        undefined;
-
-                    if (
-                        createDto.botType === 'spotGrid' &&
-                        createDto.spotGridSettingsData
-                    ) {
-                        settingsEntity =
-                            await this.spotGridSettingsService.create(
-                                createDto.spotGridSettingsData,
-                                transactionalEntityManager
-                            );
-                    }
-
-                    const newBot = this.botRepository.create({
-                        ...createDto,
-                        user: { email: userEmail },
-                        spotGridSettings: settingsEntity,
-                    });
-
-                    return await transactionalEntityManager.save(newBot);
-                }
-            );
-        } catch (error) {
-            throw new Error(`Ошибка при создании бота: ${error}`);
-        }
+        return this.botRepository.manager.transaction(
+            async (manager: EntityManager) => {
+                const settings: SpotGridSettings | undefined =
+                    await this.createSettingsIfNeed(createDto, manager);
+                const newBot: Bots = this.botRepository.create({
+                    ...createDto,
+                    user: { email },
+                    spotGridSettings: settings,
+                });
+                return await manager.save(newBot);
+            }
+        );
     }
 
     async findAllSummaries(
         userId: string | undefined
-    ): Promise<ReadBotSummaryDto[]> {
-        if (!userId) {
-            throw new NotFoundException('User not found.');
-        }
-
-        const bots = await this.botRepository.find({
+    ): Promise<(ReadBotSummaryDto | null)[]> {
+        const bots: Bots[] = await this.botRepository.find({
             where: { user: { id: userId } },
         });
-
-        return bots.map((bot) => ({
-            id: bot.id,
-            name: bot.name,
-            botType: bot.botType,
-            deposit: bot.deposit,
-            status: bot.status,
-        }));
+        return bots.map((bot: Bots) => mapBotToReadBotSummaryDto(bot));
     }
 
     async findOneDetails(botData: {
         userId: string | undefined;
         botId: number;
     }): Promise<ReadBotDetailsDto | null> {
-        const bot = await this.botRepository.findOne({
+        const bot: Bots | null = await this.botRepository.findOne({
             where: { id: botData.botId, user: { id: botData.userId } },
             relations: {
                 spotGridSettings: {
@@ -93,9 +63,6 @@ export class BotSettingsService {
                 },
             },
         });
-
-        if (!bot) return null;
-
         return mapBotToReadBotDetailsDto(bot);
     }
 
@@ -117,38 +84,29 @@ export class BotSettingsService {
         userId: string | undefined,
         updateData: CreateBotDto
     ): Promise<void> {
-        if (!userId) {
-            throw new NotFoundException('User not found.');
-        }
+        const validUserId: string = this.getValidUserId(userId);
 
         await this.botRepository.manager.transaction(
-            async (transactionalEntityManager) => {
-                const botRepository =
-                    transactionalEntityManager.getRepository(Bots);
-
-                const botToUpdate = await botRepository.findOne({
-                    where: { id: botId, user: { id: userId } },
-                    relations: { spotGridSettings: true },
-                });
-
-                if (!botToUpdate) {
-                    throw new NotFoundException(
-                        `Bot with ID "${botId}" not found or permission denied.`
-                    );
-                }
+            async (manager: EntityManager) => {
+                const bot: Bots = await this.findBotOrThrow(
+                    botId,
+                    validUserId,
+                    { spotGridSettings: true },
+                    manager
+                );
 
                 const { spotGridSettingsData, ...botFields } = updateData;
 
                 if (Object.keys(botFields).length > 0) {
-                    await botRepository.update(botId, botFields);
+                    await manager.update(Bots, botId, botFields);
                 }
 
-                if (spotGridSettingsData && botToUpdate.spotGridSettings) {
+                if (spotGridSettingsData && bot.spotGridSettings) {
                     await this.spotGridSettingsService.update(
-                        botToUpdate.spotGridSettings.id,
-                        userId,
+                        bot.spotGridSettings.id,
+                        validUserId,
                         spotGridSettingsData,
-                        transactionalEntityManager
+                        manager
                     );
                 }
             }
@@ -156,47 +114,63 @@ export class BotSettingsService {
     }
 
     async remove(botId: number, userId: string | undefined): Promise<void> {
-        if (!userId) {
-            throw new NotFoundException('User not found.');
-        }
+        const validUserId: string = this.getValidUserId(userId);
 
-        const botToRemove = await this.botRepository.findOne({
-            where: { id: botId, user: { id: userId } },
-            relations: {
-                spotGridSettings: {
-                    gridSettings: true,
-                    levelsSettings: true,
-                },
-            },
+        const bot: Bots = await this.findBotOrThrow(botId, validUserId, {
+            spotGridSettings: { gridSettings: true, levelsSettings: true },
         });
-
-        if (!botToRemove) {
-            throw new NotFoundException(
-                `Bot with ID "${botId}" not found or you don't have permission to delete it.`
-            );
-        }
-
-        await this.botRepository.remove(botToRemove);
+        await this.botRepository.remove(bot);
     }
 
     async switchBotStatus(
         botId: number,
         userId: string | undefined
     ): Promise<void> {
-        if (!userId) {
-            throw new NotFoundException('User not found.');
-        }
+        const validUserId: string = this.getValidUserId(userId);
+        const bot: Bots = await this.findBotOrThrow(botId, validUserId);
+        bot.status = bot.status === 'running' ? 'stopped' : 'running';
+        await this.botRepository.save(bot);
+    }
 
-        const bot = await this.botRepository.findOne({
+    private async findBotOrThrow(
+        botId: number,
+        userId: string,
+        relations = {},
+        manager?: EntityManager
+    ): Promise<Bots> {
+        const repo: Repository<Bots> = manager
+            ? manager.getRepository(Bots)
+            : this.botRepository;
+        const bot: Bots | null = await repo.findOne({
             where: { id: botId, user: { id: userId } },
+            relations,
         });
 
         if (!bot) {
-            throw new NotFoundException(`Bot with ID "${botId}" not found.`);
+            throw new NotFoundException(
+                `Bot with ID "${botId}" not found or access denied.`
+            );
         }
+        return bot;
+    }
 
-        bot.status = bot.status === 'running' ? 'stopped' : 'running';
+    private async createSettingsIfNeed(
+        dto: CreateBotDto,
+        manager: EntityManager
+    ): Promise<SpotGridSettings | undefined> {
+        if (dto.botType === 'spotGrid' && dto.spotGridSettingsData) {
+            return await this.spotGridSettingsService.create(
+                dto.spotGridSettingsData,
+                manager
+            );
+        }
+        return undefined;
+    }
 
-        await this.botRepository.save(bot);
+    private getValidUserId(userId: string | undefined): string {
+        if (!userId) {
+            throw new NotFoundException('User not found.');
+        }
+        return userId;
     }
 }

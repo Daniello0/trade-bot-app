@@ -1,8 +1,12 @@
 import { ReadBotDetailsDto } from '../../dto/read-bot.dto';
 import { Logger } from '@nestjs/common';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
-import { Bybit, CalculatedQuantiles } from './bybit';
+import { Bybit } from './bybit';
 import { AccountOrderV5 } from 'bybit-api';
+import {
+    CalculatedQuantiles,
+    calculateQuartiles,
+} from '../../utils/math.utils';
 
 interface Order {
     price: number;
@@ -57,7 +61,7 @@ export class Bot {
             this.candleLength
         );
 
-        const quantiles = bybitService.calculateQuartiles(
+        const quantiles: CalculatedQuantiles | null = calculateQuartiles(
             historicalData.closes
         );
 
@@ -85,7 +89,7 @@ export class Bot {
 
     placeInitialGridOrders(seedPrice: number) {
         this.gridLevels = [];
-        const lower = Number(
+        const lower: number = Number(
             this.spotGridSettings.gridSettings.lowerBoundDynamic
         );
 
@@ -132,7 +136,7 @@ export class Bot {
             return;
         }
 
-        const openSellOrders = await this.bybit.getOpenSellOrders();
+        const openSellOrders = await this.bybit.getOpenOrders('Sell');
         for (const order of openSellOrders) {
             if (Number(order.price) > this.upperPriceBound) {
                 this.sendLog(
@@ -168,7 +172,7 @@ export class Bot {
                 );
 
                 const openSellOrders: AccountOrderV5[] =
-                    await this.bybit.getOpenSellOrders();
+                    await this.bybit.getOpenOrders('Sell');
 
                 for (const order of openSellOrders) {
                     if (

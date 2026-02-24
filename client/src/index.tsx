@@ -6,10 +6,17 @@ import reportWebVitals from './reportWebVitals';
 import {BrowserRouter, Route, Routes} from "react-router";
 import BotSettings from "./view/bot-settings/BotSettings";
 import {BotConsole} from "./view/bot-settings/BotConsole";
+import Modal from 'react-modal';
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement
 );
+
+const rootElement: HTMLElement | null = document.getElementById('root');
+if (rootElement) {
+    Modal.setAppElement(rootElement);
+}
+
 root.render(
   <React.StrictMode>
       <BrowserRouter>

@@ -3,8 +3,6 @@ import Modal from 'react-modal';
 import { UserKeys } from '../../api/Types';
 import './ApiKeysModal.css';
 
-Modal.setAppElement('#root');
-
 interface ApiKeysModalProps {
     isOpen: boolean;
     onClose: () => void;

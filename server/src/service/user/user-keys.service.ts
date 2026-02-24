@@ -1,13 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { CryptoService } from '../cryptography/crypto.service';
-import { DatabaseService } from '../database/init-typeorm';
 import { Users } from '../../entity/Users';
 import { UserCrudService } from './user-crud.service';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
-// refactor: too big?
 @Injectable()
 export class UserKeysService {
     constructor(
+        @InjectRepository(Users)
+        private readonly usersRepository: Repository<Users>,
         private readonly cryptoService: CryptoService,
         private readonly userCrudService: UserCrudService
     ) {}
@@ -17,34 +23,40 @@ export class UserKeysService {
         apiKey: string,
         secretKey: string
     ) {
-        if (!userId) throw new Error('User id is not defined.');
+        const validId: string = this.getValidUserId(userId);
+        const updateData: Partial<Users> = {};
 
-        const encryptedApiKey = this.cryptoService.encrypt(apiKey);
-        const encryptedSecretKey = this.cryptoService.encrypt(secretKey);
+        if (apiKey) updateData.apiKey = this.cryptoService.encrypt(apiKey);
+        if (secretKey)
+            updateData.apiSecret = this.cryptoService.encrypt(secretKey);
 
-        const userRepository = DatabaseService.getRepository(Users);
-        await userRepository.update(userId, {
-            apiKey: encryptedApiKey,
-            apiSecret: encryptedSecretKey,
-        });
+        if (Object.keys(updateData).length > 0) {
+            await this.usersRepository.update(validId, updateData);
+        }
     }
 
     async getApiKeys(
         userId: string | undefined
     ): Promise<{ apiKey: string; apiSecret: string }> {
-        if (!userId) throw new Error('User id is not defined.');
+        const validId: string = this.getValidUserId(userId);
 
         const user: Users | undefined = await this.userCrudService.select({
-            userId: userId,
+            userId: validId,
         });
-
         if (!user) {
-            throw new Error(`User with id "${userId}" not found.`);
+            throw new NotFoundException(`User with id "${validId}" not found.`);
         }
 
-        const apiKey: string = this.cryptoService.decrypt(user.apiKey);
-        const apiSecret: string = this.cryptoService.decrypt(user.apiSecret);
+        return {
+            apiKey: this.cryptoService.decrypt(user.apiKey),
+            apiSecret: this.cryptoService.decrypt(user.apiSecret),
+        };
+    }
 
-        return { apiKey, apiSecret };
+    private getValidUserId(userId: string | undefined): string {
+        if (!userId) {
+            throw new BadRequestException('User ID is required');
+        }
+        return userId;
     }
 }

@@ -5,9 +5,6 @@ import { auth, googleProvider } from "../../firebase/Firebase";
 import "./AuthModal.css";
 import {loginUser, logoutUser} from "../../service/UserAuthService";
 import {ReadUser} from "../../api/Types";
-
-Modal.setAppElement('#root');
-
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;

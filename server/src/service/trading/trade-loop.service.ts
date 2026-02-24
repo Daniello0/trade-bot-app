@@ -6,6 +6,10 @@ import { Bot } from './bot';
 import { Bybit } from './bybit';
 import { BotGateway } from '../../gateway/bot.gateway';
 import { LogDto } from '../../dto/log.dto';
+import {
+    CalculatedQuantiles,
+    calculateQuartiles,
+} from '../../utils/math.utils';
 
 @Injectable()
 export class TradeLoopService {
@@ -105,8 +109,8 @@ export class TradeLoopService {
                 try {
                     if (!data.topic?.startsWith('kline')) return;
                     const lastPrice = await bybit.getLatestPrice();
-                    const openSellOrders = await bybit.getOpenSellOrders();
-                    const openBuyOrders = await bybit.getOpenBuyOrders();
+                    const openSellOrders = await bybit.getOpenOrders('Sell');
+                    const openBuyOrders = await bybit.getOpenOrders('Buy');
                     const OHLC = await bybit.getLastNOhlc(bot.candleLength);
                     const historicalData = OHLC.closes;
 
@@ -134,7 +138,7 @@ export class TradeLoopService {
                         if (openBuyOrders.length > 0) {
                             emitLog('Закрываю застрявшие buy-ордеры');
                             for (const order of openBuyOrders) {
-                                await bybit.cancelOrder(order);
+                                await bybit.cancelOrder(order.orderId);
                                 bot.ordersToSell = [];
                             }
                         }
@@ -177,7 +181,8 @@ export class TradeLoopService {
         bybitService: Bybit,
         historicalData: number[]
     ) {
-        const quantiles = bybitService.calculateQuartiles(historicalData);
+        const quantiles: CalculatedQuantiles | null =
+            calculateQuartiles(historicalData);
         if (!quantiles) return;
 
         bot.applyQuantiles(quantiles);

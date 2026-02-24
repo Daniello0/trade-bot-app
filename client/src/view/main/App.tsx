@@ -11,6 +11,14 @@ import {AuthModal} from "./AuthModal";
 import {getHealthStatus} from "../../service/HealthzService";
 import {getUser} from "../../service/UserAuthService";
 
+interface BotRowProps {
+    bot: ReadBotSummary;
+    onDelete: () => void;
+    onToggle: () => void;
+    onEdit: () => void;
+    onConsole: () => void;
+}
+
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
     const [bots, setBots] = useState<ReadBotSummary[] | []>([]);
@@ -155,8 +163,7 @@ function App() {
     return <h1>Disconnected</h1>;
 }
 
-// hack: any type
-const BotRow = ({ bot, onDelete, onToggle, onEdit, onConsole }: any) => (
+const BotRow: React.FC<BotRowProps> = ({ bot, onDelete, onToggle, onEdit, onConsole }: BotRowProps) => (
     <div className="table-row">
         <div className="column-name">{bot.name}</div>
         <div className="column-type">{bot.botType}</div>

@@ -16,89 +16,85 @@ export class SpotGridSettingsService {
         private readonly levelsSettingsService: LevelsSettingsService
     ) {}
 
-    // refactor: too big?
     async create(
-        spotGridSettingsData: CreateSpotGridSettingsDto,
+        dto: CreateSpotGridSettingsDto,
         manager?: EntityManager
     ): Promise<SpotGridSettings> {
-        const spotGridRepository: Repository<SpotGridSettings> = manager
-            ? manager.getRepository(SpotGridSettings)
-            : this.spotGridRepository;
+        const repo: Repository<SpotGridSettings> = this.getRepo(manager);
 
-        const savedGridSettings = await this.gridSettingsService.create(
-            spotGridSettingsData.gridSettings,
-            manager
-        );
-        const savedLevelsSettings = await this.levelsSettingsService.create(
-            spotGridSettingsData.levelsSettings,
-            manager
-        );
+        const [grid, levels] = await Promise.all([
+            this.gridSettingsService.create(dto.gridSettings, manager),
+            this.levelsSettingsService.create(dto.levelsSettings, manager),
+        ]);
 
-        const newSettings: SpotGridSettings = spotGridRepository.create({
-            candleLength: spotGridSettingsData.candleLength,
-            crypto: spotGridSettingsData.crypto,
-
-            gridSettings: savedGridSettings,
-            levelsSettings: savedLevelsSettings,
+        const newSettings: SpotGridSettings = repo.create({
+            candleLength: dto.candleLength,
+            crypto: dto.crypto,
+            gridSettings: grid,
+            levelsSettings: levels,
         });
 
-        return await spotGridRepository.save(newSettings);
+        return await repo.save(newSettings);
     }
 
-    // refactor: also too big?
     async update(
-        spotGridSettingsId: number,
+        id: number,
         userId: string,
-        updateData: CreateSpotGridSettingsDto,
+        dto: CreateSpotGridSettingsDto,
         manager?: EntityManager
     ): Promise<void> {
-        const repository = manager
-            ? manager.getRepository(SpotGridSettings)
-            : this.spotGridRepository;
+        const repo: Repository<SpotGridSettings> = this.getRepo(manager);
 
-        const settingsToUpdate: SpotGridSettings | null =
-            await this.getSpotGridSettingsToUpdate(
-                repository,
-                spotGridSettingsId,
-                userId
-            );
-
-        const { gridSettings, levelsSettings, ...spotGridFields } = updateData;
-
-        await this.gridSettingsService.update(
-            settingsToUpdate.gridSettings.id,
-            gridSettings,
-            manager
-        );
-        await this.levelsSettingsService.update(
-            settingsToUpdate.levelsSettings.id,
-            levelsSettings,
+        const existing: SpotGridSettings = await this.findOrThrow(
+            id,
+            userId,
             manager
         );
 
-        await repository.update(spotGridSettingsId, spotGridFields);
+        const { gridSettings, levelsSettings, ...spotGridFields } = dto;
+
+        await Promise.all([
+            this.gridSettingsService.update(
+                existing.gridSettings.id,
+                gridSettings,
+                manager
+            ),
+            this.levelsSettingsService.update(
+                existing.levelsSettings.id,
+                levelsSettings,
+                manager
+            ),
+            repo.update(id, spotGridFields),
+        ]);
     }
 
-    private async getSpotGridSettingsToUpdate(
-        repository: Repository<SpotGridSettings>,
-        spotGridSettingsId: number,
-        userId: string
-    ) {
-        const settingsToUpdate: SpotGridSettings | null =
-            await repository.findOne({
-                where: {
-                    id: spotGridSettingsId,
-                    bot: { user: { id: userId } },
-                },
-                relations: { gridSettings: true, levelsSettings: true },
-            });
+    private getRepo(manager?: EntityManager): Repository<SpotGridSettings> {
+        return manager
+            ? manager.getRepository(SpotGridSettings)
+            : this.spotGridRepository;
+    }
 
-        if (!settingsToUpdate) {
+    private async findOrThrow(
+        id: number,
+        userId: string,
+        manager?: EntityManager
+    ): Promise<SpotGridSettings> {
+        const settings: SpotGridSettings | null = await this.getRepo(
+            manager
+        ).findOne({
+            where: {
+                id,
+                bot: { user: { id: userId } },
+            },
+            relations: { gridSettings: true, levelsSettings: true },
+        });
+
+        if (!settings) {
             throw new NotFoundException(
-                `SpotGridSettings with ID "${spotGridSettingsId}" not found or permission denied.`
+                `SpotGridSettings #${id} not found or access denied.`
             );
         }
 
-        return settingsToUpdate;
+        return settings;
     }
 }
