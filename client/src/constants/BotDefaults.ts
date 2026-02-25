@@ -9,7 +9,7 @@ export const DEFAULT_SPOT_GRID_VALUES = {
 
 export const INITIAL_BOT_FORM: CreateBot = {
     botType: 'spotGrid',
-    name: 'My Bot',
+    name: 'Мой бот',
     deposit: 1000,
     spotGridSettingsData: DEFAULT_SPOT_GRID_VALUES,
     fullSpotSettingsData: undefined,

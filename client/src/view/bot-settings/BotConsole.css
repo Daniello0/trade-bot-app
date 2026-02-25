@@ -25,7 +25,7 @@
 }
 
 .console-window {
-    background-color: #1c1c1e;
+    background-color: var(--color-console-background);
     border-radius: var(--border-radius);
     height: 650px;
     box-shadow: var(--shadow);

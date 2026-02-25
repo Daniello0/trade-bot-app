@@ -51,7 +51,6 @@ function App() {
             setAuthUser(user)
         } else {
             setAuthUser(undefined);
-            // hack: removes bots after logout
             setBots([]);
         }
     };
@@ -63,19 +62,43 @@ function App() {
     }, []);
 
     const unauthorisedRedirect = () => {
-        const confirmed: boolean = window.confirm('Необходима авторизация. Желаете продолжить?');
+        const confirmed: boolean =
+            window.confirm('Необходима авторизация. Желаете продолжить?');
         if (confirmed) setAuthModalOpen(true);
     }
 
+    const emptyApiKeysRedirect = async () => {
+        const confirmed: boolean =
+            window.confirm('Необходимо ввести API-ключи. Желаете продолжить?');
+        if (confirmed) setKeysModalOpen(true);
+    }
+
+    const updateKeys = async (): Promise<UserKeys | undefined> => {
+        try {
+            const keys = await getUserKeys();
+            setExistingKeys(keys);
+            return keys;
+        } catch (error) {
+            console.error('Не удалось загрузить ключи:', error);
+            return undefined;
+        }
+    }
+
     const handleToggleBotButtonClick = async (botId: number) => {
+        const keys = await updateKeys();
+        const hasInvalidKeys = !keys || !keys.apiKey || !keys.apiSecret;
+        if (hasInvalidKeys) {
+            await emptyApiKeysRedirect();
+            return;
+        }
         await toggleBot(botId);
-        const bots = await getAllBots();
+        const bots: ReadBotSummary[] | undefined = await getAllBots();
         if (bots) setBots(bots);
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
         await deleteBot(botId);
-        const bots = await getAllBots();
+        const bots: ReadBotSummary[] | undefined = await getAllBots();
         if (bots) setBots(bots);
     }
 
@@ -85,8 +108,7 @@ function App() {
             return;
         }
         try {
-            const keys = await getUserKeys();
-            setExistingKeys(keys);
+            await updateKeys();
             setKeysModalOpen(true);
         } catch (error) {
             alert('Ошибка! Не удалось загрузить текущие ключи');
@@ -118,9 +140,9 @@ function App() {
         return (
             <div className="App">
                 <div className="header">
-                    <div className="settings" onClick={() => handleSettingsButtonClick()}>Settings</div>
+                    <div className="settings" onClick={() => handleSettingsButtonClick()}>Настройки API-ключей</div>
                     <div className="singup" onClick={() => {setAuthModalOpen(true)}}>
-                        {authUser? authUser.name : 'Sing up'}
+                        {authUser? authUser.name : 'Войти'}
                     </div>
                 </div>
                 <div className="table">
@@ -163,13 +185,18 @@ function App() {
     return <h1>Disconnected</h1>;
 }
 
+const botTypeLabels: Record<string, string> = {
+    spotGrid: 'Сеточный бот',
+    fullSpot: 'Биржевой бот'
+};
+
 const BotRow: React.FC<BotRowProps> = ({ bot, onDelete, onToggle, onEdit, onConsole }: BotRowProps) => (
     <div className="table-row">
         <div className="column-name">{bot.name}</div>
-        <div className="column-type">{bot.botType}</div>
+        <div className="column-type">{botTypeLabels[bot.botType]}</div>
         <div className="column-status">
             <span className={`status-badge ${bot.status === 'running' ? 'status-running' : 'status-stopped'}`}>
-                {bot.status}
+                {bot.status === 'running' ? 'Запущен' : 'Остановлен'}
             </span>
         </div>
         <div className="column-actions">

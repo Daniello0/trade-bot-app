@@ -12,7 +12,7 @@ import {
 import {mapReadBotToCreateBot} from "../../mapper/BotTypeMapper";
 import {createBotSchema} from "../../schema/Schemas";
 import {DEFAULT_SPOT_GRID_VALUES, INITIAL_BOT_FORM} from "../../constants/BotDefaults";
-
+import {InfoTooltip} from "../../components/InfoTooltip";
 
 function BotSettings() {
     const navigate: NavigateFunction = useNavigate();
@@ -75,7 +75,10 @@ function BotSettings() {
                             {errors.name && <span className="error-text">{errors.name.message}</span>}
                         </div>
                         <div className="form-group">
-                            <label>Депозит, $</label>
+                            <label>
+                                <InfoTooltip text="Общая сумма ($), которую бот будет использовать для торговли."
+                                             children="Депозит"/>
+                            </label>
                             <input type="number" step="any" {...register('deposit')} />
                             {errors.deposit && <span className="error-text">{errors.deposit.message}</span>}
                         </div>
@@ -85,8 +88,8 @@ function BotSettings() {
                         <fieldset className="form-section">
                             <legend>Тип бота</legend>
                             <div className="radio-group horizontal">
-                                <label><input type="radio" {...register('botType')} value="spotGrid" /> Spot Grid</label>
-                                <label><input type="radio" {...register('botType')} value="fullSpot" /> Full Spot</label>
+                                <label><input type="radio" {...register('botType')} value="spotGrid" /> Сеточный бот</label>
+                                <label><input type="radio" {...register('botType')} value="fullSpot" /> Торговый бот</label>
                             </div>
                         </fieldset>
                     )}

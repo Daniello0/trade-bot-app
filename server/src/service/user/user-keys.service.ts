@@ -26,9 +26,8 @@ export class UserKeysService {
         const validId: string = this.getValidUserId(userId);
         const updateData: Partial<Users> = {};
 
-        if (apiKey) updateData.apiKey = this.cryptoService.encrypt(apiKey);
-        if (secretKey)
-            updateData.apiSecret = this.cryptoService.encrypt(secretKey);
+        updateData.apiKey = this.cryptoService.encrypt(apiKey);
+        updateData.apiSecret = this.cryptoService.encrypt(secretKey);
 
         if (Object.keys(updateData).length > 0) {
             await this.usersRepository.update(validId, updateData);

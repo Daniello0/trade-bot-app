@@ -34,7 +34,24 @@ export const ApiKeysModal: React.FC<ApiKeysModalProps> = ({ isOpen, onClose, onS
             className="modal"
             overlayClassName="overlay"
         >
-            <h2>Настройки API ключей</h2>
+            <h2 className="modal-title-container">
+                Настройки API ключей
+                <div className="api-keys-help">
+                    ?
+                    <div className="api-keys-tooltip">
+                        <strong>Инструкция:</strong>
+                        <ul>
+                            <li>Войдите или зарегистрируйтесь на сайте <a rel="noreferrer noopener" target="_blank" href='https://bybit.com'>bybit.com</a>.</li>
+                            <li>Наведите курсор на иконку профиля, перейдите в раздел <a rel="noreferrer noopener" target="_blank" href="https://www.bybit.com/app/user/api-management">API</a>.</li>
+                            <li>В правом верхнем углу нажмите "Создать новый ключ" – "API ключ, сгенерированный системой".</li>
+                            <li>Настройте права чтения/записи.</li>
+                            <li>Важно! Разрешите доступ к торговым операциям ("СПОТ" – "Торговать") и
+                                информации об ордерах ("Контракт" – "Ордера").</li>
+                            <li>После создания, вставьте ключи в текстовые поля ниже</li>
+                        </ul>
+                    </div>
+                </div>
+            </h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="api-key">API Key</label>
@@ -58,7 +75,6 @@ export const ApiKeysModal: React.FC<ApiKeysModalProps> = ({ isOpen, onClose, onS
                         placeholder={initialData?.apiSecret ? '******** (уже сохранен)' : 'Введите ваш Secret Key'}
                         autoComplete="new-password"
                     />
-                    <small>Оставьте поле пустым, чтобы не изменять его.</small>
                 </div>
                 <div className="modal-actions">
                     <button type="button" className="action-button secondary" onClick={onClose}>

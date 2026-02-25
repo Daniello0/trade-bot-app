@@ -118,7 +118,7 @@ export class Bot {
         for (const order of openSellOrders) {
             if (Number(order.price) > this.upperPriceBound) {
                 this.sendLog('Стоп-лосс: перемещение ордера к границе сетки');
-                await this.bybit.stopLossSell(order, this.upperPriceBound);
+                await this.bybit.stopLossSell(order, this.lastPrice);
             }
         }
     }

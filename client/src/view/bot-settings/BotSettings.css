@@ -15,7 +15,6 @@
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     padding: 30px 40px;
-    overflow: hidden;
 }
 
 .bot-settings-form h1 {
@@ -29,7 +28,7 @@
     border: none;
     padding: 0;
     margin: 0 0 35px 0;
-    max-width: 100%; /* Вместо 800px, чтобы не вылезать за паддинги формы */
+    max-width: 100%;
     width: 100%;
 }
 
@@ -135,7 +134,7 @@
     font-size: 14px;
     color: var(--text-secondary);
     white-space: normal;
-    word-break: break-all;
+    word-break: break-word;
     max-width: 180px;
 }
 
@@ -155,4 +154,51 @@
 
 .form-group input {
     width: 100%;
+}
+
+.text-need-help {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    border-bottom: 1px dashed var(--text-secondary);
+    height: 21px;
+}
+
+.text-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: 220px;
+    background-color: var(--color-console-background);
+    color: white;
+    text-align: left;
+    border-radius: 8px;
+    padding: 12px;
+    position: absolute;
+    z-index: 100;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+    font-weight: normal;
+    line-height: 1.4;
+    pointer-events: none;
+}
+
+.text-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #3a3f4b transparent transparent transparent;
+}
+
+.text-need-help:hover .text-tooltip {
+    visibility: visible;
+    opacity: 1;
+    bottom: 125%;
 }

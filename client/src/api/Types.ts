@@ -43,7 +43,7 @@ export interface CreateBot {
 export interface ReadBotSummary {
     id: number;
     name: string;
-    botType: string;
+    botType: 'spotGrid' | 'fullSpot';
     status: 'stopped' | 'running';
 }
 

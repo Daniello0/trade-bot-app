@@ -1,6 +1,6 @@
-/* 1. Глобальные стили и переменные */
 :root {
-  --color-primary: #0000bd;
+  --color-console-background: #1c1c1e;
+  --color-primary: #00009f;
   --color-success: #009500;
   --color-danger: #9f0000;
   --color-warning: #FF9500;
