@@ -3,13 +3,11 @@ import './App.css';
 import {NavigateFunction} from "react-router";
 import {useNavigate} from "react-router"
 import {deleteBot, getAllBots} from "../../service/BotService";
-import {UserKeys, ReadBotSummary, ReadUser} from "../../api/Types";
-import {createUserKeys, getUserKeys} from "../../service/UserKeysService";
-import {ApiKeysModal} from "./ApiKeysModal";
-import {toggleBot} from "../../service/BotService";
+import {ReadBotSummary, ReadUser} from "../../api/Types";
 import {AuthModal} from "./AuthModal";
 import {getHealthStatus} from "../../service/HealthzService";
 import {getUser} from "../../service/UserAuthService";
+import {useBotActions} from "../../context/BotActionsContext";
 
 interface BotRowProps {
     bot: ReadBotSummary;
@@ -21,13 +19,11 @@ interface BotRowProps {
 
 function App() {
     const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading');
+    const { handleToggleBot, openKeysModal } = useBotActions();
     const [bots, setBots] = useState<ReadBotSummary[] | []>([]);
     const navigate: NavigateFunction = useNavigate();
 
-    const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-
-    const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
 
     const [authUser, setAuthUser] = useState<ReadUser | undefined>(undefined)
 
@@ -67,33 +63,12 @@ function App() {
         if (confirmed) setAuthModalOpen(true);
     }
 
-    const emptyApiKeysRedirect = async () => {
-        const confirmed: boolean =
-            window.confirm('Необходимо ввести API-ключи. Желаете продолжить?');
-        if (confirmed) setKeysModalOpen(true);
-    }
-
-    const updateKeys = async (): Promise<UserKeys | undefined> => {
-        try {
-            const keys = await getUserKeys();
-            setExistingKeys(keys);
-            return keys;
-        } catch (error) {
-            console.error('Не удалось загрузить ключи:', error);
-            return undefined;
-        }
-    }
-
     const handleToggleBotButtonClick = async (botId: number) => {
-        const keys = await updateKeys();
-        const hasInvalidKeys = !keys || !keys.apiKey || !keys.apiSecret;
-        if (hasInvalidKeys) {
-            await emptyApiKeysRedirect();
-            return;
+        const toggleResult: boolean = await handleToggleBot(botId);
+        if (toggleResult) {
+            const bots: ReadBotSummary[] | undefined = await getAllBots();
+            if (bots) setBots(bots);
         }
-        await toggleBot(botId);
-        const bots: ReadBotSummary[] | undefined = await getAllBots();
-        if (bots) setBots(bots);
     };
 
     const handleDeleteButtonClick = async (botId: number) => {
@@ -101,28 +76,6 @@ function App() {
         const bots: ReadBotSummary[] | undefined = await getAllBots();
         if (bots) setBots(bots);
     }
-
-    const handleSettingsButtonClick = async () => {
-        if (!authUser) {
-            unauthorisedRedirect();
-            return;
-        }
-        try {
-            await updateKeys();
-            setKeysModalOpen(true);
-        } catch (error) {
-            alert('Ошибка! Не удалось загрузить текущие ключи');
-        }
-    };
-
-    const handleSaveKeys = async (keys: UserKeys) => {
-        try {
-            await createUserKeys(keys);
-            setKeysModalOpen(false);
-        } catch (error) {
-            alert('Ошибка! Не удалось сохранить ключи');
-        }
-    };
 
     const handleAddBotButtonClick = () => {
         if (!authUser) {
@@ -140,7 +93,7 @@ function App() {
         return (
             <div className="App">
                 <div className="header">
-                    <div className="settings" onClick={() => handleSettingsButtonClick()}>Настройки API-ключей</div>
+                    <div className="settings" onClick={openKeysModal}>Настройки API-ключей</div>
                     <div className="singup" onClick={() => {setAuthModalOpen(true)}}>
                         {authUser? authUser.name : 'Войти'}
                     </div>
@@ -166,12 +119,6 @@ function App() {
                     </div>
                 </div>
                 <div className="add-bot-button" onClick={() => handleAddBotButtonClick()}>Добавить бота</div>
-                <ApiKeysModal
-                    isOpen={isKeysModalOpen}
-                    onClose={() => setKeysModalOpen(false)}
-                    onSave={handleSaveKeys}
-                    initialData={existingKeys}
-                />
                 <AuthModal
                     isOpen={isAuthModalOpen}
                     onClose={() => setAuthModalOpen(false)}
@@ -182,7 +129,7 @@ function App() {
         )
     }
 
-    return <h1>Disconnected</h1>;
+    return <h1> </h1>;
 }
 
 const botTypeLabels: Record<string, string> = {

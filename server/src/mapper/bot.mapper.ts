@@ -38,6 +38,7 @@ export const mapBotToReadBotDetailsDto = (
         id: bot.id,
         name: bot.name,
         botType: bot.botType,
+        status: bot.status,
         deposit: bot.deposit,
         spotGridSettings: spotGridSettingsDto,
     };

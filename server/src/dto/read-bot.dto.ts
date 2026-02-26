@@ -12,5 +12,6 @@ export class ReadBotDetailsDto {
     name: string;
     deposit: number;
     botType: string;
+    status: 'stopped' | 'running';
     spotGridSettings?: ReadSpotGridSettingsDto;
 }

@@ -6,12 +6,16 @@ import './BotSettings.css';
 import './BotConsole.css';
 import {Log, ReadBotDetails} from "../../api/Types";
 import {getBot} from "../../service/BotService";
+import {useBotActions} from "../../context/BotActionsContext";
 
 export const BotMonitor: React.FC = () => {
     const { botId } = useParams<{ botId: string }>();
     const navigate = useNavigate();
     const socket = useSocket();
     const [bot, setBot] = useState<ReadBotDetails | null>(null);
+    const { handleToggleBot } = useBotActions();
+
+    console.log(bot)
 
     const [logs, setLogs] = useState<Log[]>([]);
     const [dynamicData, setDynamicData] = useState({
@@ -44,14 +48,18 @@ export const BotMonitor: React.FC = () => {
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+    const updateBot = async () => {
+        if (botId) {
+            const botToEdit: ReadBotDetails = await getBot(parseInt(botId));
+            setBot(botToEdit);
+        }
+    }
+
     useEffect(() => {
         (async () => {
-            if (botId) {
-                const botToEdit: ReadBotDetails = await getBot(parseInt(botId));
-                setBot(botToEdit);
-            }
+            await updateBot();
         })()
-    }, [botId]);
+    }, []);
 
     useEffect(() => {
         if (!socket || !botId) return;
@@ -64,6 +72,11 @@ export const BotMonitor: React.FC = () => {
     if (!bot) {
         return <div></div>;
     }
+
+    const handleToggleBotButtonClick = async (botId: number) => {
+        const toggleResult: boolean = await handleToggleBot(botId);
+        if (toggleResult) await updateBot()
+    };
 
     return (
         <div className="App">
@@ -82,7 +95,7 @@ export const BotMonitor: React.FC = () => {
                     <div className="button-container" style={{margin: 0}}>
                         <button className="action-button" onClick={() => navigate(`/edit-bot/${botId}`)}>Редактировать</button>
                         <button className={`action-button ${bot.status === 'running' ? 'danger' : 'success'}`}
-                                onClick={() => console.log('Статус изменен')}>
+                                onClick={() => handleToggleBotButtonClick(bot.id)}>
                             {bot.status === 'running' ? 'Стоп' : 'Пуск'}
                         </button>
                     </div>
@@ -181,7 +194,7 @@ export const BotMonitor: React.FC = () => {
                     </aside>
                 </div>
 
-                {/* fixme: if api keys not valid - send clear answer (like 'not valid api keys'), not Object[object] */}
+                {/* fixme: if api keys not valid - send clear answer (like 'not valid api keys'), not [Object object] */}
                 <div className="console-section">
                     <div className="console-window mini">
                         <div className="console-content">
