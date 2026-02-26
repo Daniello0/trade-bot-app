@@ -1,0 +1,138 @@
+.dashboard-container {
+    width: 100%;
+    max-width: 1500px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.dashboard-main-layout {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 25px;
+    align-items: start;
+}
+
+.dynamic-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.metric-card {
+    background: var(--color-surface);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--color-primary);
+}
+
+.metric-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.metric-value.highlight {
+    color: var(--color-primary);
+}
+
+.orders-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.orders-column {
+    background: var(--color-surface);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.orders-column h4 {
+    margin: 0;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    background: #f9f9fb;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.sell-header { color: var(--color-danger); }
+.buy-header { color: var(--color-success); }
+.queue-header { color: var(--text-secondary); }
+
+.mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.mini-table th {
+    text-align: left;
+    padding: 8px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mini-table td {
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.static-sidebar {
+    background: var(--color-surface);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.static-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.static-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.static-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.console-section {
+    width: 100%;
+}
+
+.console-window.mini {
+    height: 300px;
+}

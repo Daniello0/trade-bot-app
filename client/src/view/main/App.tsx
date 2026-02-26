@@ -160,7 +160,7 @@ function App() {
                                 onDelete={() => handleDeleteButtonClick(bot.id)}
                                 onToggle={() => handleToggleBotButtonClick(bot.id)}
                                 onEdit={() => navigate(`/edit-bot/${bot.id}`)}
-                                onConsole={() => navigate(`/console/${bot.id}/${bot.name}`)}
+                                onConsole={() => navigate(`/console/${bot.id}`)}
                             />
                         ))}
                     </div>
@@ -200,7 +200,7 @@ const BotRow: React.FC<BotRowProps> = ({ bot, onDelete, onToggle, onEdit, onCons
             </span>
         </div>
         <div className="column-actions">
-            <button className="action-button" onClick={onConsole}>Консоль</button>
+            <button className="action-button" onClick={onConsole}>Мониторинг</button>
             <button className="action-button secondary" onClick={onEdit}>Редактировать</button>
             <button className="action-button danger" onClick={onDelete}>Удалить</button>
             <button

@@ -55,7 +55,7 @@ function BotSettings() {
                 : await createBot(data);
 
             if (error) throw error;
-            navigate("/");
+            navigate(-1);
         } catch (error: any) {
             alert(`Ошибка! ${error.message}`);
         }
