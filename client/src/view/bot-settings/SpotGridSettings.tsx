@@ -13,6 +13,18 @@ export function SpotGridSettings() {
 
     const fieldErrors = errors.spotGridSettingsData?.levelsSettings;
 
+    const lowerBoundOptions = [
+        { value: 'min', label: 'min (Агрессивно)' },
+        { value: '10%', label: '10% (Сбалансировано)' },
+        { value: 'q1', label: 'Q1 (Консервативно)' }
+    ];
+
+    const upperBoundOptions = [
+        { value: 'q3', label: 'Q3 (Консервативно)' },
+        { value: '90%', label: '90% (Сбалансировано)' },
+        { value: 'max', label: 'max (Агрессивно)' }
+    ];
+
     return (
         <fieldset className="form-section bot-specific-settings">
             <legend>Настройки сеточного бота</legend>
@@ -21,7 +33,7 @@ export function SpotGridSettings() {
                 <label>
                     <InfoTooltip text="Объем исторических данных
                     (1000 закрытых свечей) для рассчета границ сетки. Например, при 1-минутном таймфрейме
-                    свечей (1m) длина истории составит 1000 минут (16.6 часов)" children="Длина истории - 1000 свечей"/>
+                    свечей (1m) длина истории составит 1000 минут (16.6 часов)" children="Длина истории - 1000 свечей (Фиксированная)"/>
                 </label>
             </div>
 
@@ -55,25 +67,29 @@ export function SpotGridSettings() {
                 <label>
                     <InfoTooltip text="Динамический диапазон торговли (ценовые границы бота). min/max — это абсолютные исторические
                         минимумы/максимумы.
-                        q1/q3 (квантили) — более узкий ценовой диапазон, который отсекает резкие аномальные
+                        Q1/Q3 (квантили) — более узкий ценовой диапазон, который отсекает резкие аномальные
                         прострелы и тени свечей." children="Размер сетки"/>
                 </label>
                 <div className="radio-group vertical nested">
                     <div className="sub-group grid-bounds">
                         <div>
                             <p>Нижняя граница:</p>
-                            {['min', '10%', 'q1'].map(val => (
-                                <label key={val}>
-                                    <input type="radio" value={val} {...register('spotGridSettingsData.gridSettings.lowerBoundDynamic')} /> {val}
+                            {lowerBoundOptions.map(opt => (
+                                <label key={opt.value}>
+                                    <input type="radio" value={opt.value}
+                                           {...register('spotGridSettingsData.gridSettings.lowerBoundDynamic')} />
+                                    {opt.label}
                                 </label>
                             ))}
                         </div>
 
                         <div>
                             <p>Верхняя граница:</p>
-                            {['q3', '90%', 'max'].map(val => (
-                                <label key={val}>
-                                    <input type="radio" value={val} {...register('spotGridSettingsData.gridSettings.upperBoundDynamic')} /> {val}
+                            {upperBoundOptions.map(opt => (
+                                <label key={opt.value}>
+                                    <input type="radio" value={opt.value}
+                                           {...register('spotGridSettingsData.gridSettings.upperBoundDynamic')} />
+                                    {opt.label}
                                 </label>
                             ))}
                         </div>
@@ -84,28 +100,28 @@ export function SpotGridSettings() {
             <div className="form-group full-width">
                 <label>
                     <InfoTooltip text="Количество уровней – количество уровней внутри сетки.
-                    Цена за ставку – сумма в USDT, на которую бот будет открывать каждый ордер. Больше
-                    уровней — чаще сделки, но меньше профит с каждого шага."
-                                 children="Количество уровней внутри сетки и цена за ставку"/>
+                    Цена за ставку – сумма в USDT, на которую бот будет открывать каждый ордер
+                    (заказ на покупку/продажу). Больше уровней — чаще сделки, но меньше профит
+                    с каждого шага." children="Количество уровней внутри сетки и цена за ставку"/>
                 </label>
                 <div className="radio-group vertical nested">
                     <div className="sub-group levels">
-                        <div className="form-group">
+                        <div className="input-with-unit">
                             <input
                                 type="number"
                                 step="any"
-                                placeholder="Кол-во уровней"
                                 {...register('spotGridSettingsData.levelsSettings.countStatic')}
                             />
+                            <span className="unit-text">уровней</span>
                             {fieldErrors?.countStatic && <span className="error-text short">{fieldErrors.countStatic.message}</span>}
                         </div>
-                        <div className="form-group">
+                        <div className="input-with-unit">
                             <input
                                 type="number"
                                 step="any"
-                                placeholder="Цена за ставку ($)"
                                 {...register('spotGridSettingsData.levelsSettings.pricePerBetStatic')}
                             />
+                            <span className="unit-text">$ ставка</span>
                             {fieldErrors?.pricePerBetStatic && <span className="error-text short">{fieldErrors.pricePerBetStatic.message}</span>}
                         </div>
                         <p className="form-hint">Цена за ставку должна быть ≤ {(deposit / staticLevelsCount).toFixed(2)}$</p>
@@ -116,8 +132,8 @@ export function SpotGridSettings() {
             <div className="form-group full-width">
                 <label>
                     <InfoTooltip text="Защитная функция. Если цена упадет ниже или
-                    взлетит выше границ вашей сетки, бот мгновенно продаст актив по рынку."
-                                 children="Стоп-лосс - при выходе за пределы — продажа"/>
+                    взлетит выше границ вашей сетки, бот мгновенно продаст актив по рыночной цене."
+                                 children="Стоп-лосс (Всегда активен)"/>
                 </label>
             </div>
 
@@ -125,7 +141,7 @@ export function SpotGridSettings() {
                 <label>
                     <InfoTooltip text={"Каждые \""+candleLength+"\" минут бот пересчитывает границы " +
                         "сетки под текущий рынок, чтобы сетка могла динамически \"плыть\" за ценой"}
-                                 children={"Обновление сетки исходя из свечи ("+candleLength+"m)"}/>
+                                 children={"Обновление сетки (Интервал: каждые "+candleLength+"m)"}/>
                 </label>
             </div>
         </fieldset>

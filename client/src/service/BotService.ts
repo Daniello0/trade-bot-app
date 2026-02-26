@@ -4,13 +4,19 @@ import {requestApi} from "./RequestApiService";
 export const createBot = async (botParams: CreateBot): Promise<Error | undefined> => {
     try {
         const res: Response = await requestApi('/bots/create', 'POST', botParams);
-        if (res.status === 500) {
+
+        if (res.status === 409) {
+            return new Error('Бот с таким именем уже существует');
+        }
+
+        if (!res.ok) {
             return new Error('Ошибка при создании бота');
         }
     } catch (error) {
         return new Error('Ошибка при создании бота');
     }
-}
+};
+
 
 export const getAllBots = async ():
     Promise<ReadBotSummary[] | undefined> => {
@@ -51,7 +57,10 @@ export const updateBot = async (
     updateBotData: CreateBot
 ): Promise<Error | undefined> => {
     try {
-        await requestApi(`/bots/${botId}`, 'PATCH', updateBotData);
+        const res = await requestApi(`/bots/${botId}`, 'PATCH', updateBotData);
+        if (res.status === 409) {
+            return new Error('Бот с таким именем уже существует');
+        }
     } catch (error) {
         return new Error('Ошибка при обновлении бота');
     }

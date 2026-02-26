@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    HttpException,
+    HttpStatus,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Bots } from '../../entity/Bots';
@@ -20,25 +25,37 @@ export class BotSettingsService {
         private readonly spotGridSettingsService: SpotGridSettingsService
     ) {}
 
-    // fixme: add "if bot with this name exists - throw CreateError('Bot with this name exists')"
     async create(
         createDto: CreateBotDto,
         userEmail: string | undefined
     ): Promise<Bots> {
         const email: string = this.getValidUserId(userEmail);
 
-        return this.botRepository.manager.transaction(
-            async (manager: EntityManager) => {
-                const settings: SpotGridSettings | undefined =
-                    await this.createSettingsIfNeed(createDto, manager);
-                const newBot: Bots = this.botRepository.create({
-                    ...createDto,
-                    user: { email },
-                    spotGridSettings: settings,
-                });
-                return await manager.save(newBot);
-            }
-        );
+        try {
+            return await this.botRepository.manager.transaction(
+                async (manager: EntityManager) => {
+                    await this.ifBotExistsThrow(manager, createDto.name, email);
+
+                    const settings: SpotGridSettings | undefined =
+                        await this.createSettingsIfNeed(createDto, manager);
+
+                    const newBot: Bots = this.botRepository.create({
+                        ...createDto,
+                        user: { email },
+                        spotGridSettings: settings,
+                    });
+
+                    return await manager.save(newBot);
+                }
+            );
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            throw new HttpException(
+                `Ошибка при создании бота: ${error}`,
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     async findAllSummaries(
@@ -95,6 +112,22 @@ export class BotSettingsService {
                     manager
                 );
 
+                if (updateData.name !== bot.name) {
+                    const isTaken: boolean = await this.isBotNameTakenByAnother(
+                        manager,
+                        updateData.name,
+                        validUserId,
+                        botId
+                    );
+
+                    if (isTaken) {
+                        throw new HttpException(
+                            'Бот с таким именем уже существует',
+                            HttpStatus.CONFLICT
+                        );
+                    }
+                }
+
                 const { spotGridSettingsData, ...botFields } = updateData;
 
                 if (Object.keys(botFields).length > 0) {
@@ -130,6 +163,56 @@ export class BotSettingsService {
         const bot: Bots = await this.findBotOrThrow(botId, validUserId);
         bot.status = bot.status === 'running' ? 'stopped' : 'running';
         await this.botRepository.save(bot);
+    }
+
+    private async isBotExists(
+        manager: EntityManager,
+        name: string,
+        userEmail?: string
+    ): Promise<boolean> {
+        const existing: Bots | null = await manager.findOne(Bots, {
+            where: {
+                name: name,
+                user: { email: userEmail },
+            },
+        });
+
+        return !!existing;
+    }
+
+    private async isBotNameTakenByAnother(
+        manager: EntityManager,
+        name: string,
+        userId: string,
+        botId: number
+    ): Promise<boolean> {
+        const existing: Bots | null = await manager.findOne(Bots, {
+            where: {
+                name,
+                user: { id: userId },
+            },
+        });
+
+        return !!existing && existing.id !== botId;
+    }
+
+    private async ifBotExistsThrow(
+        manager: EntityManager,
+        name: string,
+        userEmail?: string
+    ): Promise<void> {
+        const isExisting: boolean = await this.isBotExists(
+            manager,
+            name,
+            userEmail
+        );
+
+        if (isExisting) {
+            throw new HttpException(
+                'Бот с таким именем уже существует',
+                HttpStatus.CONFLICT
+            );
+        }
     }
 
     private async findBotOrThrow(

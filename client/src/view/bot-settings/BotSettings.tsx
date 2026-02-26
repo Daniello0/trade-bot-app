@@ -57,7 +57,7 @@ function BotSettings() {
             if (error) throw error;
             navigate("/");
         } catch (error: any) {
-            alert(error.message || "Произошла ошибка");
+            alert(`Ошибка! ${error.message}`);
         }
     }
 

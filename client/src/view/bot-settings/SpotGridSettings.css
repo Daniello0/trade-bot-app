@@ -19,3 +19,31 @@
     align-items: flex-start;
     gap: 15px;
 }
+
+.input-with-unit {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.input-with-unit input {
+    padding-right: 75px !important;
+    width: 100%;
+}
+
+.unit-text {
+    position: absolute;
+    right: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    pointer-events: none;
+    font-weight: 500;
+}
+
+.input-with-unit .error-text {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+}
