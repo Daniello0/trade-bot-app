@@ -6,6 +6,7 @@ import './BotSettings.css';
 import {Log, Order, ReadBotDetails, RuntimeState} from "../../api/Types";
 import {getBot} from "../../service/BotService";
 import {useBotActions} from "../../context/BotActionsContext";
+import {deepMerge} from "../../utils/DeepMerge";
 
 export const BotMonitor: React.FC = () => {
     const { botId } = useParams<{ botId: string }>();
@@ -26,21 +27,14 @@ export const BotMonitor: React.FC = () => {
 
     const [logs, setLogs] = useState<Log[]>([]);
     const [dynamicData, setDynamicData] = useState<RuntimeState>({
-        currentPrice: 67432.50,
-        lowerBound: 65000.00,
-        upperBound: 72000.00,
-        step: 120.5,
-        sellOrders: [
-            { price: 68100, qty: 0.002, total: 136.2 },
-            { price: 68220, qty: 0.002, total: 136.4 },
-        ],
-        buyOrders: [
-            { price: 67200, qty: 0.002, total: 134.4 },
-            { price: 67080, qty: 0.002, total: 134.1 },
-        ],
-        queue: [
-            { price: 66800, qty: 0.002, total: 133.6 }
-        ]
+        currentPrice: 0,
+        lowerBound: 0,
+        upperBound: 0,
+        step: 0,
+        sellOrders: [],
+        buyOrders: [],
+        queue: [],
+        messages: []
     });
 
     const staticData = {
@@ -60,6 +54,18 @@ export const BotMonitor: React.FC = () => {
         }
     }
 
+    const updateDataAndLogs = (patch: Partial<RuntimeState>): void => {
+        setDynamicData((prev: RuntimeState) => deepMerge(prev, patch));
+        if (patch.messages && patch.messages.length > 0) {
+            const newLog: Log = {
+                timestamp: new Date().toISOString(),
+                price: patch.currentPrice || dynamicData.currentPrice || 0,
+                message: patch.messages.join('\n'),
+            };
+            setLogs((prev: Log[]) => [...prev, newLog]);
+        }
+    }
+
     useEffect(() => {
         (async () => {
             await updateBot();
@@ -75,9 +81,10 @@ export const BotMonitor: React.FC = () => {
     useEffect(() => {
         if (!socket || !botId) return;
         socket.emit('watchBot', { botId });
-        socket.on('botLog', (newLog: Log) => setLogs((prev: Log[]) => [...prev, newLog]));
-        // Здесь будет socket.on('botUpdate', (data) => setDynamicData(data))
-        return () => { socket.off('botLog'); };
+        socket.on("botState", (patch: Partial<RuntimeState>) => {
+            updateDataAndLogs(patch);
+        });
+        return () => { socket.off('botState'); };
     }, [socket, botId]);
 
     if (!bot) {
@@ -205,7 +212,6 @@ export const BotMonitor: React.FC = () => {
                     </aside>
                 </div>
 
-                {/* fixme: if api keys not valid - send clear answer (like 'not valid api keys'), not [Object object] */}
                 <div className="console-section">
                     <div className="console-window mini">
                         <div className="console-content">

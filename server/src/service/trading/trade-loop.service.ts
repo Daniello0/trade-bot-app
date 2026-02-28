@@ -5,14 +5,11 @@ import { BotSettingsService } from '../database/bot-settings.service';
 import { Bot } from './bot';
 import { Bybit } from './bybit';
 import { BotGateway } from '../../gateway/bot.gateway';
-import { LogDto } from '../../dto/log.dto';
 import {
     CalculatedQuantiles,
     calculateQuartiles,
 } from '../../utils/math.utils';
 import { RuntimeStateDto } from '../../dto/runtime-state.dto';
-
-type EmitLogFn = (payload: any, price?: number) => void;
 
 @Injectable()
 export class TradeLoopService {
@@ -40,22 +37,19 @@ export class TradeLoopService {
         const symbol: string =
             botSettings.spotGridSettings?.crypto || 'BTCUSDT';
 
-        const runtimeState: RuntimeStateDto = new RuntimeStateDto();
-
         const botRef = { lastPrice: 0 };
-        const emitLog = (payload: LogDto, price?: number) =>
-            this.sendBotLog(botId, symbol, payload, price || botRef.lastPrice);
+        const runtimeState: RuntimeStateDto = new RuntimeStateDto();
 
         const bybit = new Bybit(
             symbol,
             user.apiKey,
             user.apiSecret,
             true,
-            emitLog
+            runtimeState
         );
         await bybit.init();
 
-        const bot = new Bot(botSettings, bybit, emitLog);
+        const bot = new Bot(botSettings, bybit, runtimeState);
         await bot.init(bybit);
 
         botRef.lastPrice = bot.lastPrice;
@@ -70,8 +64,9 @@ export class TradeLoopService {
         await this.initialSync(bot, bybit);
 
         ws.on('update', (data: WsTopicRequest) => {
-            void this.handleWsUpdate(data, bot, bybit, signal, emitLog);
-            this.botGateway.server.to(`bot_${botId}`).emit('botStatus', {})
+            void this.handleWsUpdate(data, bot, bybit, signal, runtimeState);
+            this.sendBotState(botId, runtimeState);
+            runtimeState.messages = [];
         });
 
         ws.on('exception', (err) => this.logger.error('WS Exception', err));
@@ -87,35 +82,30 @@ export class TradeLoopService {
         bot: Bot,
         bybit: Bybit,
         signal: AbortSignal,
-        emitLog: EmitLogFn
+        runtimeState: RuntimeStateDto
     ) {
         if (signal.aborted || !data.topic?.startsWith('kline')) return;
 
         try {
-            const lastPrice = await bybit.getLatestPrice();
-            const openSellOrders = await bybit.getOpenOrders('Sell');
-            const openBuyOrders = await bybit.getOpenOrders('Buy');
+            const lastPrice: number = await bybit.getLatestPrice();
+            const openSellOrders: AccountOrderV5[] =
+                await bybit.getOpenOrders('Sell');
+            const openBuyOrders: AccountOrderV5[] =
+                await bybit.getOpenOrders('Buy');
             const OHLC = await bybit.getLastNOhlc(bot.candleLength);
-
-            this.logTickStatus(
-                emitLog,
-                bot,
-                openSellOrders.length,
-                openBuyOrders.length
-            );
 
             await this.processCandleChange(
                 bot,
                 bybit,
                 OHLC.closes,
                 openBuyOrders,
-                emitLog
+                runtimeState
             );
 
             if (openSellOrders.length < bot.numberOfGrids) {
                 await bot.botMakeDecision({ currentPrice: lastPrice });
             } else {
-                emitLog(`Максимум sell-ордеров достигнут`);
+                runtimeState.messages?.push('Максимум sell-ордеров достигнут');
             }
         } catch (err) {
             this.logger.error('WS update handler error:', err);
@@ -127,7 +117,7 @@ export class TradeLoopService {
         bybit: Bybit,
         historicalData: number[],
         openBuyOrders: AccountOrderV5[],
-        emitLog: EmitLogFn
+        runtimeState: RuntimeStateDto
     ) {
         const now = new Date();
         const currentPeriod = Math.floor(
@@ -136,11 +126,11 @@ export class TradeLoopService {
 
         if (currentPeriod !== this.lastCalledPeriod && now.getSeconds() < 3) {
             this.lastCalledPeriod = currentPeriod;
-            emitLog('ЗАКРЫТИЕ СВЕЧИ...');
+            runtimeState.messages?.push('Закрытие свечи...');
             this.updateGridBounds(bot, historicalData);
 
             if (openBuyOrders.length > 0) {
-                emitLog('Очистка застрявших BUY ордеров');
+                runtimeState.messages?.push('Очистка застрявших BUY ордеров.');
                 for (const order of openBuyOrders)
                     await bybit.cancelOrder(order.orderId);
                 bot.ordersToSell = [];
@@ -158,29 +148,14 @@ export class TradeLoopService {
         bot.updateGridBounds(bot.lowerPriceBound, bot.upperPriceBound);
     }
 
-    private sendBotLog(
-        botId: number,
-        symbol: string,
-        payload: LogDto,
-        currentPrice?: number
-    ) {
-        const isObj: boolean = typeof payload === 'object' && payload !== null;
-
-        const logObject: LogDto = {
-            botId: botId,
-            timestamp: isObj
-                ? payload.timestamp || new Date().toISOString()
-                : new Date().toISOString(),
-            message: isObj ? payload.message || '' : String(payload),
-            price: isObj ? Number(payload.price) || currentPrice : currentPrice,
-            symbol: symbol.replace('USDT', ''),
-        };
-
-        this.botGateway.server.to(`bot_${botId}`).emit('botLog', logObject);
+    private sendBotState(botId: number, runtimeState: RuntimeStateDto) {
+        this.botGateway.server
+            .to(`bot_${botId}`)
+            .emit('botState', runtimeState);
     }
 
     private async initialSync(bot: Bot, bybit: Bybit) {
-        const seedPrice = await bybit.getLatestPrice();
+        const seedPrice: number = await bybit.getLatestPrice();
         bot.placeInitialGridOrders(seedPrice);
         const OHLC = await bybit.getLastNOhlc(bot.candleLength);
         this.updateGridBounds(bot, OHLC.closes);
@@ -195,16 +170,5 @@ export class TradeLoopService {
             this.logger.log(`Closing WS for ${symbol}`);
             ws.closeAll();
         });
-    }
-
-    private logTickStatus(
-        emitLog: EmitLogFn,
-        bot: Bot,
-        sells: number,
-        buys: number
-    ) {
-        emitLog(
-            `--- TICK | Sells: ${sells} | Buys: ${buys} | Queue: ${bot.ordersToSell.length} ---`
-        );
     }
 }

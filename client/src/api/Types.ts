@@ -64,11 +64,9 @@ export interface UserKeys {
 }
 
 export interface Log {
-    botId?: number;
     timestamp: string;
     message: string;
-    price?: number;
-    symbol: string;
+    price: number;
 }
 
 export interface ReadUser {

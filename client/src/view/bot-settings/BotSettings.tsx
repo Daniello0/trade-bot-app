@@ -61,6 +61,7 @@ function BotSettings() {
         }
     }
 
+    // optimize: add input limit to deposit, pricePerBet, ...
     return (
         <div className="bot-settings-page">
             <FormProvider {...methods}>
