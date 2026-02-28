@@ -76,3 +76,20 @@ export interface ReadUser {
     email: string;
     name: string;
 }
+
+export interface Order {
+    price: number;
+    qty: number;
+    total: number;
+}
+
+export interface RuntimeState {
+    currentPrice?: number,
+    lowerBound?: number,
+    upperBound?: number,
+    step?: number,
+    sellOrders?: Order[],
+    buyOrders?: Order[],
+    queue?: Order[]
+    messages?: string[]
+}

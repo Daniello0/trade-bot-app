@@ -10,6 +10,7 @@ import {
     CalculatedQuantiles,
     calculateQuartiles,
 } from '../../utils/math.utils';
+import { RuntimeStateDto } from '../../dto/runtime-state.dto';
 
 type EmitLogFn = (payload: any, price?: number) => void;
 
@@ -38,6 +39,8 @@ export class TradeLoopService {
 
         const symbol: string =
             botSettings.spotGridSettings?.crypto || 'BTCUSDT';
+
+        const runtimeState: RuntimeStateDto = new RuntimeStateDto();
 
         const botRef = { lastPrice: 0 };
         const emitLog = (payload: LogDto, price?: number) =>
@@ -68,6 +71,7 @@ export class TradeLoopService {
 
         ws.on('update', (data: WsTopicRequest) => {
             void this.handleWsUpdate(data, bot, bybit, signal, emitLog);
+            this.botGateway.server.to(`bot_${botId}`).emit('botStatus', {})
         });
 
         ws.on('exception', (err) => this.logger.error('WS Exception', err));
@@ -160,7 +164,7 @@ export class TradeLoopService {
         payload: LogDto,
         currentPrice?: number
     ) {
-        const isObj = typeof payload === 'object' && payload !== null;
+        const isObj: boolean = typeof payload === 'object' && payload !== null;
 
         const logObject: LogDto = {
             botId: botId,

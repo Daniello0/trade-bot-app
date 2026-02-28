@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, RefObject} from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useSocket } from '../../hooks/useSocket';
 import './BotMonitor.css';
 import './BotSettings.css';
-import './BotConsole.css';
-import {Log, ReadBotDetails} from "../../api/Types";
+import {Log, Order, ReadBotDetails, RuntimeState} from "../../api/Types";
 import {getBot} from "../../service/BotService";
 import {useBotActions} from "../../context/BotActionsContext";
 
@@ -15,24 +14,32 @@ export const BotMonitor: React.FC = () => {
     const [bot, setBot] = useState<ReadBotDetails | null>(null);
     const { handleToggleBot } = useBotActions();
 
+    const messagesEndRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const [autoScroll, setAutoScroll] = useState<boolean>(true);
+
     console.log(bot)
 
     const [logs, setLogs] = useState<Log[]>([]);
-    const [dynamicData, setDynamicData] = useState({
-        currentPrice: "67432.50",
-        lowerBound: "65000.00",
-        upperBound: "72000.00",
-        step: "120.5",
+    const [dynamicData, setDynamicData] = useState<RuntimeState>({
+        currentPrice: 67432.50,
+        lowerBound: 65000.00,
+        upperBound: 72000.00,
+        step: 120.5,
         sellOrders: [
-            { price: "68100", qty: "0.002", total: "136.2" },
-            { price: "68220", qty: "0.002", total: "136.4" },
+            { price: 68100, qty: 0.002, total: 136.2 },
+            { price: 68220, qty: 0.002, total: 136.4 },
         ],
         buyOrders: [
-            { price: "67200", qty: "0.002", total: "134.4" },
-            { price: "67080", qty: "0.002", total: "134.1" },
+            { price: 67200, qty: 0.002, total: 134.4 },
+            { price: 67080, qty: 0.002, total: 134.1 },
         ],
         queue: [
-            { price: "66800", qty: "0.002", total: "133.6" }
+            { price: 66800, qty: 0.002, total: 133.6 }
         ]
     });
 
@@ -45,8 +52,6 @@ export const BotMonitor: React.FC = () => {
         lowerBoundDynamic: bot?.spotGridSettings?.gridSettings.lowerBoundDynamic,
         upperBoundDynamic: bot?.spotGridSettings?.gridSettings.upperBoundDynamic,
     };
-
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     const updateBot = async () => {
         if (botId) {
@@ -62,9 +67,15 @@ export const BotMonitor: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        if (autoScroll) {
+            scrollToBottom();
+        }
+    }, [autoScroll, logs]);
+
+    useEffect(() => {
         if (!socket || !botId) return;
         socket.emit('watchBot', { botId });
-        socket.on('botLog', (newLog: Log) => setLogs(prev => [...prev, newLog]));
+        socket.on('botLog', (newLog: Log) => setLogs((prev: Log[]) => [...prev, newLog]));
         // Здесь будет socket.on('botUpdate', (data) => setDynamicData(data))
         return () => { socket.off('botLog'); };
     }, [socket, botId]);
@@ -130,7 +141,7 @@ export const BotMonitor: React.FC = () => {
                                 <table className="mini-table">
                                     <thead><tr><th>Цена</th><th>Qty</th><th>Сумма</th></tr></thead>
                                     <tbody>
-                                    {dynamicData.sellOrders.map((o, i) => (
+                                    {dynamicData.sellOrders?.map((o: Order, i: number) => (
                                         <tr key={i}><td>{o.price+"$"}</td><td>{o.qty}</td><td>{o.total+"$"}</td></tr>
                                     ))}
                                     </tbody>
@@ -141,7 +152,7 @@ export const BotMonitor: React.FC = () => {
                                 <table className="mini-table">
                                     <thead><tr><th>Цена</th><th>Qty</th><th>Сумма</th></tr></thead>
                                     <tbody>
-                                    {dynamicData.buyOrders.map((o, i) => (
+                                    {dynamicData.buyOrders?.map((o: Order, i: number) => (
                                         <tr key={i}><td>{o.price+"$"}</td><td>{o.qty}</td><td>{o.total+"$"}</td></tr>
                                     ))}
                                     </tbody>
@@ -152,7 +163,7 @@ export const BotMonitor: React.FC = () => {
                                 <table className="mini-table">
                                     <thead><tr><th>Цена</th><th>Qty</th><th>Сумма</th></tr></thead>
                                     <tbody>
-                                    {dynamicData.queue.map((o, i) => (
+                                    {dynamicData.queue?.map((o: Order, i: number) => (
                                         <tr key={i}><td>{o.price+"$"}</td><td>{o.qty}</td><td>{o.total+"$"}</td></tr>
                                     ))}
                                     </tbody>
@@ -198,6 +209,9 @@ export const BotMonitor: React.FC = () => {
                 <div className="console-section">
                     <div className="console-window mini">
                         <div className="console-content">
+                            {logs.length === 0 && (
+                                <div className="console-placeholder">Ожидание данных от бота...</div>
+                            )}
                             {logs.map((log, index) => (
                                 <div key={index} className="log-line">
                                     <span className="log-time">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
@@ -207,6 +221,17 @@ export const BotMonitor: React.FC = () => {
                             <div ref={messagesEndRef} />
                         </div>
                     </div>
+                </div>
+
+                <div className="button-container">
+                    <button className="action-button danger clear-btn" onClick={() => setLogs([])}>
+                        Очистить консоль
+                    </button>
+
+                    <button className={`action-button ${autoScroll? 'success' : 'danger'} auto-scroll`}
+                            onClick={() => {setAutoScroll(!autoScroll)}}>
+                        Авто-скроллинг
+                    </button>
                 </div>
 
             </div>
