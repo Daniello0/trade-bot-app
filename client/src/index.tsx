@@ -5,8 +5,9 @@ import App from './view/main/App';
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter, Route, Routes} from "react-router";
 import BotSettings from "./view/bot-settings/BotSettings";
-import {BotConsole} from "./view/bot-settings/BotConsole";
 import Modal from 'react-modal';
+import {BotMonitor} from "./view/bot-settings/BotMonitor";
+import {BotActionsProvider} from "./context/BotActionsContext";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -19,15 +20,17 @@ if (rootElement) {
 
 root.render(
   <React.StrictMode>
-      <BrowserRouter>
-          <Routes>
-              <Route path="/console/:botId/:botName" element={<BotConsole />} />
-              <Route path="/" element={<App />} />
-              <Route path="/add-bot" element={<BotSettings />} />
-              <Route path={"/edit-bot/:botId"} element={<BotSettings />} />
-              <Route path="*" element={<div><h1>Страница не найдена (404)</h1></div>} />
-          </Routes>
-      </BrowserRouter>
+      <BotActionsProvider>
+          <BrowserRouter>
+              <Routes>
+                  <Route path="/console/:botId" element={<BotMonitor />} />
+                  <Route path="/" element={<App />} />
+                  <Route path="/add-bot" element={<BotSettings />} />
+                  <Route path={"/edit-bot/:botId"} element={<BotSettings />} />
+                  <Route path="*" element={<div><h1>Страница не найдена (404)</h1></div>} />
+              </Routes>
+          </BrowserRouter>
+      </BotActionsProvider>
   </React.StrictMode>
 );
 reportWebVitals();

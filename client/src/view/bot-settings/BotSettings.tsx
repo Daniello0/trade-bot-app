@@ -55,12 +55,13 @@ function BotSettings() {
                 : await createBot(data);
 
             if (error) throw error;
-            navigate("/");
+            navigate(-1);
         } catch (error: any) {
             alert(`Ошибка! ${error.message}`);
         }
     }
 
+    // optimize: add input limit to deposit, pricePerBet, ...
     return (
         <div className="bot-settings-page">
             <FormProvider {...methods}>

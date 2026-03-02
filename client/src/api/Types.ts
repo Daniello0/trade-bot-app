@@ -64,15 +64,30 @@ export interface UserKeys {
 }
 
 export interface Log {
-    botId?: number;
     timestamp: string;
     message: string;
-    price?: number;
-    symbol: string;
+    price: number;
 }
 
 export interface ReadUser {
     id: string;
     email: string;
     name: string;
+}
+
+export interface Order {
+    price: number;
+    qty: number;
+    total: number;
+}
+
+export interface RuntimeState {
+    currentPrice?: number,
+    lowerBound?: number,
+    upperBound?: number,
+    step?: number,
+    sellOrders?: Order[],
+    buyOrders?: Order[],
+    queue?: Order[]
+    messages?: string[]
 }

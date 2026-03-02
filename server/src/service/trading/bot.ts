@@ -1,5 +1,4 @@
 import { ReadBotDetailsDto } from '../../dto/read-bot.dto';
-import { Logger } from '@nestjs/common';
 import { ReadSpotGridSettingsDto } from '../../dto/read-spot-grid-settings.dto';
 import { Bybit } from './bybit';
 import { AccountOrderV5 } from 'bybit-api';
@@ -7,15 +6,9 @@ import {
     CalculatedQuantiles,
     calculateQuartiles,
 } from '../../utils/math.utils';
-
-interface Order {
-    price: number;
-    qty: number;
-}
+import { OrderDto, RuntimeStateDto } from '../../dto/runtime-state.dto';
 
 export class Bot {
-    private readonly logger: Logger = new Logger(Bot.name);
-
     private spotGridSettings: ReadSpotGridSettingsDto;
     public symbol: string;
     private readonly maxDeposit: number;
@@ -23,21 +16,24 @@ export class Bot {
     public numberOfGrids: number;
     gridInterval: number;
     public gridLevels: number[];
-    public ordersToSell: Order[] = [];
+    public ordersToSell: OrderDto[] = [];
     public lastPrice: number;
     public upperPriceBound: number;
     public lowerPriceBound: number;
     private readonly amountPerOrderUsd: number;
     private readonly lowerQuantile: string;
     private readonly upperQuantile: string;
+    private readonly runtimeState: RuntimeStateDto;
 
     constructor(
         private readonly botSettings: ReadBotDetailsDto,
         private readonly bybit: Bybit,
-        private onLog?: (payload: any) => void
+        runtimeState: RuntimeStateDto
     ) {
         if (!botSettings.spotGridSettings) {
-            this.sendLog('No spot grid settings found!');
+            this.runtimeState.messages?.push(
+                'Ошибка! Настройки сеточного бота не найдены!'
+            );
             return;
         }
 
@@ -53,6 +49,8 @@ export class Bot {
             this.spotGridSettings.gridSettings.lowerBoundDynamic;
         this.upperQuantile =
             this.spotGridSettings.gridSettings.upperBoundDynamic;
+
+        this.runtimeState = runtimeState;
     }
 
     public async init(bybitService: Bybit) {
@@ -70,13 +68,14 @@ export class Bot {
     }
 
     async botMakeDecision({ currentPrice }: { currentPrice: number }) {
+        this.collectDataForRuntimeState();
+
         const prevPrice = this.lastPrice;
         this.lastPrice = currentPrice;
 
         await this.processPendingSells();
 
         if (prevPrice === null) {
-            this.sendLog('Первый тик — ожидаю следующего.');
             return;
         }
 
@@ -102,14 +101,9 @@ export class Bot {
             );
 
             if (res === 0) {
-                this.sendLog(
-                    `SELL выставлен: ${order.qty.toFixed(2)} @${sellPrice.toFixed(4)}`
-                );
                 this.ordersToSell = this.ordersToSell.filter(
                     (o) => o !== order
                 );
-            } else {
-                this.sendLog(`Sell order не принят. Код: ${res}`);
             }
         }
     }
@@ -117,7 +111,6 @@ export class Bot {
     private async handleStopLoss(openSellOrders: AccountOrderV5[]) {
         for (const order of openSellOrders) {
             if (Number(order.price) > this.upperPriceBound) {
-                this.sendLog('Стоп-лосс: перемещение ордера к границе сетки');
                 await this.bybit.stopLossSell(order, this.lastPrice);
             }
         }
@@ -152,44 +145,23 @@ export class Bot {
         );
 
         const tooCloseToLocalOrder = this.ordersToSell.some(
-            (order: Order) => Math.abs(order.price - currentPrice) < minDistance
+            (order: OrderDto) =>
+                Math.abs(order.price - currentPrice) < minDistance
         );
 
-        if (tooCloseToExchangeOrder || tooCloseToLocalOrder) {
-            this.sendLog(`Слишком близко к существующим уровням (step * 1.9)`);
-            return true;
-        }
-
-        return false;
+        return tooCloseToExchangeOrder || tooCloseToLocalOrder;
     }
 
     private async executeBuyOrder(price: number) {
-        const qty = this.amountPerOrderUsd / price;
-        this.sendLog(
-            `Cross на уровне: BUY ${qty.toFixed(6)} @${price.toFixed(6)}`
-        );
-
-        try {
-            const res = await this.bybit.placeOrder('Buy', qty, price);
-            if (res === 0) {
-                this.ordersToSell.push({ price, qty });
-                this.sendLog(
-                    `ORDERS placed: BUY @${price.toFixed(4)} -> SELL queue added`
-                );
-            } else {
-                this.sendLog(`Buy order не принят. Код: ${res}`);
-            }
-        } catch (err) {
-            this.sendLog(`Ошибка при выставлении BUY: ${err}`);
+        const qty: number = this.amountPerOrderUsd / price;
+        const res: number = await this.bybit.placeOrder('Buy', qty, price);
+        if (res === 0) {
+            this.ordersToSell.push({ price, qty, total: qty * price });
         }
     }
 
     private isPriceOutOfBounds(price: number): boolean {
-        if (price < this.lowerPriceBound || price > this.upperPriceBound) {
-            this.sendLog(`Цена ${price.toFixed(6)} вне грида. Пропускаю.`);
-            return true;
-        }
-        return false;
+        return price < this.lowerPriceBound || price > this.upperPriceBound;
     }
 
     public updateGridBounds(newLower: number, newUpper: number) {
@@ -202,9 +174,7 @@ export class Bot {
             (_, i) => this.lowerPriceBound + i * this.gridInterval
         );
 
-        this.sendLog(
-            `Grid updated. Range: [${newLower.toFixed(4)} - ${newUpper.toFixed(4)}], Step: ${this.gridInterval.toFixed(6)}`
-        );
+        this.runtimeState.messages?.push(`Сетка обновлена.`);
     }
 
     public applyQuantiles(q: CalculatedQuantiles) {
@@ -213,17 +183,6 @@ export class Bot {
 
         this.lowerPriceBound = lowerMap[this.lowerQuantile] ?? q.Q1;
         this.upperPriceBound = upperMap[this.upperQuantile] ?? q.max;
-    }
-
-    private sendLog(message: string) {
-        this.logger.log(message);
-        this.onLog?.({
-            botId: this.botSettings.id,
-            timestamp: new Date().toISOString(),
-            message,
-            price: this.lastPrice,
-            symbol: this.symbol,
-        });
     }
 
     public placeInitialGridOrders(seedPrice: number) {
@@ -237,8 +196,25 @@ export class Bot {
         );
 
         this.lastPrice = seedPrice;
-        this.sendLog(
-            `Initial grid. Seed: ${seedPrice}, Deposit: ${this.maxDeposit}`
+        this.runtimeState.messages?.push(
+            `Сетка инициализирована, начальная цена: ${seedPrice}`
         );
+    }
+
+    private collectDataForRuntimeState() {
+        const usdScale: number = 2;
+
+        this.runtimeState.lowerBound = this.lowerPriceBound;
+        this.runtimeState.upperBound = this.upperPriceBound;
+        this.runtimeState.step = +this.gridInterval.toFixed(
+            this.bybit.priceScale
+        );
+        this.runtimeState.queue = this.ordersToSell.map((order: OrderDto) => {
+            return {
+                price: Number(order.price.toFixed(this.bybit.priceScale)),
+                qty: Number(order.qty.toFixed(this.bybit.qtyScale)),
+                total: Number(order.total.toFixed(usdScale)),
+            };
+        });
     }
 }

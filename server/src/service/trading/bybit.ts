@@ -8,24 +8,25 @@ import {
     OrderSideV5,
     RestClientV5,
 } from 'bybit-api';
-import { Logger } from '@nestjs/common';
 import { getDecimalsCount } from '../../utils/math.utils';
+import { OrderDto, RuntimeStateDto } from '../../dto/runtime-state.dto';
+import { mapAccountOrdersToOrdersDto } from '../../mapper/order.mapper';
 
 export class Bybit {
-    private readonly logger = new Logger(Bybit.name);
     private client: RestClientV5;
     private readonly category: CategoryV5 = 'spot';
     private readonly fullSymbol: string;
+    private readonly runtimeState: RuntimeStateDto;
 
-    public priceScale = 2;
-    public qtyScale = 2;
+    public priceScale: number = 2;
+    public qtyScale: number = 2;
 
     constructor(
         readonly symbol: string,
         apiKey: string,
         apiSecret: string,
         demoTrading = true,
-        private onLog?: (payload: any) => void
+        runtimeState: RuntimeStateDto
     ) {
         this.fullSymbol = `${symbol}USDT`;
         this.client = new RestClientV5({
@@ -33,16 +34,7 @@ export class Bybit {
             secret: apiSecret,
             demoTrading,
         });
-    }
-
-    private sendLog(message: string, price?: string) {
-        this.logger.log(message);
-        this.onLog?.({
-            timestamp: new Date().toISOString(),
-            message,
-            price,
-            symbol: this.symbol,
-        });
+        this.runtimeState = runtimeState;
     }
 
     async init() {
@@ -59,7 +51,9 @@ export class Bybit {
             category: 'spot',
             symbol: this.fullSymbol,
         });
-        return parseFloat(result.list[0].lastPrice);
+        const currentPrice: number = parseFloat(result.list[0].lastPrice);
+        this.runtimeState.currentPrice = currentPrice;
+        return currentPrice;
     }
 
     async getLastNOhlc(interval: string = '1') {
@@ -79,7 +73,7 @@ export class Bybit {
                 closes: candles.map((c) => parseFloat(c[4])),
             };
         } catch (err) {
-            this.handleError('getLastNOhlc', err);
+            this.handleError('Не удалось получить свечи', err);
             throw err;
         }
     }
@@ -101,13 +95,14 @@ export class Bybit {
                     timeInForce: 'GTC',
                 });
 
-            this.sendLog(
-                `Order ${side} placed: ${res.retMsg}`,
-                price.toString()
-            );
+            if (res.retCode === 0) {
+                this.runtimeState.messages?.push(
+                    `${side}-ордер выставлен по цене ${price.toString()}`
+                );
+            }
             return res.retCode;
         } catch (err) {
-            this.handleError(`placeOrder ${side}`, err);
+            this.handleError(`Не удалось выставить ${side}-ордер`, err);
             return -1;
         }
     }
@@ -120,11 +115,30 @@ export class Bybit {
                 limit: 50,
             });
             const orders: AccountOrderV5[] = result?.list ?? [];
-            return side
+            const filteredOrders: AccountOrderV5[] = side
                 ? orders.filter((o: AccountOrderV5) => o.side === side)
                 : orders;
+
+            const mappedOrders: OrderDto[] = mapAccountOrdersToOrdersDto(
+                filteredOrders,
+                this.priceScale,
+                this.qtyScale
+            );
+
+            if (side) {
+                this.addOrdersToRuntimeState(
+                    this.runtimeState,
+                    mappedOrders,
+                    side
+                );
+            }
+
+            return filteredOrders;
         } catch (err) {
-            this.handleError('getOpenOrders', err);
+            this.handleError(
+                `Не удалось получить открытые ${side}-ордеры`,
+                err
+            );
             return [];
         }
     }
@@ -134,10 +148,15 @@ export class Bybit {
         stopPrice: number
     ): Promise<void> {
         try {
+            this.runtimeState.messages?.push('Выполняется стоп-лосс...');
             await this.cancelOrder(order.orderId);
             await this.placeOrder('Sell', parseFloat(order.qty), stopPrice);
+            this.runtimeState.messages?.push('Стоп-лосс выполнен успешно');
         } catch (err) {
-            this.sendLog(`SL failed for ${order.orderId}: ${err}`);
+            this.handleError(
+                `Не удалось выполнить стоп-лосс (цена ордера - ${order.price})`,
+                err
+            );
         }
     }
 
@@ -145,7 +164,7 @@ export class Bybit {
         await this.client.cancelOrder({
             category: this.category,
             symbol: this.fullSymbol,
-            orderId,
+            orderId: orderId,
         });
     }
 
@@ -180,6 +199,23 @@ export class Bybit {
     }
 
     private handleError(context: string, err: any) {
-        this.sendLog(`${context} exception: ${err}`);
+        this.runtimeState.messages?.push(`Ошибка! ${context}, ${err.message}`);
     }
+
+    private addOrdersToRuntimeState = (
+        runtimeState: RuntimeStateDto,
+        orders: OrderDto[],
+        side: OrderSideV5
+    ) => {
+        switch (side) {
+            case 'Sell':
+                runtimeState.sellOrders = orders;
+                break;
+            case 'Buy':
+                runtimeState.buyOrders = orders;
+                break;
+            default:
+                break;
+        }
+    };
 }
