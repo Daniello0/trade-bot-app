@@ -63,6 +63,7 @@ export class TradeLoopService {
 
         await this.initialSync(bot, bybit);
 
+        // TODO:
         ws.on('update', (data: WsTopicRequest) => {
             void this.handleWsUpdate(data, bot, bybit, signal, runtimeState);
             this.sendBotState(botId, runtimeState);

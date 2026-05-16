@@ -26,6 +26,7 @@ export class Bots {
     @Column('text', { nullable: false })
     botType: string;
 
+    // TODO: enum
     @Column('text', { nullable: false, default: 'stopped' })
     status: 'stopped' | 'running';
 
@@ -40,7 +41,7 @@ export class Bots {
     })
     @JoinColumn({
         name: 'userEmail',
-        referencedColumnName: 'email',
+        referencedColumnName: 'email', // TODO: join by id
     })
     user: Users;
 }

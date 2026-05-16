@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bots } from '../entity/Bots';
 import { GridSettings } from '../entity/GridSettings';
 import { UserModule } from './user.module';
-import { BotController } from '../controller/bot.controller';
+import { BotController } from '../controllers/bot.controller';
 import { SpotGridSettings } from '../entity/SpotGridSettings';
 import { LevelsSettings } from 'src/entity/LevelsSettings';
 import { BotSettingsService } from '../service/database/bot-settings.service';

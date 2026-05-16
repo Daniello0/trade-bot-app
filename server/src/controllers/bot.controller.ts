@@ -31,6 +31,7 @@ export class BotController {
     @Post('/create')
     @HttpCode(HttpStatus.CREATED)
     async createBot(
+        // TODO @UserId() | @UserEmail()
         @Req() req: user_idGuard.RequestWithUserId,
         @Body() createBotDto: CreateBotDto
     ): Promise<Bots> {

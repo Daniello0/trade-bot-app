@@ -9,11 +9,13 @@ import { GridSettings } from './GridSettings';
 import { LevelsSettings } from './LevelsSettings';
 import { Bots } from './Bots';
 
+// TODO: underscored
 @Entity('spot_grid_settings')
 export class SpotGridSettings {
     @PrimaryGeneratedColumn('increment', { type: 'bigint' })
     id: number;
 
+    // TODO: snake_case
     @Column('text', { nullable: false, name: 'candleLength' })
     candleLength: '1' | '5';
 

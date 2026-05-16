@@ -6,6 +6,7 @@ import { ServiceAccount } from 'firebase-admin';
 export class FirebaseService implements OnModuleInit {
     onModuleInit() {
         const serviceAccount =
+            // TODO: remove eslint disable
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('../../firebase-adminsdk.json') as ServiceAccount;
 

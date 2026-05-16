@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult } from 'typeorm';
 import { CryptoService } from '../cryptography/crypto.service';
 
+// TODO: extends Repository<Users>
 @Injectable()
 export class UserCrudService {
     constructor(

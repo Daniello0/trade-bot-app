@@ -13,7 +13,7 @@ export const DatabaseService = new DataSource({
     port: parseInt(process.env.DATABASE_PORT || '5432'),
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
-    database: 'tradeBotApp',
+    database: 'tradeBotApp', // TODO
     entities: [Users, Bots, SpotGridSettings, LevelsSettings, GridSettings],
     synchronize: true,
     logging: false,

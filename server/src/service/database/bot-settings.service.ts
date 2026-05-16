@@ -32,6 +32,8 @@ export class BotSettingsService {
         const email: string = this.getValidUserId(userEmail);
 
         try {
+            // TODO: сделать промисификацию метода
+            // await function(createDto.name, email)
             return await this.botRepository.manager.transaction(
                 async (manager: EntityManager) => {
                     await this.ifBotExistsThrow(manager, createDto.name, email);
@@ -161,7 +163,7 @@ export class BotSettingsService {
     ): Promise<void> {
         const validUserId: string = this.getValidUserId(userId);
         const bot: Bots = await this.findBotOrThrow(botId, validUserId);
-        bot.status = bot.status === 'running' ? 'stopped' : 'running';
+        bot.status = bot.status === 'running' ? 'stopped' : 'running'; // TODO: enum c 'stopped' | 'running'
         await this.botRepository.save(bot);
     }
 

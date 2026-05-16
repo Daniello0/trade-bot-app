@@ -1,5 +1,6 @@
 import { ReadSpotGridSettingsDto } from './read-spot-grid-settings.dto';
 
+// TODO: dto class-validator
 export class ReadBotSummaryDto {
     id: number;
     name: string;
