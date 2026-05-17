@@ -1,5 +1,7 @@
 import { IsArray, IsNumber, IsOptional } from 'class-validator';
 
+// SMELL: Bloaters – Primitive Obsession
+// SMELL: Bloaters – Data Clumps
 export class OrderDto {
     @IsNumber()
     price: number;

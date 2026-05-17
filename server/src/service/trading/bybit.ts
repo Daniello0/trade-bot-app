@@ -12,22 +12,27 @@ import { getDecimalsCount } from '../../utils/math.utils';
 import { OrderDto, RuntimeStateDto } from '../../dto/runtime-state.dto';
 import { mapAccountOrdersToOrdersDto } from '../../mapper/order.mapper';
 
+// SMELL: Bloater – Large Class
 export class Bybit {
     private client: RestClientV5;
     private readonly category: CategoryV5 = 'spot';
     private readonly fullSymbol: string;
     private readonly runtimeState: RuntimeStateDto;
 
+    // SMELL: Bloaters – Data Clumps
     public priceScale: number = 2;
     public qtyScale: number = 2;
 
+    // SMELL: Bloaters – Long Parameter List
     constructor(
         readonly symbol: string,
+        // SMELL: Bloaters – Data Clumps
         apiKey: string,
         apiSecret: string,
         demoTrading = true,
         runtimeState: RuntimeStateDto
     ) {
+        // SMELL: Bloaters – Primitive Obsession
         this.fullSymbol = `${symbol}USDT`;
         this.client = new RestClientV5({
             key: apiKey,
@@ -95,6 +100,7 @@ export class Bybit {
                     timeInForce: 'GTC',
                 });
 
+            // SMELL: Bloaters – Primitive Obsession
             if (res.retCode === 0) {
                 this.runtimeState.messages?.push(
                     `${side}-ордер выставлен по цене ${price.toString()}`
@@ -107,6 +113,7 @@ export class Bybit {
         }
     }
 
+    // SMELL: Bloater – Long Method
     async getOpenOrders(side?: OrderSideV5): Promise<AccountOrderV5[]> {
         try {
             const { result } = await this.client.getActiveOrders({
@@ -182,6 +189,7 @@ export class Bybit {
             ) {
                 const instrument = response.result.list[0];
                 return {
+                    // SMELL: Bloaters – Data Clumps
                     priceScale: getDecimalsCount(
                         instrument.priceFilter.tickSize
                     ),

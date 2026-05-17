@@ -98,6 +98,7 @@ export class BotSettingsService {
         return mapBotToReadBotSummaryDto(bot);
     }
 
+    // SMELL: Bloater – Long Method (too many responsibilities)
     async update(
         botId: number,
         userId: string | undefined,

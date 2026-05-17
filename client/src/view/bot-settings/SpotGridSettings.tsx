@@ -13,12 +13,14 @@ export function SpotGridSettings() {
 
     const fieldErrors = errors.spotGridSettingsData?.levelsSettings;
 
+    // SMELL: Bloaters – Primitive Obsession
     const lowerBoundOptions = [
         { value: 'min', label: 'min (Агрессивно)' },
         { value: '10%', label: '10% (Сбалансировано)' },
         { value: 'q1', label: 'Q1 (Консервативно)' }
     ];
 
+    // SMELL: Bloaters – Primitive Obsession
     const upperBoundOptions = [
         { value: 'q3', label: 'Q3 (Консервативно)' },
         { value: '90%', label: '90% (Сбалансировано)' },

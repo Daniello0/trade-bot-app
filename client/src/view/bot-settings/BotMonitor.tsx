@@ -8,6 +8,7 @@ import {getBot} from "../../service/BotService";
 import {useBotActions} from "../../context/BotActionsContext";
 import {deepMerge} from "../../utils/DeepMerge";
 
+// SMELL: Bloater – Large Class (Large Component, uses navigation, socket, bot and botId, possibly code duplication)
 export const BotMonitor: React.FC = () => {
     const { botId } = useParams<{ botId: string }>();
     const navigate = useNavigate();
@@ -96,6 +97,7 @@ export const BotMonitor: React.FC = () => {
         if (toggleResult) await updateBot()
     };
 
+    // SMELL: Bloater – Long Method (three almost identical blocks of code)
     return (
         <div className="App">
             <div className="dashboard-container">

@@ -22,6 +22,7 @@ export class TradeLoopService {
         private readonly botGateway: BotGateway
     ) {}
 
+    // SMELL: Bloater – Long Method (typical "script in a method", mixed abstraction levels)
     async start(
         userId: string | undefined,
         botId: number,
@@ -40,8 +41,10 @@ export class TradeLoopService {
         const botRef = { lastPrice: 0 };
         const runtimeState: RuntimeStateDto = new RuntimeStateDto();
 
+        // SMELL: Bloaters – Long Parameter List
         const bybit = new Bybit(
             symbol,
+            // SMELL: Bloaters – Data Clumps
             user.apiKey,
             user.apiSecret,
             true,
@@ -55,8 +58,10 @@ export class TradeLoopService {
         botRef.lastPrice = bot.lastPrice;
 
         const ws = new WebsocketClient({
+            // SMELL: Bloaters – Data Clumps
             key: user.apiKey,
             secret: user.apiSecret,
+            
             demoTrading: true,
         });
         this.setupWsCleanup(ws, signal, symbol);
@@ -78,6 +83,7 @@ export class TradeLoopService {
         });
     }
 
+    // SMELL: Bloaters – Long Parameter List
     private async handleWsUpdate(
         data: WsTopicRequest,
         bot: Bot,
@@ -113,6 +119,7 @@ export class TradeLoopService {
         }
     }
 
+    // SMELL: Bloaters – Long Parameter List
     private async processCandleChange(
         bot: Bot,
         bybit: Bybit,
@@ -121,6 +128,8 @@ export class TradeLoopService {
         runtimeState: RuntimeStateDto
     ) {
         const now = new Date();
+
+        // SMELL: Bloaters – Primitive Obsession (candleLength = API interval и «минуты» в одном примитиве)
         const currentPeriod = Math.floor(
             now.getMinutes() / Number(bot.candleLength)
         );

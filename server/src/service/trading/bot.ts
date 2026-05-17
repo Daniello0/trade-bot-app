@@ -8,6 +8,7 @@ import {
 } from '../../utils/math.utils';
 import { OrderDto, RuntimeStateDto } from '../../dto/runtime-state.dto';
 
+// SMELL: Bloater – Large Class
 export class Bot {
     private spotGridSettings: ReadSpotGridSettingsDto;
     public symbol: string;
@@ -40,6 +41,8 @@ export class Bot {
         this.spotGridSettings = botSettings.spotGridSettings;
         this.amountPerOrderUsd =
             this.spotGridSettings.levelsSettings.pricePerBetStatic;
+
+        // SMELL: Bloaters – Primitive Obsession
         this.symbol = this.spotGridSettings.crypto || 'BTCUSDT';
         this.maxDeposit = botSettings.deposit;
         this.candleLength = this.spotGridSettings.candleLength;
@@ -177,6 +180,7 @@ export class Bot {
         this.runtimeState.messages?.push(`Сетка обновлена.`);
     }
 
+    // SMELL: Bloaters – Primitive Obsession
     public applyQuantiles(q: CalculatedQuantiles) {
         const lowerMap: Record<string, number> = { min: q.min, '10%': q.Q10 };
         const upperMap: Record<string, number> = { q3: q.Q3, '90%': q.Q90 };
