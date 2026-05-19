@@ -58,6 +58,7 @@ export class BotManagerService implements OnModuleDestroy {
             throw new Error(`Bot with ID "${botId}" not found.`);
         }
 
+        // SMELL: OOP – Switch Statements
         if (bot.status === 'running') {
             return this.stopBot(botId, userId);
         } else if (bot.status === 'stopped') {

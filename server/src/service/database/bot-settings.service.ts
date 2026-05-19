@@ -240,6 +240,7 @@ export class BotSettingsService {
         return bot;
     }
 
+    // SMELL: OOP – Switch Statements
     private async createSettingsIfNeed(
         dto: CreateBotDto,
         manager: EntityManager

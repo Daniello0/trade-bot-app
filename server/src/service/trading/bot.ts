@@ -15,12 +15,15 @@ export class Bot {
     private readonly maxDeposit: number;
     public candleLength: string;
     public numberOfGrids: number;
+
+    // SMELL: OOP – Temporary Field
     gridInterval: number;
     public gridLevels: number[];
     public ordersToSell: OrderDto[] = [];
     public lastPrice: number;
     public upperPriceBound: number;
     public lowerPriceBound: number;
+    
     private readonly amountPerOrderUsd: number;
     private readonly lowerQuantile: string;
     private readonly upperQuantile: string;

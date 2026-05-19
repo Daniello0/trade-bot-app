@@ -14,6 +14,7 @@ import { RuntimeStateDto } from '../../dto/runtime-state.dto';
 @Injectable()
 export class TradeLoopService {
     private readonly logger = new Logger(TradeLoopService.name);
+    // SMELL: OOP – Temporary Field
     private lastCalledPeriod: number | null = null;
 
     constructor(
@@ -68,10 +69,10 @@ export class TradeLoopService {
 
         await this.initialSync(bot, bybit);
 
-        // TODO:
         ws.on('update', (data: WsTopicRequest) => {
             void this.handleWsUpdate(data, bot, bybit, signal, runtimeState);
             this.sendBotState(botId, runtimeState);
+            // SMELL: OOP – Temporary Field
             runtimeState.messages = [];
         });
 
@@ -134,6 +135,7 @@ export class TradeLoopService {
             now.getMinutes() / Number(bot.candleLength)
         );
 
+        // SMELL: OOP – Temporary Field
         if (currentPeriod !== this.lastCalledPeriod && now.getSeconds() < 3) {
             this.lastCalledPeriod = currentPeriod;
             runtimeState.messages?.push('Закрытие свечи...');

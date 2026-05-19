@@ -39,6 +39,7 @@ function BotSettings() {
         })()
     }, [botId, reset]);
 
+    // SMELL: OOP – Switch Statements
     useEffect(() => {
         if (botType === 'spotGrid') {
             setValue('spotGridSettingsData', DEFAULT_SPOT_GRID_VALUES);
@@ -95,6 +96,7 @@ function BotSettings() {
                         </fieldset>
                     )}
 
+                    // SMELL: OOP – Switch Statements
                     {botType === 'spotGrid' && <SpotGridSettings />}
                     {botType === 'fullSpot' && <h2>Временно недоступен</h2>}
 

@@ -20,6 +20,7 @@ export class Bybit {
     private readonly runtimeState: RuntimeStateDto;
 
     // SMELL: Bloaters – Data Clumps
+    // SMELL: OOP – Temporary Field
     public priceScale: number = 2;
     public qtyScale: number = 2;
 
@@ -47,6 +48,7 @@ export class Bybit {
         if (!scale)
             throw new Error(`Failed to init scales for ${this.fullSymbol}`);
 
+        // SMELL: OOP – Temporary Field
         this.priceScale = scale.priceScale;
         this.qtyScale = scale.qtyScale;
     }
@@ -210,6 +212,7 @@ export class Bybit {
         this.runtimeState.messages?.push(`Ошибка! ${context}, ${err.message}`);
     }
 
+    // SMELL: OOP – Switch Statements (maybe just leave untouched)
     private addOrdersToRuntimeState = (
         runtimeState: RuntimeStateDto,
         orders: OrderDto[],

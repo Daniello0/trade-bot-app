@@ -14,6 +14,7 @@ const BotActionsContext = createContext<BotActionsContextType | undefined>(undef
 
 export const BotActionsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
+    // SMELL: OOP – Temporary Field
     const [existingKeys, setExistingKeys] = useState<UserKeys | undefined>();
     const [isToggling, setIsToggling] = useState(false);
 

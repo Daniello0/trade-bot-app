@@ -5,6 +5,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import { CryptoService } from '../cryptography/crypto.service';
 
 // TODO: extends Repository<Users>
+// SMELL: OOP – Refusal of Bequest (latent — TODO extends Repository)
 @Injectable()
 export class UserCrudService {
     constructor(
